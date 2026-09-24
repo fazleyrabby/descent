@@ -8,7 +8,7 @@ import '@fontsource/space-grotesk/latin-600.css';
 import '@fontsource/space-grotesk/latin-700.css';
 import './styles.css';
 import { OceanWorld, type WorldMetrics, type Quality } from './world';
-import { vampireSquid, zoneAt } from './content';
+import { documentedSpecimens, type Specimen, zoneAt } from './content';
 
 const root = document.querySelector<HTMLDivElement>('#app');
 if (!root) throw new Error('Missing app root');
@@ -25,7 +25,7 @@ root.innerHTML = `
         <span class="signal"><i></i> SYSTEMS ONLINE</span>
         <button id="controlsBtn" class="text-button" type="button" aria-label="Controls manual">MANUAL <span class="key-badge">?</span></button>
         <button id="muteBtn" class="text-button" type="button" aria-label="Toggle audio">AUDIO <span id="muteLabel">ON</span></button>
-        <button id="journalBtn" class="text-button" type="button">FIELD JOURNAL <span id="journalCount">00</span></button>
+        <button id="journalBtn" class="text-button" type="button">FIELD JOURNAL <span id="journalCount">00/04</span></button>
         <button id="pauseBtn" class="icon-button" type="button" aria-label="Pause expedition">Ⅱ</button>
       </div>
     </header>
@@ -43,7 +43,7 @@ root.innerHTML = `
     </aside>
 
     <div class="reticle" aria-hidden="true"><span></span><span></span><span></span><span></span><i></i></div>
-    <div id="targetPrompt" class="target-prompt is-hidden"><span class="target-prompt-dot"></span><span>SPECIMEN NEARBY<br><em>PRESS E TO SCAN</em></span></div>
+    <div id="targetPrompt" class="target-prompt is-hidden"><span class="target-prompt-dot"></span><span id="targetPromptText">SPECIMEN IN SIGHT<br><em>HOLD E TO SCAN</em></span></div>
     <div id="scanMeter" class="scan-meter is-hidden"><span>ANALYZING SIGNATURE</span><div><i id="scanFill"></i></div></div>
     <div id="toast" class="toast is-hidden" role="status"></div>
 
@@ -62,7 +62,7 @@ root.innerHTML = `
     <!-- Initial surface flight directive banner -->
     <div id="surfaceDirective" class="directive-card">
       <div class="directive-head"><span class="directive-dot"></span><span>EXPEDITION DIRECTIVE</span><button id="dismissDirective" class="directive-close" type="button" aria-label="Dismiss directive">×</button></div>
-      <p>Dive from the sunlit surface down to the <strong>2,000 m</strong> abyssal floor. Locate the midwater twilight contact near 650 m with sonar (<kbd>R</kbd>), scan with (<kbd>E</kbd>), and record in your Field Journal (<kbd>J</kbd>).</p>
+      <p>Dive from the sunlit surface down to the <strong>2,000 m</strong> abyssal floor. Locate <strong>4 documented species</strong> with sonar (<kbd>R</kbd>), scan with (<kbd>E</kbd>), and compile your scientific Field Journal (<kbd>J</kbd>).</p>
       <div class="directive-keys">
         <span><kbd>W</kbd><kbd>S</kbd> Dive / Rise</span>
         <span><kbd>A</kbd><kbd>D</kbd> Drift</span>
@@ -249,15 +249,13 @@ root.innerHTML = `
       <div class="journal-grid">
         <div class="journal-index">
           <span>DISCOVERIES</span>
-          <button id="entryTab" class="entry-tab" type="button">
-            01 <strong>Vampire squid</strong>
-            <small id="entryState">UNDISCOVERED</small>
-          </button>
+          <div id="journalEntriesList" class="journal-entries-list"></div>
           <div class="journal-expedition-stats">
             <span>EXPEDITION METRICS</span>
             <div><small>MISSION DEPTH</small><strong id="journalMaxDepth">000 m</strong></div>
-            <div><small>CATALOGUED</small><strong id="journalDiscoveredCount">0 of 1 Species</strong></div>
-            <div><small>STATUS</small><strong id="journalStatus">ACTIVE DESCENT</strong></div>
+            <div><small>CATALOGUED</small><strong id="journalDiscoveredCount">0 of 4 Species</strong></div>
+            <div><small>SURVEY STATUS</small><strong id="journalStatus">ACTIVE DESCENT</strong></div>
+            <div id="surveyBadgeContainer"></div>
           </div>
         </div>
         <article id="journalEntry" class="journal-entry">
@@ -295,7 +293,10 @@ let metrics: WorldMetrics = {
   frameMs: 16,
   targetDistance: null,
   targetInSight: false,
+  targetSpecimenId: null,
+  targetSpecimenName: null,
   sonarDistance: null,
+  sonarTargetName: null,
   isThrusting: false,
   reached1000: false,
   reached2000: false,
@@ -332,15 +333,32 @@ let scanGain: GainNode | null = null;
 
 let volume = 0.35;
 let muted = readMuted();
-let discovered = readDiscovery();
+let discoveredIds: string[] = readDiscoveries();
+let selectedSpecimenId: string = documentedSpecimens[0].id;
 
-function readDiscovery() {
-  try { return localStorage.getItem('descent-v1-vampire-squid') === '1'; }
-  catch { return false; }
+function readDiscoveries(): string[] {
+  try {
+    const raw = localStorage.getItem('descent-v1-discovered-species');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
+    }
+    if (localStorage.getItem('descent-v1-vampire-squid') === '1') {
+      return ['vampire-squid'];
+    }
+    return [];
+  } catch {
+    return [];
+  }
 }
-function saveDiscovery() {
-  try { localStorage.setItem('descent-v1-vampire-squid', '1'); }
-  catch { /* Discovery works for session */ }
+
+function saveDiscoveries() {
+  try {
+    localStorage.setItem('descent-v1-discovered-species', JSON.stringify(discoveredIds));
+    if (discoveredIds.includes('vampire-squid')) {
+      localStorage.setItem('descent-v1-vampire-squid', '1');
+    }
+  } catch { /* session storage */ }
 }
 
 function readMuted() {
@@ -592,7 +610,7 @@ function pingAudio(contactDistance: number | null) {
     osc.stop(t0 + 0.76);
 
     // Sonar contact echo return chirp if an object is within detection range
-    if (contactDistance !== null && contactDistance < 120 && !discovered) {
+    if (contactDistance !== null && contactDistance < 150) {
       const echoDelay = 0.25 + (contactDistance / 120) * 0.45;
       const echoTime = t0 + echoDelay;
       const echoOsc = audioContext.createOscillator();
@@ -700,96 +718,95 @@ function toast(message: string) {
   toastTimer = window.setTimeout(() => show(node, false), 3700);
 }
 
-function vampireSquidSvg() {
-  return `
-    <div class="specimen-plate">
-      <div class="plate-badge">CLASSIFICATION // CEPHALOPODA · VAMPYROMORPHA</div>
-      <svg class="specimen-diagram" viewBox="0 0 340 240" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <radialGradient id="specimenAura" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="#49a8be" stop-opacity="0.25"/>
-            <stop offset="100%" stop-color="#49a8be" stop-opacity="0"/>
-          </radialGradient>
-          <linearGradient id="specimenMantle" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#722b49"/>
-            <stop offset="100%" stop-color="#3b1625"/>
-          </linearGradient>
-          <linearGradient id="specimenWeb" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#4e2034"/>
-            <stop offset="100%" stop-color="#250d18"/>
-          </linearGradient>
-        </defs>
-        <circle cx="170" cy="120" r="100" fill="url(#specimenAura)" />
-        <!-- Retractile sensory filaments -->
-        <path d="M 140 130 C 100 160 80 190 60 220" stroke="rgba(195,245,255,0.4)" stroke-width="1.2" fill="none" stroke-dasharray="3 3"/>
-        <path d="M 200 130 C 240 160 260 190 280 220" stroke="rgba(195,245,255,0.4)" stroke-width="1.2" fill="none" stroke-dasharray="3 3"/>
-        <!-- Interbrachial web cloak -->
-        <path d="M 145 105 C 120 120 100 160 115 195 Q 140 180 152 205 Q 162 188 170 208 Q 178 188 188 205 Q 200 180 225 195 C 240 160 220 120 195 105 Z" fill="url(#specimenWeb)" stroke="rgba(215,115,160,0.6)" stroke-width="1.5"/>
-        <!-- Arms and photophores -->
-        <circle cx="115" cy="195" r="3" fill="#82f5ff" />
-        <circle cx="152" cy="205" r="3" fill="#82f5ff" />
-        <circle cx="170" cy="208" r="3" fill="#82f5ff" />
-        <circle cx="188" cy="205" r="3" fill="#82f5ff" />
-        <circle cx="225" cy="195" r="3" fill="#82f5ff" />
-        <!-- Velvet mantle -->
-        <path d="M 140 110 C 138 70 155 35 170 32 C 185 35 202 70 200 110 Q 170 130 140 110 Z" fill="url(#specimenMantle)" stroke="rgba(215,115,160,0.6)" stroke-width="1.5"/>
-        <!-- Fins -->
-        <ellipse cx="132" cy="65" rx="22" ry="9" transform="rotate(-25 132 65)" fill="#8d3b5d" stroke="rgba(228,135,178,0.6)" stroke-width="1.2"/>
-        <ellipse cx="208" cy="65" rx="22" ry="9" transform="rotate(25 208 65)" fill="#8d3b5d" stroke="rgba(228,135,178,0.6)" stroke-width="1.2"/>
-        <!-- Lucid sapphire eyes -->
-        <circle cx="154" cy="105" r="7" fill="#1b4d58" stroke="#48b8c2" stroke-width="1.2"/>
-        <circle cx="153" cy="104" r="3" fill="#061318"/>
-        <circle cx="151.5" cy="102.5" r="1.5" fill="#ffffff"/>
-        <circle cx="186" cy="105" r="7" fill="#1b4d58" stroke="#48b8c2" stroke-width="1.2"/>
-        <circle cx="187" cy="104" r="3" fill="#061318"/>
-        <circle cx="185.5" cy="102.5" r="1.5" fill="#ffffff"/>
-      </svg>
-      <div class="plate-annotations">
-        <span><b>01.</b> Apical swimming fins</span>
-        <span><b>02.</b> Lucid sapphire eye</span>
-        <span><b>03.</b> Bioluminescent photophores</span>
-        <span><b>04.</b> Sensory feeding filaments</span>
-      </div>
-    </div>
-  `;
-}
-
 function journalContent() {
-  el<HTMLElement>('journalCount').textContent = discovered ? '01' : '00';
-  el<HTMLElement>('entryState').textContent = discovered ? 'CATALOGUED' : 'UNDISCOVERED';
+  const count = discoveredIds.length;
+  const total = documentedSpecimens.length;
+  el<HTMLElement>('journalCount').textContent = `${count.toString().padStart(2, '0')}/${total.toString().padStart(2, '0')}`;
   el<HTMLElement>('journalMaxDepth').textContent = `${Math.round(maxDepthRecord)} m`;
-  el<HTMLElement>('journalDiscoveredCount').textContent = discovered ? '1 of 1 Species' : '0 of 1 Species';
-  el<HTMLElement>('journalStatus').textContent = metrics.reached2000 ? '2,000 M FLOOR REACHED' : metrics.reached1000 ? '1,000 M BATHYPELAGIC' : 'EXPEDITION ACTIVE';
+  el<HTMLElement>('journalDiscoveredCount').textContent = `${count} of ${total} Species (${Math.round((count / total) * 100)}%)`;
+  el<HTMLElement>('journalStatus').textContent = count === total ? 'ALL SPECIES CATALOGUED' : metrics.reached2000 ? '2,000 M FLOOR REACHED' : metrics.reached1000 ? '1,000 M BATHYPELAGIC' : 'EXPEDITION ACTIVE';
 
+  const badgeContainer = el<HTMLElement>('surveyBadgeContainer');
+  if (badgeContainer) {
+    badgeContainer.innerHTML = count === total
+      ? `<div class="survey-complete-badge">★ EXPEDITION SURVEY COMPLETE · 4/4 CATALOGUED</div>`
+      : '';
+  }
+
+  // Populate specimen tabs
+  const list = el<HTMLElement>('journalEntriesList');
+  if (list) {
+    list.innerHTML = documentedSpecimens.map((spec) => {
+      const isCat = discoveredIds.includes(spec.id);
+      const isSel = spec.id === selectedSpecimenId;
+      return `
+        <button class="entry-tab ${isSel ? 'is-selected' : ''} ${isCat ? 'is-catalogued' : ''}" data-specimen="${spec.id}" type="button">
+          ${spec.index} <strong>${spec.name}</strong>
+          <small>
+            <span>${spec.depth}</span>
+            <span>${isCat ? 'CATALOGUED' : 'UNDISCOVERED'}</span>
+          </small>
+        </button>
+      `;
+    }).join('');
+
+    list.querySelectorAll<HTMLButtonElement>('.entry-tab').forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const id = tab.getAttribute('data-specimen');
+        if (id) {
+          selectedSpecimenId = id;
+          journalContent();
+        }
+      });
+    });
+  }
+
+  const current = documentedSpecimens.find((s) => s.id === selectedSpecimenId) || documentedSpecimens[0];
   const entry = el<HTMLElement>('journalEntry');
-  if (!discovered) {
+  const isCurrentDiscovered = discoveredIds.includes(current.id);
+
+  if (!isCurrentDiscovered) {
     entry.innerHTML = `
-      <div class="empty-journal">
-        <span>◇</span>
-        <h3>No entries yet</h3>
-        <p>Descend into the twilight zone (600–900 m). Follow a sonar contact with <kbd>R</kbd> and press <kbd>E</kbd> while looking at the organism to catalog it.</p>
+      <div class="entry-kicker">SPECIES RECORD // UNVERIFIED ACOUSTIC SIGNATURE · ${current.depthTier.toUpperCase()}</div>
+      <h3>${current.name}</h3>
+      <p class="latin">Biometric scan required · Species uncatalogued</p>
+      <div class="recon-plate">
+        <div class="recon-reticle"></div>
+        <div class="plate-badge">ACOUSTIC TARGET // ${current.depth.toUpperCase()}</div>
+        <p>Submersible sensors detect bio-acoustic echoes consistent with <em>${current.scientificName}</em> in the <strong>${current.habitat}</strong>.</p>
+      </div>
+      <div class="entry-facts">
+        <div><span>EXPECTED DEPTH</span><strong>${current.depth}</strong></div>
+        <div><span>HABITAT TIER</span><strong>${current.habitat}</strong></div>
+        <div><span>EXPECTED SIZE</span><strong>${current.realSize}</strong></div>
+        <div><span>FIELD STATUS</span><strong>AWAITING SCAN</strong></div>
+      </div>
+      <p>${current.description}</p>
+      <div class="entry-source">
+        <span>RECONNAISSANCE DIRECTIVE</span>
+        <small>Descend to ${current.depth}. Ping sonar (<kbd>R</kbd>) to triangulate the specimen contact, maneuver within 20 meters, and hold <kbd>E</kbd> while targeting the organism to complete biometric scanning.</small>
       </div>
     `;
     return;
   }
 
   entry.innerHTML = `
-    <div class="entry-kicker">SPECIES // DOCUMENTED ORGANISM</div>
-    <h3>${vampireSquid.name}</h3>
-    <p class="latin">${vampireSquid.scientificName}</p>
-    ${vampireSquidSvg()}
+    <div class="entry-kicker">SPECIES // DOCUMENTED ORGANISM · ${current.depthTier.toUpperCase()}</div>
+    <h3>${current.name}</h3>
+    <p class="latin">${current.scientificName}</p>
+    ${current.svg}
     <div class="entry-facts">
-      <div><span>REPORTED DEPTH</span><strong>${vampireSquid.depth}</strong></div>
-      <div><span>HABITAT</span><strong>${vampireSquid.habitat}</strong></div>
-      <div><span>DIET</span><strong>Marine snow (detritivore)</strong></div>
-      <div><span>SIZE</span><strong>~28 cm (illustration enlarged)</strong></div>
+      <div><span>REPORTED DEPTH</span><strong>${current.depth}</strong></div>
+      <div><span>HABITAT</span><strong>${current.habitat}</strong></div>
+      <div><span>VERIFIED SIZE</span><strong>${current.realSize}</strong></div>
+      <div><span>CLASSIFICATION</span><strong>${current.classification}</strong></div>
     </div>
-    <p>${vampireSquid.description}</p>
-    <p>${vampireSquid.detail}</p>
+    <p>${current.description}</p>
+    <p>${current.detail}</p>
     <div class="entry-source">
       <span>SCIENTIFIC SOURCE & INSTITUTION</span>
-      <a href="${vampireSquid.source.url}" target="_blank" rel="noopener noreferrer">${vampireSquid.source.title} ↗</a>
-      <small>${vampireSquid.source.publisher} · Accessed ${vampireSquid.source.accessedOn}</small>
+      <a href="${current.source.url}" target="_blank" rel="noopener noreferrer">${current.source.title} ↗</a>
+      <small>${current.source.publisher} · Accessed ${current.source.accessedOn}</small>
     </div>
   `;
 }
@@ -822,15 +839,20 @@ function setControls(next: boolean) {
 }
 
 function finishScan() {
+  const specimenId = metrics.targetSpecimenId || 'vampire-squid';
+  const specimen = documentedSpecimens.find((s) => s.id === specimenId) || documentedSpecimens[1];
   cancelScan();
-  world.markDiscovered();
-  discovered = true;
-  saveDiscovery();
+  world.markDiscovered(specimenId);
+  if (!discoveredIds.includes(specimenId)) {
+    discoveredIds.push(specimenId);
+    saveDiscoveries();
+  }
+  selectedSpecimenId = specimenId;
   journalContent();
   discoveryAudio();
   show(el<HTMLElement>('scanMeter'), false);
   show(el<HTMLElement>('targetPrompt'), false);
-  toast('SPECIES CATALOGUED · VAMPIRE SQUID [OPEN JOURNAL: J]');
+  toast(`SPECIES CATALOGUED · ${specimen.name.toUpperCase()} [OPEN JOURNAL: J]`);
 }
 
 function onTick(next: WorldMetrics) {
@@ -872,7 +894,7 @@ function onTick(next: WorldMetrics) {
     if (scanProgress === 0) stopScanAudio();
   }
 
-  if (scanning && (metrics.targetDistance === null || metrics.targetDistance > 28)) {
+  if (scanning && (metrics.targetDistance === null || metrics.targetDistance > 45)) {
     cancelScan();
   }
   if (scanProgress >= 1) finishScan();
@@ -896,11 +918,18 @@ function onTick(next: WorldMetrics) {
     zoomDisplay.textContent = `${Math.round(metrics.zoom * 100)}% ZOOM`;
   }
 
-  show(el<HTMLElement>('targetPrompt'), metrics.targetInSight && !discovered && !scanning);
-  show(el<HTMLElement>('scanMeter'), scanProgress > 0 && !discovered);
+  const promptEl = el<HTMLElement>('targetPrompt');
+  show(promptEl, metrics.targetInSight && !scanning);
+  if (metrics.targetInSight && metrics.targetSpecimenName) {
+    const promptText = el<HTMLElement>('targetPromptText');
+    if (promptText) {
+      promptText.innerHTML = `SPECIMEN IN SIGHT: ${metrics.targetSpecimenName.toUpperCase()}<br><em>HOLD E TO SCAN</em>`;
+    }
+  }
+  show(el<HTMLElement>('scanMeter'), scanProgress > 0);
   el<HTMLElement>('scanFill').style.width = `${scanProgress * 100}%`;
 
-  const hasSonarContact = metrics.sonarDistance !== null && metrics.sonarDistance < 120 && !discovered;
+  const hasSonarContact = metrics.sonarDistance !== null && metrics.sonarDistance < 160;
   show(el<HTMLElement>('sonarContact'), hasSonarContact);
   el<HTMLElement>('sonarRange').textContent = hasSonarContact ? `${Math.round(metrics.sonarDistance!)} M` : '— M';
 
@@ -913,7 +942,7 @@ function onTick(next: WorldMetrics) {
 
 try {
   world = new OceanWorld(canvas, onTick);
-  if (discovered) world.markDiscovered();
+  world.setDiscovered(discoveredIds);
   journalContent();
   world.start();
 } catch (error) {
@@ -975,6 +1004,7 @@ el<HTMLInputElement>('reducedMotion').addEventListener('change', (e) => {
 
 el<HTMLButtonElement>('resetProgress').addEventListener('click', () => {
   try {
+    localStorage.removeItem('descent-v1-discovered-species');
     localStorage.removeItem('descent-v1-vampire-squid');
     localStorage.removeItem('descent-v1-muted');
   } catch { /* Storage */ }
@@ -987,7 +1017,6 @@ el<HTMLInputElement>('debugDepth').addEventListener('input', (e) => {
 });
 
 el<HTMLButtonElement>('debugLight').addEventListener('click', () => world.toggleLights());
-el<HTMLButtonElement>('entryTab').addEventListener('click', () => journalContent());
 
 // Light Dismiss for all modal overlays
 for (const overlayId of ['pauseOverlay', 'journalOverlay', 'controlsOverlay']) {
@@ -1021,20 +1050,24 @@ bindTouch('touchRight', 'KeyD');
 el<HTMLButtonElement>('touchSonar')?.addEventListener('click', () => triggerSonar());
 el<HTMLButtonElement>('touchLight')?.addEventListener('click', () => toggleLights());
 el<HTMLButtonElement>('touchScan')?.addEventListener('click', () => {
-  if (metrics.targetInSight && !discovered) {
+  if (metrics.targetInSight) {
     scanning = true;
     world.setScanAssist(true);
-    toast('SCAN INITIATED · STAY NEAR SPECIMEN');
+    toast(`SCAN INITIATED · HOLD NEAR ${metrics.targetSpecimenName ? metrics.targetSpecimenName.toUpperCase() : 'SPECIMEN'}`);
   }
 });
 el<HTMLButtonElement>('touchJournal')?.addEventListener('click', () => setJournal(!journalOpen));
 
 function triggerSonar() {
-  const range = world.ping();
-  pingAudio(range);
+  const res = world.ping();
+  pingAudio(res.distance);
   el<HTMLElement>('sonarState').textContent = 'PINGING';
   window.setTimeout(() => { el<HTMLElement>('sonarState').textContent = 'STANDBY'; }, 1700);
-  toast(range !== null && range < 120 && !discovered ? `CONTACT DETECTED · ${Math.round(range)} M` : 'NO CONTACT WITHIN RANGE');
+  if (res.distance !== null && res.distance < 160) {
+    toast(`ACOUSTIC CONTACT DETECTED · ${Math.round(res.distance)} M ${res.name ? `[${res.name.toUpperCase()}]` : ''}`);
+  } else {
+    toast(discoveredIds.length === documentedSpecimens.length ? 'ALL 4 REGIONAL SPECIES CATALOGUED' : 'NO UNCATALOGUED CONTACT IN RANGE');
+  }
 }
 
 function toggleLights() {
@@ -1100,10 +1133,10 @@ document.addEventListener('keydown', (event) => {
 
   if (event.code === 'KeyF') toggleLights();
   if (event.code === 'KeyR') triggerSonar();
-  if (event.code === 'KeyE' && metrics.targetInSight && !discovered) {
+  if (event.code === 'KeyE' && metrics.targetInSight) {
     scanning = true;
     world.setScanAssist(true);
-    toast('SCAN INITIATED · STAY NEAR SPECIMEN');
+    toast(`SCAN INITIATED · HOLD NEAR ${metrics.targetSpecimenName ? metrics.targetSpecimenName.toUpperCase() : 'SPECIMEN'}`);
   }
 });
 

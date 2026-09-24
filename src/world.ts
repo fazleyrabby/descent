@@ -5,7 +5,10 @@ export type WorldMetrics = {
   frameMs: number;
   targetDistance: number | null;
   targetInSight: boolean;
+  targetSpecimenId: string | null;
+  targetSpecimenName: string | null;
   sonarDistance: number | null;
+  sonarTargetName: string | null;
   isThrusting: boolean;
   reached1000: boolean;
   reached2000: boolean;
@@ -51,6 +54,7 @@ export class OceanWorld {
   private lightsOn = true;
   private scanAssist = false;
   private discovered = false;
+  private discoveredSet = new Set<string>();
   private encounterX: number | null = null;
   private sonarTime = -100;
   private elapsed = 0;
@@ -146,10 +150,22 @@ export class OceanWorld {
   setZoom(z: number) { this.targetZoom = clamp(z, 0.55, 1.85); }
   resetZoom() { this.targetZoom = 1.0; }
   adjustZoom(delta: number) { this.targetZoom = clamp(this.targetZoom + delta, 0.55, 1.85); }
-  isDiscovered() { return this.discovered; }
-  markDiscovered() { this.discovered = true; }
+  isDiscovered(id = 'vampire-squid') { return this.discoveredSet.has(id); }
+  markDiscovered(id = 'vampire-squid') {
+    this.discoveredSet.add(id);
+    if (id === 'vampire-squid') this.discovered = true;
+  }
+  setDiscovered(ids: string[]) {
+    this.discoveredSet = new Set(ids);
+    this.discovered = this.discoveredSet.has('vampire-squid');
+  }
+  getDiscovered(): string[] { return Array.from(this.discoveredSet); }
   setScanAssist(active: boolean) { this.scanAssist = active; }
-  ping() { this.sonarTime = this.elapsed; return this.distanceToTarget(); }
+  ping(): { distance: number | null; name: string | null } {
+    this.sonarTime = this.elapsed;
+    const closest = this.getClosestUndiscoveredTarget();
+    return closest ? { distance: closest.distance, name: closest.target.name } : { distance: null, name: null };
+  }
 
   resize() {
     this.width = this.canvas.clientWidth || innerWidth;
@@ -240,6 +256,15 @@ export class OceanWorld {
   private screenX(worldX: number) { return this.focusX + (worldX - this.vehicle.position.x) * this.pxPerMeter; }
   private screenY(worldDepth: number) { return this.focusY + (worldDepth - this.depth) * this.pxPerMeter; }
 
+  private whalePosition() {
+    const whaleBaseX = 110;
+    const whaleX = this.wrapCoord(whaleBaseX, 220);
+    const whaleSpeed = 3.2;
+    const whaleCurrX = whaleX + (this.elapsed * whaleSpeed) % 220 - 110;
+    const whaleDepth = 135 + Math.sin(this.elapsed * 0.15) * 14;
+    return { x: whaleCurrX, depth: whaleDepth };
+  }
+
   private squidPosition() {
     return {
       x: (this.encounterX ?? 0) + Math.sin(this.elapsed * 0.42) * 0.8,
@@ -247,22 +272,77 @@ export class OceanWorld {
     };
   }
 
-  private distanceToTarget() {
-    if (this.encounterX === null) return null;
-    const target = this.squidPosition();
-    return Math.hypot(target.x - this.vehicle.position.x, target.depth - this.depth);
+  private barreleyePosition() {
+    const barreleyeBaseX = 60;
+    const barreleyeX = this.wrapCoord(barreleyeBaseX, 130);
+    const barreleyeDepth = 1100 + Math.sin(this.elapsed * 0.35) * 12;
+    return { x: barreleyeX, depth: barreleyeDepth };
+  }
+
+  private tripodPosition() {
+    const tx = this.wrapCoord(18, 90);
+    return { x: tx, depth: 1994 };
+  }
+
+  private documentedTargets() {
+    return [
+      { id: 'blue-whale', name: 'Blue whale', pos: this.whalePosition(), maxSightDist: 42 },
+      { id: 'vampire-squid', name: 'Vampire squid', pos: this.squidPosition(), maxSightDist: 18 },
+      { id: 'barreleye-fish', name: 'Barreleye fish', pos: this.barreleyePosition(), maxSightDist: 22 },
+      { id: 'tripod-fish', name: 'Benthic tripod fish', pos: this.tripodPosition(), maxSightDist: 22 },
+    ];
+  }
+
+  private getClosestUndiscoveredTarget() {
+    let closest: { target: { id: string; name: string; maxSightDist: number }; distance: number } | null = null;
+    for (const t of this.documentedTargets()) {
+      if (this.discoveredSet.has(t.id)) continue;
+      const posX = t.id === 'vampire-squid' && this.encounterX === null ? this.vehicle.position.x + 8 : t.pos.x;
+      const dist = Math.hypot(posX - this.vehicle.position.x, t.pos.depth - this.depth);
+      if (!closest || dist < closest.distance) {
+        closest = { target: t, distance: dist };
+      }
+    }
+    return closest;
   }
 
   private metrics(): WorldMetrics {
-    const targetDistance = this.discovered ? null : this.distanceToTarget();
-    const targetY = this.screenY(this.squidPosition().depth);
+    let targetInSight = false;
+    let targetDistance: number | null = null;
+    let targetSpecimenId: string | null = null;
+    let targetSpecimenName: string | null = null;
+
+    for (const t of this.documentedTargets()) {
+      if (this.discoveredSet.has(t.id)) continue;
+      const posX = t.id === 'vampire-squid' && this.encounterX === null ? this.vehicle.position.x + 8 : t.pos.x;
+      const dist = Math.hypot(posX - this.vehicle.position.x, t.pos.depth - this.depth);
+      const sy = this.screenY(t.pos.depth);
+      const sx = this.screenX(posX);
+
+      if (dist <= t.maxSightDist && sy > 70 && sy < this.height - 70 && sx > 40 && sx < this.width - 40) {
+        targetInSight = true;
+        targetDistance = dist;
+        targetSpecimenId = t.id;
+        targetSpecimenName = t.name;
+        break;
+      }
+    }
+
+    const closestUndiscovered = this.getClosestUndiscoveredTarget();
+    const isSonarActive = this.elapsed - this.sonarTime < 5;
+    const sonarDistance = isSonarActive && closestUndiscovered && closestUndiscovered.distance < 160 ? closestUndiscovered.distance : null;
+    const sonarTargetName = isSonarActive && closestUndiscovered && closestUndiscovered.distance < 160 ? closestUndiscovered.target.name : null;
+
     return {
       depth: this.depth,
       horizontalM: this.vehicle.position.x,
       frameMs: this.lastFrame,
       targetDistance,
-      targetInSight: targetDistance !== null && targetDistance < 17 && targetY > 80 && targetY < this.height - 75,
-      sonarDistance: this.elapsed - this.sonarTime < 5 ? targetDistance : null,
+      targetInSight,
+      targetSpecimenId,
+      targetSpecimenName,
+      sonarDistance,
+      sonarTargetName,
       isThrusting: this.isThrusting,
       reached1000: this.depth >= 998,
       reached2000: this.depth >= 1998,
@@ -848,7 +928,10 @@ export class OceanWorld {
         screenX: wsx,
         screenY: wsy,
         name: 'BLUE WHALE',
-        category: 'Ambient scenery · Epipelagic',
+        category: this.isDiscovered('blue-whale')
+          ? 'Catalogued · NOAA Sourced Record'
+          : 'Documented Species · Balaenoptera musculus',
+        isHero: true,
         radius: 65,
         distM: Math.hypot(whaleCurrX - this.vehicle.position.x, whaleDepth - this.depth),
       });
@@ -1511,7 +1594,10 @@ export class OceanWorld {
         screenX: bsx,
         screenY: bsy,
         name: 'BARRELEYE FISH',
-        category: 'Ambient scenery · Bathypelagic',
+        category: this.isDiscovered('barreleye-fish')
+          ? 'Catalogued · MBARI Sourced Record'
+          : 'Documented Species · Macropinna microstoma',
+        isHero: true,
         radius: 22,
         distM: Math.hypot(barreleyeX - this.vehicle.position.x, barreleyeDepth - this.depth),
       });
@@ -1766,7 +1852,10 @@ export class OceanWorld {
           screenX: tsx,
           screenY: floorY - 14,
           name: 'BENTHIC TRIPOD FISH',
-          category: 'Ambient scenery · Bathypelagic',
+          category: this.isDiscovered('tripod-fish')
+            ? 'Catalogued · Smithsonian Sourced Record'
+            : 'Documented Species · Bathypterois grallator',
+          isHero: true,
           radius: 18,
           distM: Math.hypot(tx - this.vehicle.position.x, 1995 - this.depth),
         });

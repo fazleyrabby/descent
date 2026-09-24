@@ -1021,25 +1021,92 @@ a { color: var(--aqua); }
   letter-spacing: 0.19em;
   font-weight: 700;
 }
+.journal-entries-list {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
 .entry-tab {
-  margin-top: 1.5rem;
   width: 100%;
   display: grid;
-  grid-template-columns: 1.3rem 1fr;
-  gap: 0.5rem;
+  grid-template-columns: 1.4rem 1fr;
+  gap: 0.45rem;
+  align-items: center;
   text-align: left;
-  background: rgba(125, 226, 213, 0.08);
-  border: 1px solid rgba(150, 238, 219, 0.25);
-  color: #dff9f3;
-  padding: 0.85rem;
+  background: rgba(125, 226, 213, 0.05);
+  border: 1px solid rgba(150, 238, 219, 0.18);
+  color: #c7dede;
+  padding: 0.75rem 0.85rem;
   font-size: 0.68rem;
+  cursor: pointer;
+  transition: all 0.16s ease;
 }
-.entry-tab strong { font-weight: 600; }
+.entry-tab:hover {
+  background: rgba(125, 226, 213, 0.12);
+  border-color: rgba(150, 238, 219, 0.35);
+  color: #ffffff;
+}
+.entry-tab.is-selected {
+  background: rgba(125, 226, 213, 0.18);
+  border-color: var(--aqua);
+  color: #e6fffb;
+  box-shadow: 0 0 12px rgba(125, 226, 213, 0.14);
+}
+.entry-tab strong { font-weight: 600; display: block; font-size: 0.72rem; }
 .entry-tab small {
   grid-column: 2;
-  color: #9eb9b9;
-  font-size: 0.55rem;
+  color: #6d8b8e;
+  font-size: 0.54rem;
   letter-spacing: 0.12em;
+  display: flex;
+  justify-content: space-between;
+}
+.entry-tab.is-catalogued small span:last-child {
+  color: var(--aqua);
+  font-weight: 700;
+}
+.survey-complete-badge {
+  background: rgba(125, 226, 213, 0.12);
+  border: 1px solid var(--aqua);
+  padding: 0.6rem 0.8rem;
+  font-size: 0.58rem;
+  letter-spacing: 0.15em;
+  font-weight: 700;
+  color: #b5fff3;
+  text-align: center;
+  border-radius: 2px;
+}
+.recon-plate {
+  margin: 1.8rem 0;
+  padding: 2.2rem 1.5rem;
+  background: radial-gradient(circle at center, rgba(8, 28, 38, 0.85) 0%, rgba(2, 10, 16, 0.95) 100%);
+  border: 1px dashed rgba(162, 235, 225, 0.28);
+  text-align: center;
+}
+.recon-reticle {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  border: 1px solid rgba(125, 226, 213, 0.35);
+  margin: 0 auto 1.2rem;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: sonarPing 3s infinite ease-out;
+}
+.recon-reticle::before {
+  content: '';
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 1px dashed rgba(125, 226, 213, 0.25);
+}
+.recon-reticle::after {
+  content: '+';
+  position: absolute;
+  color: var(--aqua);
+  font-size: 1.1rem;
 }
 
 .journal-expedition-stats {

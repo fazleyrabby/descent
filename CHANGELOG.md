@@ -6,6 +6,11 @@ User-visible changes to DESCENT are recorded here. Add new work under **Unreleas
 
 ### Added
 
+- Multi-specimen scientific Field Journal catalog featuring 4 fully scannable hero species spanning the water column: Blue Whale (*Balaenoptera musculus*, 0–200 m, NOAA sourced), Vampire Squid (*Vampyroteuthis infernalis*, 600–900 m, MBARI sourced), Barreleye Fish (*Macropinna microstoma*, 600–1,200 m, MBARI sourced), and Benthic Tripod Fish (*Bathypterois grallator*, 1,900–2,000 m, Smithsonian/NOAA sourced).
+- Individual scientific specimen plates with detailed SVG anatomical diagrams and callouts for all 4 documented species.
+- Reconnaissance briefing dossier for undiscovered species with bio-acoustic target sonar radar, expected depth range clues, and scanning directives.
+- Multi-target active sonar triangulation that dynamically calculates distance, bearing, and contact identification for the nearest undiscovered species.
+- Expedition fauna survey completion badge acknowledging full cataloguing of all 4 regional documented marine species.
 - Dynamic mouse scroll wheel and two-finger touch pinch camera zoom (55%–185%) with smooth exponential approach, interactive HUD zoom percentage badge, and quick `Z` key reset.
 - Interactive creature taxonomy tooltips and HUD identification tags displaying species names and classification categories on proximity or mouse hover, toggleable with <kbd>T</kbd> and in pause settings.
 - Major marine megafauna and deep-sea organisms across depth tiers: pods of Bottlenose Dolphins, diving Harbor Seals, Pelagic Apex Sharks, and massive Blue Whales in the sunlight zone (0–200 m); Giant Pacific Octopuses, deep-diving Sperm Whales, and Dumbo Octopuses in the twilight zone (200–1,000 m); and ancient Bluntnose Sixgill Sharks, Barreleye Fish, Gulper Eels, Giant Squids, and Deep-Sea Dragonfish in the midnight abyss.
