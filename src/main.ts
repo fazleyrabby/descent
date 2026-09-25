@@ -69,6 +69,7 @@ root.innerHTML = `
         <span><kbd>W</kbd><kbd>S</kbd> Dive / Rise</span>
         <span><kbd>A</kbd><kbd>D</kbd> Drift</span>
         <span><kbd>Shift</kbd> Boost</span>
+        <span><kbd>C</kbd> Speed</span>
         <span><kbd>R</kbd> Sonar</span>
         <span><kbd>E</kbd> Scan</span>
         <span><kbd>F</kbd> Lights</span>
@@ -115,6 +116,7 @@ root.innerHTML = `
         <span><kbd>A</kbd><kbd>D</kbd> DRIFT</span>
         <span><kbd>W</kbd><kbd>S</kbd> RISE / DIVE</span>
         <span><kbd>Shift</kbd> BOOST</span>
+        <span><kbd>C</kbd> SPEED</span>
         <span><kbd>Scroll</kbd> ZOOM</span>
         <span><kbd>F</kbd> LIGHTS</span>
         <span><kbd>R</kbd> SONAR</span>
@@ -125,6 +127,7 @@ root.innerHTML = `
         <span><kbd>?</kbd> MANUAL</span>
       </div>
       <div class="bottom-right-cluster">
+        <span class="speed-badge" id="speedDisplay" title="Thrust speed tier — press C to cycle, 1–5 to set">1× SPEED</span>
         <span class="zoom-badge" id="zoomDisplay" title="Click or press Z to reset zoom">100% ZOOM</span>
         <span class="bottom-right" id="fpsDisplay">— FPS</span>
       </div>
@@ -198,6 +201,10 @@ root.innerHTML = `
             <li>
               <div class="key-combo"><kbd>Shift</kbd><span>+</span><kbd>W A S D</kbd></div>
               <span class="key-desc">Thruster boost (2.2× thrust)</span>
+            </li>
+            <li>
+              <div class="key-combo"><kbd>C</kbd><span>/</span><kbd>1</kbd><span>–</span><kbd>5</kbd></div>
+              <span class="key-desc">Thrust speed tier (1×–5× superspeed)</span>
             </li>
             <li>
               <div class="key-combo"><kbd>Scroll</kbd><span>/</span><kbd>Pinch</kbd></div>
@@ -291,16 +298,16 @@ root.innerHTML = `
         <button id="closePhotoBtn" class="icon-button photo-close" type="button" aria-label="Close reference photo">×</button>
       </div>
       <div class="photo-body">
-        <p class="eyebrow">FIELD REFERENCE PHOTOGRAPH</p>
+        <p id="photoEyebrow" class="eyebrow">FIELD REFERENCE PHOTOGRAPH</p>
         <h2 id="photoTitle"></h2>
         <p id="photoCaption" class="photo-caption"></p>
         <div id="photoFacts" class="entry-facts photo-facts"></div>
-        <div class="entry-source">
+        <div id="photoSource" class="entry-source">
           <span>PHOTOGRAPH CREDIT</span>
           <small id="photoCredit"></small>
           <a id="photoPageLink" href="#" target="_blank" rel="noopener noreferrer">View on Wikimedia Commons ↗</a>
         </div>
-        <div class="modal-actions">
+        <div id="photoActions" class="modal-actions">
           <button id="photoJournalBtn" class="secondary-button" type="button">OPEN IN FIELD JOURNAL</button>
         </div>
       </div>
@@ -337,6 +344,7 @@ let metrics: WorldMetrics = {
   sonarTargetName: null,
   isThrusting: false,
   isBoosting: false,
+  speedMultiplier: 1,
   reached1000: false,
   reached2000: false,
   reached3000: false,
@@ -1182,8 +1190,10 @@ function setControls(next: boolean) {
 
 let photoOpen = false;
 
-function setPhoto(next: boolean, specimenId?: string) {
-  if (next && specimenId) renderPhoto(specimenId);
+type CreatureHit = { specimenId: string | null; name: string; category: string; isHero: boolean };
+
+function setPhoto(next: boolean, target?: string | CreatureHit) {
+  if (next && target) renderPhoto(target);
   if (next) cancelScan();
   photoOpen = next;
   show(el<HTMLElement>('photoOverlay'), next);
@@ -1192,30 +1202,66 @@ function setPhoto(next: boolean, specimenId?: string) {
   updateAudio();
 }
 
-function renderPhoto(specimenId: string) {
-  const spec = documentedSpecimens.find((s) => s.id === specimenId);
-  if (!spec) return;
+function resetPhotoModal() {
+  el<HTMLElement>('photoOverlay').classList.remove('is-simulated');
+  show(el<HTMLElement>('photoSource'), true);
+  show(el<HTMLElement>('photoActions'), true);
+}
+
+function renderPhoto(target: string | CreatureHit) {
+  const specimenId = typeof target === 'string' ? target : target.specimenId;
+  const spec = specimenId ? documentedSpecimens.find((s) => s.id === specimenId) : undefined;
+
+  // Documented species show their real-life reference photograph.
+  if (spec) {
+    resetPhotoModal();
+    el<HTMLElement>('photoEyebrow').textContent = 'FIELD REFERENCE PHOTOGRAPH';
+    const img = el<HTMLImageElement>('photoImage');
+    img.src = spec.photo.src;
+    img.alt = `Real-life reference photograph: ${spec.name} (${spec.photo.caption})`;
+    el<HTMLElement>('photoTitle').textContent = spec.name;
+    el<HTMLElement>('photoCaption').textContent = `${spec.scientificName} · ${spec.photo.caption}`;
+    el<HTMLElement>('photoFacts').innerHTML = `
+      <div><span>REPORTED DEPTH</span><strong>${spec.depth}</strong></div>
+      <div><span>HABITAT</span><strong>${spec.habitat}</strong></div>
+      <div><span>VERIFIED SIZE</span><strong>${spec.realSize}</strong></div>
+      <div><span>FIELD STATUS</span><strong>${discoveredIds.includes(spec.id) ? 'CATALOGUED' : 'UNSCANNED'}</strong></div>
+    `;
+    el<HTMLElement>('photoCredit').textContent = `${spec.photo.credit} · ${spec.photo.license}`;
+    const link = el<HTMLAnchorElement>('photoPageLink');
+    link.href = spec.photo.pageUrl;
+    const journalBtn = el<HTMLButtonElement>('photoJournalBtn');
+    journalBtn.onclick = () => {
+      selectedSpecimenId = spec.id;
+      selectedSiteId = null;
+      setPhoto(false);
+      setJournal(true);
+    };
+    return;
+  }
+
+  // Ambient creatures and scenery: a detail card labelled as simulated.
+  const name = typeof target === 'string' ? target : target.name;
+  const category = typeof target === 'string' ? 'Simulated scenery' : target.category;
+  el<HTMLElement>('photoOverlay').classList.add('is-simulated');
+  show(el<HTMLElement>('photoSource'), false);
+  show(el<HTMLElement>('photoActions'), false);
   const img = el<HTMLImageElement>('photoImage');
-  img.src = spec.photo.src;
-  img.alt = `Real-life reference photograph: ${spec.name} (${spec.photo.caption})`;
-  el<HTMLElement>('photoTitle').textContent = spec.name;
-  el<HTMLElement>('photoCaption').textContent = `${spec.scientificName} · ${spec.photo.caption}`;
+  img.src = simulatedPlateDataUri(name);
+  img.alt = `Simulated silhouette diagram for ${name}`;
+  el<HTMLElement>('photoEyebrow').textContent = 'SIMULATED SILHOUETTE · FIELD NOTE';
+  el<HTMLElement>('photoTitle').textContent = name;
+  el<HTMLElement>('photoCaption').textContent = category;
   el<HTMLElement>('photoFacts').innerHTML = `
-    <div><span>REPORTED DEPTH</span><strong>${spec.depth}</strong></div>
-    <div><span>HABITAT</span><strong>${spec.habitat}</strong></div>
-    <div><span>VERIFIED SIZE</span><strong>${spec.realSize}</strong></div>
-    <div><span>FIELD STATUS</span><strong>${discoveredIds.includes(spec.id) ? 'CATALOGUED' : 'UNSCANNED'}</strong></div>
+    <div><span>CATEGORY</span><strong>${category}</strong></div>
+    <div><span>STATUS</span><strong>SIMULATED SCENERY</strong></div>
+    <div><span>FIELD NOTE</span><strong>Ambient silhouette rendered in-scene; no sourced species record or reference photograph is catalogued for this contact.</strong></div>
   `;
-  el<HTMLElement>('photoCredit').textContent = `${spec.photo.credit} · ${spec.photo.license}`;
-  const link = el<HTMLAnchorElement>('photoPageLink');
-  link.href = spec.photo.pageUrl;
-  const journalBtn = el<HTMLButtonElement>('photoJournalBtn');
-  journalBtn.onclick = () => {
-    selectedSpecimenId = spec.id;
-    selectedSiteId = null;
-    setPhoto(false);
-    setJournal(true);
-  };
+}
+
+function simulatedPlateDataUri(label: string) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="720" height="360" viewBox="0 0 720 360"><rect width="720" height="360" fill="#03121a"/><circle cx="360" cy="180" r="112" fill="none" stroke="rgba(120,200,210,0.16)" stroke-width="1.5"/><circle cx="360" cy="180" r="64" fill="none" stroke="rgba(120,200,210,0.12)" stroke-width="1"/><text x="360" y="176" text-anchor="middle" fill="#2f7f8a" font-family="monospace" font-size="17" letter-spacing="5">SIMULATED</text><text x="360" y="202" text-anchor="middle" fill="#2f7f8a" font-family="monospace" font-size="17" letter-spacing="5">SILHOUETTE</text><text x="360" y="252" text-anchor="middle" fill="#215c66" font-family="monospace" font-size="12" letter-spacing="2">${label.slice(0, 48).toUpperCase()}</text></svg>`;
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
 
 function finishScan() {
@@ -1405,6 +1451,12 @@ function onTick(next: WorldMetrics) {
   if (zoomDisplay) {
     zoomDisplay.textContent = `${Math.round(metrics.zoom * 100)}% ZOOM`;
   }
+  const speedDisplay = el<HTMLElement>('speedDisplay');
+  if (speedDisplay) {
+    speedDisplay.textContent = `${metrics.speedMultiplier}× SPEED`;
+    speedDisplay.classList.toggle('is-boosted', metrics.speedMultiplier > 1);
+    speedDisplay.classList.toggle('is-superspeed', metrics.speedMultiplier >= 4);
+  }
 
   const promptEl = el<HTMLElement>('targetPrompt');
   show(promptEl, metrics.targetInSight && !scanning);
@@ -1460,12 +1512,12 @@ el<HTMLButtonElement>('controlsBtn').addEventListener('click', () => setControls
 el<HTMLButtonElement>('closeControlsBtn').addEventListener('click', () => setControls(false));
 el<HTMLButtonElement>('closePhotoBtn').addEventListener('click', () => setPhoto(false));
 
-// Tap / click a hero creature to open its real-life reference photograph
+// Tap / click a creature or feature to open its detail card
 canvas.addEventListener('click', (e) => {
   if (!started || paused || journalOpen || controlsOpen || photoOpen) return;
   const rect = canvas.getBoundingClientRect();
   const hit = world.creatureAtScreen(e.clientX - rect.left, e.clientY - rect.top);
-  if (hit) setPhoto(true, hit.specimenId);
+  if (hit) setPhoto(true, hit);
 });
 canvas.addEventListener('mousemove', (e) => {
   if (!started || paused || journalOpen || controlsOpen || photoOpen) {
@@ -1637,6 +1689,16 @@ document.addEventListener('keydown', (event) => {
   if (event.code === 'KeyZ') {
     world.resetZoom();
     toast('CAMERA ZOOM RESET · 100%');
+    return;
+  }
+  if (event.code === 'KeyC' && !event.repeat) {
+    const tier = world.cycleSpeedMultiplier();
+    toast(`THRUST SPEED · ${tier}×`);
+    return;
+  }
+  if (/^Digit[1-5]$/.test(event.code)) {
+    const tier = world.setSpeedMultiplier(Number(event.code.slice(5)));
+    toast(`THRUST SPEED · ${tier}×`);
     return;
   }
 

@@ -11,6 +11,7 @@ export type WorldMetrics = {
   sonarTargetName: string | null;
   isThrusting: boolean;
   isBoosting: boolean;
+  speedMultiplier: number;
   reached1000: boolean;
   reached2000: boolean;
   reached3000: boolean;
@@ -71,6 +72,8 @@ export class OceanWorld {
   private encounterX: number | null = null;
   private sonarTime = -100;
   private elapsed = 0;
+  private realElapsed = 0;
+  private speedMultiplier = 1;
   private running = false;
   private frameId = 0;
   private lastTime = 0;
@@ -166,6 +169,12 @@ export class OceanWorld {
   setZoom(z: number) { this.targetZoom = clamp(z, 0.55, 1.85); }
   resetZoom() { this.targetZoom = 1.0; }
   adjustZoom(delta: number) { this.targetZoom = clamp(this.targetZoom + delta, 0.55, 1.85); }
+  getSpeedMultiplier() { return this.speedMultiplier; }
+  setSpeedMultiplier(multiplier: number) {
+    this.speedMultiplier = Math.round(clamp(multiplier, 1, 5));
+    return this.speedMultiplier;
+  }
+  cycleSpeedMultiplier() { return this.setSpeedMultiplier(this.speedMultiplier >= 5 ? 1 : this.speedMultiplier + 1); }
   isDiscovered(id = 'vampire-squid') { return this.discoveredSet.has(id); }
   markDiscovered(id = 'vampire-squid') {
     this.discoveredSet.add(id);
@@ -178,19 +187,18 @@ export class OceanWorld {
   getDiscovered(): string[] { return Array.from(this.discoveredSet); }
   setScanAssist(active: boolean) { this.scanAssist = active; }
   ping(): { distance: number | null; name: string | null } {
-    this.sonarTime = this.elapsed;
+    this.sonarTime = this.realElapsed;
     const closest = this.getClosestUndiscoveredTarget();
     return closest ? { distance: closest.distance, name: closest.target.name } : { distance: null, name: null };
   }
 
-  /** Hit-test the latest frame's hero tags for tap/click-to-photo. Topmost match wins. */
-  creatureAtScreen(sx: number, sy: number): { specimenId: string; name: string } | null {
+  /** Hit-test the latest frame's tags for tap/click-to-detail. Topmost match wins. */
+  creatureAtScreen(sx: number, sy: number): { specimenId: string | null; name: string; category: string; isHero: boolean } | null {
     for (let i = this.activeCreatures.length - 1; i >= 0; i--) {
       const tag = this.activeCreatures[i];
-      if (!tag.isHero || !tag.specimenId) continue;
       const pad = 14;
       if (Math.hypot(tag.screenX - sx, tag.screenY - sy) <= tag.radius + pad) {
-        return { specimenId: tag.specimenId, name: tag.name };
+        return { specimenId: tag.specimenId ?? null, name: tag.name, category: tag.category, isHero: !!tag.isHero };
       }
     }
     return null;
@@ -221,7 +229,10 @@ export class OceanWorld {
     const dt = Math.min((now - this.lastTime) / 1000, 0.05);
     this.lastTime = now;
     this.lastFrame = dt * 1000;
-    this.elapsed += dt;
+    this.realElapsed += dt;
+    // Superspeed tiers accelerate the simulated world clock (creature motion,
+    // ambient animation) without changing real-time systems like sonar.
+    this.elapsed += dt * this.speedMultiplier;
     this.update(dt);
     this.draw();
     this.onTick(this.metrics());
@@ -238,14 +249,15 @@ export class OceanWorld {
     const boosting = shift && (left || right || up || down);
     const boostMul = boosting ? 2.2 : 1;
     this.isBoosting = boosting;
+    const speedMul = this.speedMultiplier;
     const horizontal = Number(right) - Number(left);
     const vertical = this.scanAssist ? 0 : Number(down) - Number(up);
 
     this.isThrusting = horizontal !== 0 || vertical !== 0 || Math.abs(this.horizontalSpeed) > 0.8 || Math.abs(this.verticalSpeed) > 2;
 
     const prevDepth = this.depth;
-    this.horizontalSpeed += (horizontal * 8 * boostMul - this.horizontalSpeed) * (1 - Math.exp(-dt * 3.1));
-    this.verticalSpeed += (vertical * 34 * boostMul - this.verticalSpeed) * (1 - Math.exp(-dt * 2.5));
+    this.horizontalSpeed += (horizontal * 8 * boostMul * speedMul - this.horizontalSpeed) * (1 - Math.exp(-dt * 3.1));
+    this.verticalSpeed += (vertical * 34 * boostMul * speedMul - this.verticalSpeed) * (1 - Math.exp(-dt * 2.5));
     this.vehicle.position.x += this.horizontalSpeed * dt;
     this.vehicle.position.y = clamp(this.vehicle.position.y - this.verticalSpeed * dt, -11000, 3);
     const currDepth = this.depth;
@@ -421,7 +433,7 @@ export class OceanWorld {
     }
 
     const closestUndiscovered = this.getClosestUndiscoveredTarget();
-    const isSonarActive = this.elapsed - this.sonarTime < 5;
+    const isSonarActive = this.realElapsed - this.sonarTime < 5;
     const sonarDistance = isSonarActive && closestUndiscovered && closestUndiscovered.distance < 160 ? closestUndiscovered.distance : null;
     const sonarTargetName = isSonarActive && closestUndiscovered && closestUndiscovered.distance < 160 ? closestUndiscovered.target.name : null;
 
@@ -437,6 +449,7 @@ export class OceanWorld {
       sonarTargetName,
       isThrusting: this.isThrusting,
       isBoosting: this.isBoosting,
+      speedMultiplier: this.speedMultiplier,
       reached1000: this.depth >= 998,
       reached2000: this.depth >= 1998,
       reached3000: this.depth >= 2998,
@@ -4314,7 +4327,7 @@ export class OceanWorld {
   }
 
   private drawSonarPulse() {
-    const age = this.elapsed - this.sonarTime;
+    const age = this.realElapsed - this.sonarTime;
     if (age < 0 || age > 2.0) return;
     const ctx = this.ctx;
 
