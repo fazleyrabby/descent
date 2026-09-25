@@ -16,6 +16,8 @@ export type WorldMetrics = {
   reached4000: boolean;
   reached5000: boolean;
   reached6000: boolean;
+  reached7000: boolean;
+  reached8000: boolean;
   zoom: number;
   waterTransition: 'breach' | 'plunge' | null;
 };
@@ -134,10 +136,10 @@ export class OceanWorld {
 
     let state = this.seed;
     const random = () => ((state = (state * 1664525 + 1013904223) >>> 0) / 4294967296);
-    for (let i = 0; i < 7500; i++) {
+    for (let i = 0; i < 10000; i++) {
       this.particles.push({
         x: (random() - 0.5) * 440,
-        depth: random() * 6250,
+        depth: random() * 8750,
         radius: 0.35 + random() * 1.5,
         phase: random() * Math.PI * 2,
       });
@@ -220,7 +222,7 @@ export class OceanWorld {
     this.horizontalSpeed += (horizontal * 8 - this.horizontalSpeed) * (1 - Math.exp(-dt * 3.1));
     this.verticalSpeed += (vertical * 34 - this.verticalSpeed) * (1 - Math.exp(-dt * 2.5));
     this.vehicle.position.x += this.horizontalSpeed * dt;
-    this.vehicle.position.y = clamp(this.vehicle.position.y - this.verticalSpeed * dt, -6000, 3);
+    this.vehicle.position.y = clamp(this.vehicle.position.y - this.verticalSpeed * dt, -8500, 3);
     const currDepth = this.depth;
 
     if (prevDepth > 0.4 && currDepth <= 0.4) {
@@ -321,6 +323,15 @@ export class OceanWorld {
     return { x: seaPigCurrX, depth: seaPigDepth };
   }
 
+  private marianaSnailfishPosition() {
+    const snailfishBaseX = -25;
+    const snailfishX = this.wrapCoord(snailfishBaseX, 150);
+    const snailfishSpeed = 2.2;
+    const snailfishCurrX = snailfishX + (this.elapsed * snailfishSpeed) % 150 - 75;
+    const snailfishDepth = 7850 + Math.sin(this.elapsed * 0.38) * 20;
+    return { x: snailfishCurrX, depth: snailfishDepth };
+  }
+
   private documentedTargets() {
     return [
       { id: 'blue-whale', name: 'Blue whale', pos: this.whalePosition(), maxSightDist: 42 },
@@ -329,6 +340,7 @@ export class OceanWorld {
       { id: 'tripod-fish', name: 'Benthic tripod fish', pos: this.tripodPosition(), maxSightDist: 22 },
       { id: 'gulper-eel', name: 'Gulper eel', pos: this.gulperEelPosition(), maxSightDist: 28 },
       { id: 'sea-pig', name: 'Abyssal sea pig', pos: this.seaPigPosition(), maxSightDist: 22 },
+      { id: 'mariana-snailfish', name: 'Mariana snailfish', pos: this.marianaSnailfishPosition(), maxSightDist: 26 },
     ];
   }
 
@@ -389,6 +401,8 @@ export class OceanWorld {
       reached4000: this.depth >= 3998,
       reached5000: this.depth >= 4998,
       reached6000: this.depth >= 5998,
+      reached7000: this.depth >= 6998,
+      reached8000: this.depth >= 7998,
       zoom: this.zoom,
       waterTransition: this.waterTransition,
     };
@@ -434,7 +448,8 @@ export class OceanWorld {
     if (depth > 1700 && depth < 2450) this.drawMidOceanRidge(darkness);
     if (depth > 2950 && depth < 3550) this.drawWhaleFall(darkness);
     if (depth > 3700 && depth < 5600) this.drawAbyssalPlain(darkness);
-    if (depth > 5500) this.drawHadalFault(darkness);
+    if (depth > 5500 && depth < 6800) this.drawHadalFault(darkness);
+    if (depth > 6700) this.drawHadalTrench(darkness);
 
     // 5. Marine Snow Particles (enhanced with headlight cone scatter)
     this.drawParticles(darkness);
@@ -446,6 +461,7 @@ export class OceanWorld {
     if (this.encounterX !== null) this.drawSquid();
     if (depth > 2400 && depth < 3100) this.drawGulperEel();
     if (depth > 4900 && depth < 5500) this.drawSeaPig();
+    if (depth > 7500 && depth < 8300) this.drawMarianaSnailfish();
 
     // 8. Headlight Cones & Volumetric Glow
     this.drawLightBeam(darkness);
@@ -1058,6 +1074,192 @@ export class OceanWorld {
       }
 
       ctx.restore();
+    }
+  }
+
+  private drawHadalTrench(darkness: number) {
+    const ctx = this.ctx;
+    const trenchDepth = 8400;
+    const floorY = this.screenY(trenchDepth);
+    if (floorY > this.height + 200) return;
+
+    // 1. Mariana Trench V-shaped basalt walls (left and right colossal slopes)
+    // Left western wall
+    ctx.beginPath();
+    ctx.moveTo(-40, -100);
+    ctx.lineTo(this.width * 0.32, floorY - 260);
+    ctx.lineTo(this.width * 0.44, floorY - 120);
+    ctx.lineTo(this.width * 0.48, floorY - 40);
+    ctx.lineTo(this.width * 0.52, floorY);
+    ctx.lineTo(-40, floorY + 40);
+    ctx.closePath();
+    ctx.fillStyle = '#010304';
+    ctx.fill();
+
+    // Right eastern wall
+    ctx.beginPath();
+    ctx.moveTo(this.width + 40, -100);
+    ctx.lineTo(this.width * 0.68, floorY - 240);
+    ctx.lineTo(this.width * 0.56, floorY - 110);
+    ctx.lineTo(this.width * 0.52, floorY);
+    ctx.lineTo(this.width + 40, floorY + 40);
+    ctx.closePath();
+    ctx.fillStyle = '#010405';
+    ctx.fill();
+
+    // Basalt compression ridges & shear fault lines
+    ctx.beginPath();
+    ctx.moveTo(-20, floorY - 280);
+    ctx.lineTo(this.width * 0.35, floorY - 190);
+    ctx.lineTo(this.width * 0.46, floorY - 80);
+    ctx.strokeStyle = 'rgba(65, 180, 195, 0.22)';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(this.width + 20, floorY - 260);
+    ctx.lineTo(this.width * 0.65, floorY - 180);
+    ctx.lineTo(this.width * 0.54, floorY - 70);
+    ctx.strokeStyle = 'rgba(65, 180, 195, 0.2)';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    // 2. Serpentine Hydrothermal Mud Seep at depth ~7,200 m
+    const seepDepth = 7200;
+    const seepY = this.screenY(seepDepth);
+    if (seepY > -100 && seepY < this.height + 100) {
+      const seepWorldX = this.wrapCoord(-20, 190);
+      const seepScreenX = this.screenX(seepWorldX);
+
+      if (seepScreenX > -80 && seepScreenX < this.width + 80) {
+        this.activeCreatures.push({
+          screenX: seepScreenX,
+          screenY: seepY - 25,
+          name: 'SERPENTINITE COLD SEEP & MUD VOLCANO',
+          category: 'Chemosynthetic Chimneys · Carbonate Mounds · 7,200 m',
+          isHero: false,
+          radius: 36,
+          distM: Math.hypot(seepWorldX - this.vehicle.position.x, seepDepth - this.depth),
+        });
+
+        ctx.save();
+        ctx.translate(seepScreenX, seepY);
+
+        // Carbonate chimney spires
+        for (const chimney of [-18, 0, 16]) {
+          const chH = 28 + Math.abs(chimney) * 0.8;
+          ctx.beginPath();
+          ctx.moveTo(chimney - 6, 0);
+          ctx.lineTo(chimney - 3, -chH);
+          ctx.lineTo(chimney + 3, -chH);
+          ctx.lineTo(chimney + 6, 0);
+          ctx.closePath();
+          ctx.fillStyle = '#0a161c';
+          ctx.strokeStyle = 'rgba(180, 230, 240, 0.4)';
+          ctx.lineWidth = 1;
+          ctx.fill();
+          ctx.stroke();
+
+          // Mineral fluid effluent discharge
+          for (let m = 0; m < 3; m++) {
+            const mPhase = (this.elapsed * 1.8 + m * 0.6 + chimney) % 1;
+            const my = -chH - mPhase * 24;
+            const mx = chimney + Math.sin(this.elapsed * 2 + m) * 4;
+            ctx.beginPath();
+            ctx.arc(mx, my, 1.2, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(200, 245, 255, ${(1 - mPhase) * 0.45})`;
+            ctx.fill();
+          }
+        }
+
+        ctx.restore();
+      }
+    }
+
+    // 3. Deep-Ocean Free-Fall Lander NEREUS-II at depth = 8,250 m
+    const landerDepth = 8250;
+    const landerY = this.screenY(landerDepth);
+    if (landerY > -120 && landerY < this.height + 120) {
+      const landerWorldX = this.wrapCoord(30, 220);
+      const landerScreenX = this.screenX(landerWorldX);
+
+      if (landerScreenX > -90 && landerScreenX < this.width + 90) {
+        this.activeCreatures.push({
+          screenX: landerScreenX,
+          screenY: landerY - 32,
+          name: 'HADAL FREE-FALL LANDER NEREUS-II',
+          category: 'Autonomous Hadal Research Platform · SOI/UW · 8,250 m',
+          isHero: false,
+          radius: 42,
+          distM: Math.hypot(landerWorldX - this.vehicle.position.x, landerDepth - this.depth),
+        });
+
+        ctx.save();
+        ctx.translate(landerScreenX, landerY);
+
+        // Lander sacrificial iron drop-weights
+        ctx.fillStyle = '#081014';
+        ctx.fillRect(-22, -4, 44, 8);
+
+        // High-pressure titanium chassis frame
+        ctx.beginPath();
+        ctx.moveTo(-20, -4); ctx.lineTo(-14, -46); ctx.lineTo(14, -46); ctx.lineTo(20, -4);
+        ctx.closePath();
+        ctx.strokeStyle = 'rgba(150, 220, 230, 0.7)';
+        ctx.lineWidth = 1.6;
+        ctx.fillStyle = 'rgba(10, 24, 32, 0.85)';
+        ctx.fill();
+        ctx.stroke();
+
+        // Dual Benthos 17-inch pressure-resistant glass flotation spheres
+        for (const sphereX of [-8, 8]) {
+          ctx.beginPath();
+          ctx.arc(sphereX, -30, 8.5, 0, Math.PI * 2);
+          ctx.fillStyle = '#041018';
+          ctx.strokeStyle = 'rgba(175, 245, 255, 0.9)';
+          ctx.lineWidth = 1.4;
+          ctx.fill();
+          ctx.stroke();
+
+          // Internal vacuum sphere highlight
+          ctx.beginPath();
+          ctx.arc(sphereX - 2, -32, 3, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(210, 255, 250, 0.5)';
+          ctx.fill();
+        }
+
+        // Bait arm & high-speed macro camera trap
+        ctx.beginPath();
+        ctx.moveTo(14, -18);
+        ctx.lineTo(34, -10);
+        ctx.strokeStyle = 'rgba(170, 225, 235, 0.75)';
+        ctx.lineWidth = 1.3;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(34, -10, 3, 0, Math.PI * 2);
+        ctx.fillStyle = '#1c3440';
+        ctx.strokeStyle = '#a2ede3';
+        ctx.lineWidth = 1;
+        ctx.fill();
+        ctx.stroke();
+
+        // Pulsing high-intensity cyan acoustic transponder beacon
+        const beaconActive = (this.elapsed * 2.4) % 1 > 0.7;
+        ctx.beginPath();
+        ctx.arc(0, -56, 3, 0, Math.PI * 2);
+        ctx.fillStyle = beaconActive ? '#55f7e1' : '#144039';
+        ctx.fill();
+
+        if (beaconActive) {
+          ctx.beginPath();
+          ctx.arc(0, -56, 20, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(85, 247, 225, 0.28)';
+          ctx.fill();
+        }
+
+        ctx.restore();
+      }
     }
   }
 
@@ -2458,6 +2660,66 @@ export class OceanWorld {
         ctx.restore();
       }
     }
+
+    // L. Swarms of Hadal Amphipods (Hirondellea gigas) (6,500m – 8,500m)
+    if (this.depth > 6400 && this.depth < 8600) {
+      for (let amp = 0; amp < 6; amp++) {
+        const ampBaseX = amp * 28 - 70;
+        const ampWorldX = this.wrapCoord(ampBaseX, 130);
+        const ampFlutter = Math.sin(this.elapsed * 4.2 + amp * 1.5) * 6;
+        const ampDepth = 7000 + amp * 220 + ampFlutter;
+        const hampSx = this.screenX(ampWorldX);
+        const hampSy = this.screenY(ampDepth);
+
+        if (hampSx > -30 && hampSx < this.width + 30 && hampSy > -30 && hampSy < this.height + 30) {
+          if (amp === 0) {
+            this.activeCreatures.push({
+              screenX: hampSx,
+              screenY: hampSy,
+              name: 'HADAL AMPHIPOD SWARM',
+              category: 'Ambient scenery · Hirondellea gigas · Hadalpelagic',
+              radius: 18,
+              distM: Math.hypot(ampWorldX - this.vehicle.position.x, ampDepth - this.depth),
+            });
+          }
+
+          ctx.save();
+          ctx.translate(hampSx, hampSy);
+          const dartX = Math.sin(this.elapsed * 2.8 + amp) * 3;
+          ctx.translate(dartX, 0);
+
+          // C-shaped curved chitinous carapace
+          ctx.beginPath();
+          ctx.arc(0, 0, 4.5, -Math.PI * 0.75, Math.PI * 0.65);
+          ctx.strokeStyle = 'rgba(235, 245, 250, 0.65)';
+          ctx.lineWidth = 1.4;
+          ctx.stroke();
+
+          // Delicate swimming pleopods (paddling legs)
+          for (let l = -2; l <= 2; l++) {
+            const legKick = Math.sin(this.elapsed * 12 + amp + l) * 2;
+            ctx.beginPath();
+            ctx.moveTo(l * 1.4, 2);
+            ctx.lineTo(l * 1.4 - 1.5, 5 + legKick);
+            ctx.strokeStyle = 'rgba(200, 235, 245, 0.5)';
+            ctx.lineWidth = 0.8;
+            ctx.stroke();
+          }
+
+          // Long paired sensory antennae
+          ctx.beginPath();
+          ctx.moveTo(3, -2);
+          ctx.lineTo(7, -5 + Math.sin(this.elapsed * 3 + amp) * 1.5);
+          ctx.moveTo(3, -1);
+          ctx.lineTo(8, -2 + Math.cos(this.elapsed * 3 + amp) * 1.5);
+          ctx.strokeStyle = 'rgba(220, 250, 255, 0.7)';
+          ctx.lineWidth = 0.7;
+          ctx.stroke();
+
+          ctx.restore();
+        }
+      }
+    }
   }
 
   /**
@@ -2931,6 +3193,148 @@ export class OceanWorld {
       ctx.fillStyle = '#ffd6e7';
       ctx.fill();
     }
+
+    ctx.restore();
+  }
+
+  /**
+   * Hero Creature: Mariana Snailfish (Pseudoliparis swirei)
+   * Authored with 5 dynamic anatomical layers:
+   * 1. Translucent scaleless gelatinous pinkish-white body with undulating tadpole motion
+   * 2. Fan-like pectoral wing fins flapping rhythmically for precise low-speed maneuvering
+   * 3. Cartilaginous skull silhouette with small dark vestigial eyes
+   * 4. Visible internal visceral cavity containing red liver/stomach organs
+   * 5. Continuous dorsal-anal-caudal ribbon fin undulating along tail spine
+   */
+  private drawMarianaSnailfish() {
+    const ctx = this.ctx;
+    const target = this.marianaSnailfishPosition();
+    const x = this.screenX(target.x);
+    const y = this.screenY(target.depth);
+    if (x < -110 || x > this.width + 110 || y < -110 || y > this.height + 110) return;
+
+    this.activeCreatures.push({
+      screenX: x,
+      screenY: y,
+      name: 'MARIANA SNAILFISH',
+      category: this.isDiscovered('mariana-snailfish')
+        ? 'Catalogued · Schmidt Ocean Inst. Record'
+        : 'Documented Species · Pseudoliparis swirei',
+      isHero: true,
+      radius: 38 * this.zoom,
+      distM: Math.hypot(target.x - this.vehicle.position.x, target.depth - this.depth),
+    });
+
+    // Soft hadal pressure aura
+    const aura = ctx.createRadialGradient(x, y, 4, x, y, 75 * this.zoom);
+    aura.addColorStop(0, 'rgba(255, 230, 240, 0.16)');
+    aura.addColorStop(0.5, 'rgba(230, 200, 220, 0.05)');
+    aura.addColorStop(1, 'rgba(20, 10, 25, 0)');
+    ctx.fillStyle = aura;
+    ctx.fillRect(x - 75 * this.zoom, y - 75 * this.zoom, 150 * this.zoom, 150 * this.zoom);
+
+    ctx.save();
+    ctx.translate(x, y);
+
+    const swimWave = Math.sin(this.elapsed * 3.6);
+    const bodyFlex = swimWave * 0.08;
+    const pecFlap = Math.sin(this.elapsed * 4.2) * 5;
+
+    ctx.rotate(bodyFlex);
+    ctx.scale(this.zoom, this.zoom);
+
+    // 1. Continuous dorsal and ventral ribbon fins undulating along spine
+    ctx.beginPath();
+    ctx.moveTo(10, -9);
+    for (let seg = 0; seg <= 6; seg++) {
+      const segX = 10 - seg * 9;
+      const segWave = Math.sin(this.elapsed * 3.6 - seg * 0.7) * (1.5 + seg * 0.8);
+      const finHeight = Math.max(1, 8 - seg * 1.1);
+      ctx.lineTo(segX, -finHeight + segWave);
+    }
+    for (let seg = 6; seg >= 0; seg--) {
+      const segX = 10 - seg * 9;
+      const segWave = Math.sin(this.elapsed * 3.6 - seg * 0.7) * (1.5 + seg * 0.8);
+      const finHeight = Math.max(1, 8 - seg * 1.1);
+      ctx.lineTo(segX, finHeight + segWave);
+    }
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(255, 225, 235, 0.42)';
+    ctx.strokeStyle = 'rgba(255, 240, 248, 0.6)';
+    ctx.lineWidth = 0.8;
+    ctx.fill();
+    ctx.stroke();
+
+    // 2. Translucent pinkish-white bulbous body and tapering tadpole tail
+    ctx.beginPath();
+    ctx.moveTo(28, 0);
+    ctx.quadraticCurveTo(22, -12, 4, -10);
+    ctx.quadraticCurveTo(-14, -8, -32, swimWave * 3);
+    ctx.lineTo(-48, swimWave * 6);
+    ctx.quadraticCurveTo(-32, swimWave * 3 + 2, -14, 8);
+    ctx.quadraticCurveTo(4, 10, 22, 8);
+    ctx.quadraticCurveTo(28, 4, 28, 0);
+    ctx.closePath();
+
+    const bodyGrad = ctx.createLinearGradient(20, -12, -20, 12);
+    bodyGrad.addColorStop(0, 'rgba(255, 242, 246, 0.88)');
+    bodyGrad.addColorStop(0.4, 'rgba(255, 220, 230, 0.78)');
+    bodyGrad.addColorStop(1, 'rgba(240, 195, 210, 0.65)');
+    ctx.fillStyle = bodyGrad;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+    ctx.lineWidth = 1.2;
+    ctx.fill();
+    ctx.stroke();
+
+    // 3. Visible internal dark red visceral organ cavity (liver & gut)
+    ctx.beginPath();
+    ctx.ellipse(3, 1, 9, 5.5, -0.15, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(175, 45, 65, 0.62)';
+    ctx.strokeStyle = 'rgba(215, 75, 95, 0.7)';
+    ctx.lineWidth = 1;
+    ctx.fill();
+    ctx.stroke();
+
+    // Cartilaginous vertebral spine shadow
+    ctx.beginPath();
+    ctx.moveTo(12, 0);
+    ctx.quadraticCurveTo(-8, 0, -42, swimWave * 5);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.55)';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    // 4. Cartilaginous skull silhouette & small vestigial eye
+    ctx.beginPath();
+    ctx.arc(20, -3, 2.2, 0, Math.PI * 2);
+    ctx.fillStyle = '#061219';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(19.5, -3.5, 0.8, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+
+    // Blunt sensory snout pores
+    for (let p = 0; p < 3; p++) {
+      ctx.beginPath();
+      ctx.arc(26 - p * 2.5, 2 + p * 1.5, 0.9, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(215, 160, 180, 0.8)';
+      ctx.fill();
+    }
+
+    // 5. Large translucent fan-like pectoral fin flapping
+    ctx.save();
+    ctx.translate(6, 4);
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.quadraticCurveTo(8 + pecFlap * 0.3, 10 + pecFlap, 14, 16 + pecFlap);
+    ctx.quadraticCurveTo(6, 14 + pecFlap * 0.5, 0, 7);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(255, 235, 245, 0.7)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+    ctx.lineWidth = 1;
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
 
     ctx.restore();
   }

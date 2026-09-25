@@ -25,7 +25,7 @@ root.innerHTML = `
         <span class="signal"><i></i> SYSTEMS ONLINE</span>
         <button id="controlsBtn" class="text-button" type="button" aria-label="Controls manual">MANUAL <span class="key-badge">?</span></button>
         <button id="muteBtn" class="text-button" type="button" aria-label="Toggle audio">AUDIO <span id="muteLabel">ON</span></button>
-        <button id="journalBtn" class="text-button" type="button">FIELD JOURNAL <span id="journalCount">00/06</span></button>
+        <button id="journalBtn" class="text-button" type="button">FIELD JOURNAL <span id="journalCount">00/07</span></button>
         <button id="pauseBtn" class="icon-button" type="button" aria-label="Pause expedition">Ⅱ</button>
       </div>
     </header>
@@ -62,7 +62,7 @@ root.innerHTML = `
     <!-- Initial surface flight directive banner -->
     <div id="surfaceDirective" class="directive-card">
       <div class="directive-head"><span class="directive-dot"></span><span>EXPEDITION DIRECTIVE</span><button id="dismissDirective" class="directive-close" type="button" aria-label="Dismiss directive">×</button></div>
-      <p>Dive from the sunlit surface down through the 2,000 m hydrothermal rift and 4,000 m abyssal plain to the <strong>6,000 m Hadal Subduction Fault</strong>. Locate <strong>6 documented species</strong> with sonar (<kbd>R</kbd>), scan with (<kbd>E</kbd>), and compile your scientific Field Journal (<kbd>J</kbd>).</p>
+      <p>Dive from the sunlit surface down through the 2,000 m hydrothermal rift, 4,000 m abyssal plain, and 6,000 m subduction fault into the <strong>8,500 m Hadal Trench Chasm</strong>. Locate <strong>7 documented species</strong> with sonar (<kbd>R</kbd>), scan with (<kbd>E</kbd>), and compile your scientific Field Journal (<kbd>J</kbd>).</p>
       <div class="directive-keys">
         <span><kbd>W</kbd><kbd>S</kbd> Dive / Rise</span>
         <span><kbd>A</kbd><kbd>D</kbd> Drift</span>
@@ -79,11 +79,11 @@ root.innerHTML = `
       <button id="dismissTipBtn" class="tip-close" type="button" aria-label="Dismiss tip">×</button>
     </div>
 
-    <!-- 6,000m Milestone Celebration Card -->
+    <!-- 8,500m Milestone Celebration Card -->
     <div id="milestoneCard" class="milestone-card is-hidden" role="alert">
-      <div class="milestone-tag">EXPEDITION MILESTONE · 6,000 M</div>
-      <h3>Hadal Subduction Gateway Reached</h3>
-      <p>You have reached the boundary of the Hadal zone at 6,000 m depth along the oceanic subduction fault where tectonic plates collide. Hydrostatic pressure: ~601 atm. Telemetry sensors at Ocean Floor Mooring Station H-6000 record deep mantle tremors. Open your field journal (<kbd>J</kbd>) to review your findings, or continue exploring.</p>
+      <div class="milestone-tag">EXPEDITION MILESTONE · 8,500 M</div>
+      <h3>Mariana Trench Hadal Chasm Reached</h3>
+      <p>You have descended through the Hadal trench chasm to 8,500 m depth. Hydrostatic pressure exceeds 850 atmospheres (~12,500 psi). At Free-Fall Lander NEREUS-II and the serpentine cold seeps, the endemic Mariana Snailfish thrives in total darkness. Open your field journal (<kbd>J</kbd>) to review your findings, or continue exploring.</p>
       <button id="milestoneCloseBtn" class="primary-button" type="button"><span>ACKNOWLEDGE & EXPLORE</span><span class="button-arrow">↗</span></button>
     </div>
 
@@ -107,7 +107,7 @@ root.innerHTML = `
     </div>
 
     <div class="bottom-bar">
-      <div class="bottom-left"><span class="latitude">SIMULATED EXPEDITION</span><span class="bottom-rule"></span><span>0 → 6,000 M</span></div>
+      <div class="bottom-left"><span class="latitude">SIMULATED EXPEDITION</span><span class="bottom-rule"></span><span>0 → 8,500 M</span></div>
       <div class="control-strip">
         <span><kbd>A</kbd><kbd>D</kbd> DRIFT</span>
         <span><kbd>W</kbd><kbd>S</kbd> RISE / DIVE</span>
@@ -279,7 +279,7 @@ root.innerHTML = `
   <aside id="debug" class="debug is-hidden">
     <div>DEBUG / SEED 183729</div>
     <div id="debugStats">—</div>
-    <label>TELEPORT DEPTH <input id="debugDepth" type="range" min="0" max="6000" step="1" value="0" /></label>
+    <label>TELEPORT DEPTH <input id="debugDepth" type="range" min="0" max="8500" step="1" value="0" /></label>
     <button id="debugLight" type="button">TOGGLE LIGHTS</button>
   </aside>
   <div id="fatal" class="fatal is-hidden" role="alert">
@@ -311,6 +311,8 @@ let metrics: WorldMetrics = {
   reached4000: false,
   reached5000: false,
   reached6000: false,
+  reached7000: false,
+  reached8000: false,
   zoom: 1.0,
   waterTransition: null,
 };
@@ -330,6 +332,9 @@ let reached2000Notified = false;
 let reached3000Notified = false;
 let reached4000Notified = false;
 let reached5000Notified = false;
+let reached6000Notified = false;
+let reached7000Notified = false;
+let reached8000Notified = false;
 let lastAudioZone = '';
 let toastTimer: number | undefined;
 
@@ -610,15 +615,24 @@ function updateAudio() {
     subGain = 0.095 + ratio * 0.015;
     noiseFreq = 65 - ratio * 15;
     noiseLevel = 0.012;
-  } else {
-    // Hadal Subduction Fault Gateway (5,500m - 6,000m)
-    const faultProximity = (depth - 5500) / 500;
-    cutoff = 55 + faultProximity * 25;
-    droneFreq = 18; // Deep tectonic infrasound resonance
+  } else if (depth < 6700) {
+    // Hadal Subduction Fault Gateway (5,500m - 6,700m)
+    const faultProximity = (depth - 5500) / 1200;
+    cutoff = 55 + faultProximity * 20;
+    droneFreq = 18 - faultProximity * 2; // Deep tectonic infrasound resonance
     subGain = 0.12;
     // Tectonic plate subduction shear rumble and friction hiss
-    noiseFreq = 50 + faultProximity * 80;
-    noiseLevel = 0.014 + faultProximity * 0.025;
+    noiseFreq = 50 + faultProximity * 60;
+    noiseLevel = 0.014 + faultProximity * 0.02;
+  } else {
+    // Mariana Trench Chasm & Cold Seeps (6,700m - 8,500m)
+    const trenchRatio = Math.min((depth - 6700) / 1800, 1);
+    cutoff = 48 - trenchRatio * 14;
+    droneFreq = 15 - trenchRatio * 2; // Extreme low-frequency hadal canyon reverberation
+    subGain = 0.14 + trenchRatio * 0.03;
+    // Cold seep effluent discharge and sheer basalt wall echo hiss
+    noiseFreq = 42 + trenchRatio * 35;
+    noiseLevel = 0.012 + trenchRatio * 0.018;
   }
 
   ambientFilter.frequency.setTargetAtTime(cutoff, now, 0.25);
@@ -864,6 +878,10 @@ function journalContent() {
   el<HTMLElement>('journalDiscoveredCount').textContent = `${count} of ${total} Species (${Math.round((count / total) * 100)}%)`;
   el<HTMLElement>('journalStatus').textContent = count === total
     ? 'ALL SPECIES CATALOGUED'
+    : metrics.reached8000
+    ? '8,000 M MARIANA HADAL CHASM'
+    : metrics.reached7000
+    ? '7,000 M SERPENTINITE COLD SEEP'
     : metrics.reached6000
     ? '6,000 M HADAL SUBDUCTION'
     : metrics.reached5000
@@ -881,7 +899,7 @@ function journalContent() {
   const badgeContainer = el<HTMLElement>('surveyBadgeContainer');
   if (badgeContainer) {
     badgeContainer.innerHTML = count === total
-      ? `<div class="survey-complete-badge">★ EXPEDITION SURVEY COMPLETE · 6/6 CATALOGUED</div>`
+      ? `<div class="survey-complete-badge">★ EXPEDITION SURVEY COMPLETE · 7/7 CATALOGUED</div>`
       : '';
   }
 
@@ -1050,11 +1068,32 @@ function onTick(next: WorldMetrics) {
   }
 
   // 6,000 m Hadal Subduction Fault Milestone Check
-  if (metrics.reached6000 && !milestoneTriggered) {
+  if (metrics.reached6000 && !reached6000Notified) {
+    reached6000Notified = true;
+    milestoneAudio();
+    toast('6,000 M REACHED · HADAL SUBDUCTION FAULT GATEWAY');
+  }
+
+  // 7,000 m Serpentine Mud Volcanoes Milestone Check
+  if (metrics.reached7000 && !reached7000Notified) {
+    reached7000Notified = true;
+    milestoneAudio();
+    toast('7,000 M REACHED · SERPENTINITE COLD SEEP & MUD VOLCANO');
+  }
+
+  // 8,000 m Mariana Hadal Trench Milestone Check
+  if (metrics.reached8000 && !reached8000Notified) {
+    reached8000Notified = true;
+    milestoneAudio();
+    toast('8,000 M REACHED · MARIANA TRENCH CHASM & HABITAT BOUNDARY');
+  }
+
+  // 8,500 m Expedition Boundary Celebration Card
+  if (metrics.depth >= 8450 && !milestoneTriggered) {
     milestoneTriggered = true;
     show(el<HTMLElement>('milestoneCard'), true);
     milestoneAudio();
-    toast('6,000 M REACHED · HADAL SUBDUCTION FAULT GATEWAY');
+    toast('8,500 M REACHED · EXPEDITION TERMINAL BOUNDARY');
   }
 
   // Water breach and plunge surface transitions
@@ -1100,7 +1139,7 @@ function onTick(next: WorldMetrics) {
   el<HTMLElement>('zoneSubtitle').textContent = zone.subtitle;
   el<HTMLElement>('pressure').textContent = `~${(1 + depth / 10).toFixed(1)} atm`;
   el<HTMLElement>('light').textContent = `${Math.round(Math.pow(1 - Math.min(depth / 1000, 1), 2.6) * 100)}%`;
-  el<HTMLElement>('depthProgress').style.width = `${Math.min(depth / 6000, 1) * 100}%`;
+  el<HTMLElement>('depthProgress').style.width = `${Math.min(depth / 8500, 1) * 100}%`;
   el<HTMLElement>('fpsDisplay').textContent = `${Math.round(1000 / Math.max(metrics.frameMs, 1))} FPS`;
   const zoomDisplay = el<HTMLElement>('zoomDisplay');
   if (zoomDisplay) {
@@ -1263,7 +1302,7 @@ function triggerSonar() {
   if (res.distance !== null && res.distance < 160) {
     toast(`ACOUSTIC CONTACT DETECTED · ${Math.round(res.distance)} M ${res.name ? `[${res.name.toUpperCase()}]` : ''}`);
   } else {
-    toast(discoveredIds.length === documentedSpecimens.length ? 'ALL 6 REGIONAL SPECIES CATALOGUED' : 'NO UNCATALOGUED CONTACT IN RANGE');
+    toast(discoveredIds.length === documentedSpecimens.length ? 'ALL 7 REGIONAL SPECIES CATALOGUED' : 'NO UNCATALOGUED CONTACT IN RANGE');
   }
 }
 

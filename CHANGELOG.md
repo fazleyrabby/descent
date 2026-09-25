@@ -6,6 +6,12 @@ User-visible changes to DESCENT are recorded here. Add new work under **Unreleas
 
 ### Added
 
+- Deep-ocean expedition expansion from 6,000 m down to 8,500 m into the Hadal Trench Chasm, extending the submersible descent through the extreme hadalpelagic zone under >850 atmospheres of hydrostatic pressure.
+- 7th documented hero species: Mariana Snailfish (*Pseudoliparis swirei*, target depth 7,850 m, Schmidt Ocean Institute / University of Washington sourced), complete with an authored scientific SVG plate, interactive taxonomy reticle, active sonar triangulation, and animated in-game model featuring a translucent gelatinous scale-less body, visible visceral organ cavity, flapping pectoral wings, and undulating tadpole swimming motion.
+- Mariana Trench Hadal Chasm geological environment (>6,700 m) featuring colossal V-shaped basalt walls, shear fault compression lines, and Serpentine Hydrothermal Cold Seeps at 7,200 m discharging carbonate mineral plumes from authigenic chimneys.
+- Autonomous oceanographic research artifact: Deep-Ocean Free-Fall Lander NEREUS-II at 8,250 m with sacrificial drop weights, Benthos 17-inch pressure-resistant glass flotation spheres, camera trap bait arm, and high-intensity cyan strobe beacon.
+- Ambient hadalpelagic wildlife: swarms of super-pressure adapted Hadal Amphipods (*Hirondellea gigas*, 6,500–8,500 m) darting through benthic currents with flickering pleopods and sensory antennae.
+- Hadal acoustic synthesis with 14–15 Hz sub-bass trench reverberation, cold seep mineral fluid hiss, and high-pressure water damping.
 - Deep-ocean expedition expansion from 4,000 m down to 6,000 m into the Hadal Trench Subduction Gateway, extending the total descent column through the entire Abyssopelagic zone.
 - 6th documented hero species: Abyssal Sea Pig (*Scotoplanes globosa*, target depth 5,200 m, MBARI sourced), complete with an authored scientific SVG plate, interactive taxonomy reticle, active sonar triangulation, and animated model with walking hydraulic tube-feet, dorsal sensory papillae, and oral detritus tentacles.
 - Hadal Subduction Fault Gateway at 6,000 m featuring towering tectonic basalt canyon walls where the Pacific Plate subducts, serpentine fracture lines with piezoelectric luminescence, and the Ocean Floor Moored Hydrophone Station H-6000 with a flashing red seismic telemetry beacon.

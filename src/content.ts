@@ -488,6 +488,89 @@ export const documentedSpecimens: Specimen[] = [
       </div>
     `,
   },
+  {
+    id: 'mariana-snailfish',
+    index: '07',
+    name: 'Mariana snailfish',
+    scientificName: 'Pseudoliparis swirei',
+    depth: '6,000–8,200 m',
+    depthTier: 'hadalpelagic',
+    targetDepth: 7850,
+    habitat: 'Mariana Trench Slope · Hadal Chasm',
+    realSize: '15–25 cm',
+    classification: 'ACTINOPTERYGII · SCORPAENIFORMES · LIPARIDAE',
+    description:
+      'The deepest living vertebrate fish discovered on Earth, thriving in the extreme Hadalpelagic trench slopes under crushing hydrostatic pressures exceeding 800 atmospheres.',
+    detail:
+      'Completely scale-less with translucent pinkish-white gelatinous skin, its internal visceral organs and braincase are visible through its dermis. Its cellular proteins are stabilized by high concentrations of osmolyte trimethylamine N-oxide (TMAO), allowing its enzymes to function under pressures that would crush ordinary vertebrate biology.',
+    source: {
+      title: 'Schmidt Ocean Institute · The Deepest Fish in the Sea',
+      url: 'https://schmidtocean.org/cruise-log-post/the-deepest-fish-in-the-sea/',
+      publisher: 'Schmidt Ocean Institute / University of Washington',
+      accessedOn: '2026-09-25',
+    },
+    annotations: [
+      { num: '01.', label: 'Translucent scale-less skin' },
+      { num: '02.', label: 'Visceral organ cavity' },
+      { num: '03.', label: 'Cartilaginous cranial dome' },
+      { num: '04.', label: 'Winged pectoral fins' },
+    ],
+    svg: `
+      <div class="specimen-plate">
+        <div class="plate-badge">CLASSIFICATION // SCORPAENIFORMES · LIPARIDAE</div>
+        <svg class="specimen-diagram" viewBox="0 0 340 240" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="snailfishAura" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#ffd5e2" stop-opacity="0.25"/>
+              <stop offset="100%" stop-color="#ffd5e2" stop-opacity="0"/>
+            </radialGradient>
+            <linearGradient id="snailfishBody" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="rgba(255,225,235,0.92)"/>
+              <stop offset="45%" stop-color="rgba(255,195,215,0.8)"/>
+              <stop offset="100%" stop-color="rgba(235,160,185,0.7)"/>
+            </linearGradient>
+            <linearGradient id="visceraGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="rgba(230,85,115,0.75)"/>
+              <stop offset="100%" stop-color="rgba(165,40,70,0.85)"/>
+            </linearGradient>
+          </defs>
+          <circle cx="170" cy="120" r="110" fill="url(#snailfishAura)" />
+          
+          <!-- Tadpole-like elongated tapering tail fin -->
+          <path d="M 190 114 Q 255 116 295 120 Q 255 124 190 126" fill="rgba(255,200,220,0.6)" stroke="rgba(255,230,240,0.85)" stroke-width="1.2"/>
+          <path d="M 120 98 Q 215 106 295 120 Q 215 134 120 142 Z" fill="url(#snailfishBody)" stroke="rgba(255,235,245,0.95)" stroke-width="1.6"/>
+
+          <!-- Broad bulbous cartilaginous head -->
+          <ellipse cx="105" cy="120" rx="42" ry="24" fill="url(#snailfishBody)" stroke="rgba(255,235,245,0.95)" stroke-width="1.6"/>
+          
+          <!-- Visible internal visceral organ cavity & liver -->
+          <ellipse cx="118" cy="122" rx="18" ry="11" fill="url(#visceraGrad)" />
+          <circle cx="112" cy="122" r="5" fill="rgba(255,130,155,0.8)"/>
+
+          <!-- Cranial dome & sensory pores -->
+          <circle cx="78" cy="116" r="3.2" fill="#203540" stroke="#ffffff" stroke-width="0.7"/>
+          <circle cx="77" cy="115" r="1" fill="#ffffff"/>
+
+          <!-- Winged pectoral swimming fins -->
+          <path d="M 112 128 C 118 152 142 165 158 158 C 145 142 135 132 125 128 Z" fill="rgba(255,215,230,0.75)" stroke="rgba(255,240,248,0.9)" stroke-width="1.2"/>
+          
+          <!-- Fin rays -->
+          <line x1="116" y1="132" x2="152" y2="157" stroke="rgba(255,255,255,0.6)" stroke-width="0.8"/>
+          <line x1="119" y1="135" x2="145" y2="160" stroke="rgba(255,255,255,0.6)" stroke-width="0.8"/>
+          <line x1="122" y1="138" x2="136" y2="161" stroke="rgba(255,255,255,0.6)" stroke-width="0.8"/>
+
+          <!-- Gentle mouth arc -->
+          <path d="M 68 124 Q 74 128 82 126" fill="none" stroke="rgba(200,90,120,0.7)" stroke-width="1.2"/>
+        </svg>
+        <div class="plate-annotations">
+          <span><b>01.</b> Translucent scale-less skin</span>
+          <span><b>02.</b> Visceral organ cavity</span>
+          <span><b>03.</b> Cartilaginous cranial dome</span>
+          <span><b>04.</b> Winged pectoral fins</span>
+        </div>
+      </div>
+    `,
+  },
 ];
 
 export const vampireSquid = documentedSpecimens[1];
