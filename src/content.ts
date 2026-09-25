@@ -731,10 +731,10 @@ export const documentedSpecimens: Specimen[] = [
     "classification": "SCYPHOZOA · SEMAEOSTOMEAE · ULMARIDAE",
     "photo": {
       "src": "/species/phantom-jelly.jpg",
-      "caption": "Giant phantom jelly Stygiomedusa gigantea documented by ROV in midnight zone",
-      "credit": "Larson. R / Marine Structural Integrity Programs",
-      "license": "FAL",
-      "pageUrl": "https://commons.wikimedia.org/wiki/File:Stygiomedusa_Gigantea_ov.jpg"
+      "caption": "Giant phantom jelly (Stygiomedusa gigantea) observed in deep water off Antarctica",
+      "credit": "MasterfulNerd / Viking Expeditions",
+      "license": "CC BY 4.0",
+      "pageUrl": "https://commons.wikimedia.org/wiki/File:Phantom_Jellyfish_Off_of_the_Melchior_Islands.webm"
     },
     "description": "Colossal deep-sea scyphozoan and one of the largest invertebrate predators in the midnight zone. Possesses a dark velvety umber bell and four ribbon-like oral arms that stream up to 10 meters behind it to ensnare fish and crustaceans.",
     "detail": "Lacks stinging tentacles on its bell margin entirely, relying instead on its massive, fluttering oral sheets to entangle and transport prey directly into its gastrovascular cavity.",
