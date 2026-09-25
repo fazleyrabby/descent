@@ -6,6 +6,8 @@ User-visible changes to DESCENT are recorded here. Add new work under **Unreleas
 
 ### Added
 
+- RMS Titanic historic wreck site at ~3,800 m with an upright raked bow section, fractured midship break, detached stern fragment, debris field, rusticle streaks, and floodlight porthole glints, plus sonar triangulation (`R`), proximity survey scanning (`E`), a 3,800 m milestone toast, and the first Field Journal HISTORIC SITES entry with a wreck survey plate (sourced to NOAA Ocean Exploration and Woods Hole Oceanographic Institution).
+- Thruster boost: hold `Shift` with any thrust direction for 2.2× movement speed, with a one-time engagement toast and Flight Manual, directive, and control-strip documentation (`Shift` remapped from alternate-descend; `Space`/`S` still descend).
 - Sonar-reticle SVG favicon (`public/favicon.svg`) wired up in [index.html](index.html), eliminating the `/favicon.ico` 404 on every page load.
 - High-resolution Open Graph social preview banner (`public/og-image.jpg`, 1280x720) with deep-ocean exploration submersible illumination, supergiant hadal amphipod, vampire squid, and scientific telemetry badges, coupled with standard Open Graph and Twitter Card `summary_large_image` metadata in [index.html](index.html).
 - Real-time visitor counter telemetry widget mounted in the HUD masthead, backed by the self-hosted homelab `view-counter` microservice (`https://views.fazleyrabbi.xyz`) with animated number roll, pulsing live beacon, offline local caching, and automated deduplication guards (bots, localhost, session).

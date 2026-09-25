@@ -665,6 +665,114 @@ export const documentedSpecimens: Specimen[] = [
 
 export const vampireSquid = documentedSpecimens[1];
 
+export type Site = {
+  id: string;
+  index: string;
+  name: string;
+  kind: string;
+  depth: string;
+  depthTier: 'epipelagic' | 'mesopelagic' | 'bathypelagic' | 'abyssopelagic' | 'hadalpelagic';
+  targetDepth: number;
+  location: string;
+  description: string;
+  detail: string;
+  facts: { label: string; value: string }[];
+  source: {
+    title: string;
+    url: string;
+    publisher: string;
+    accessedOn: string;
+  };
+  annotations: { num: string; label: string }[];
+  svg: string;
+};
+
+export const documentedSites: Site[] = [
+  {
+    id: 'rms-titanic',
+    index: 'H1',
+    name: 'RMS Titanic',
+    kind: 'Historic shipwreck · Ocean liner',
+    depth: '≈3,800 m',
+    depthTier: 'bathypelagic',
+    targetDepth: 3800,
+    location: 'North Atlantic · ~600 km off Newfoundland',
+    description:
+      'The wreck of the British ocean liner RMS Titanic, which sank on 15 April 1912 after striking an iceberg on her maiden voyage. She rests upright in abyssal sediment at roughly 3,800 m depth, broken in two with bow and stern sections lying about 600 m apart amid a vast debris field.',
+    detail:
+      'Located on 1 September 1985 by a joint Woods Hole Oceanographic Institution and IFREMER expedition led by Robert Ballard, the wreck is colonized by rusticle-forming microbes slowly consuming the iron hull. Encounter her with floodlights and active sonar: ping for the large structure return, then hold position to document the site.',
+    facts: [
+      { label: 'RESTING DEPTH', value: '≈3,800 m (12,500 ft)' },
+      { label: 'LOCATION', value: '~600 km SSE off Newfoundland' },
+      { label: 'LOST', value: '15 April 1912 · maiden voyage' },
+      { label: 'DISCOVERED', value: '1 Sept 1985 · Ballard / WHOI–IFREMER' },
+    ],
+    source: {
+      title: 'NOAA Ocean Exploration',
+      url: 'https://oceanexplorer.noaa.gov/',
+      publisher: 'NOAA Ocean Exploration · Woods Hole Oceanographic Institution',
+      accessedOn: '2026-09-25',
+    },
+    annotations: [
+      { num: '01.', label: 'Raked bow prow, upright in sediment' },
+      { num: '02.', label: 'Fractured midship break zone' },
+      { num: '03.', label: 'Stern section & debris field' },
+      { num: '04.', label: 'Rusticle microbial colonies' },
+    ],
+    svg: `
+      <div class="specimen-plate">
+        <div class="plate-badge">SITE SURVEY // HISTORIC WRECK · 1912</div>
+        <svg class="specimen-diagram" viewBox="0 0 340 240" xmlns="http://www.w3.org/2000/svg">
+          <!-- Abyssal sediment mound -->
+          <path d="M 0 196 Q 90 184 170 192 Q 260 200 340 190 L 340 240 L 0 240 Z" fill="rgba(20,34,40,0.9)" stroke="rgba(150,210,200,0.35)" stroke-width="1"/>
+          <!-- Bow hull section (upright, raked prow facing left) -->
+          <path d="M 30 190 L 34 120 L 44 96 L 120 96 L 128 120 L 130 190 Z" fill="#101c22" stroke="rgba(195,230,225,0.75)" stroke-width="1.6"/>
+          <!-- Sheer line & deck plating -->
+          <path d="M 34 120 L 128 120" stroke="rgba(170,220,215,0.5)" stroke-width="1"/>
+          <path d="M 36 140 L 129 140" stroke="rgba(110,160,170,0.4)" stroke-width="0.8"/>
+          <path d="M 33 160 L 130 160" stroke="rgba(110,160,170,0.4)" stroke-width="0.8"/>
+          <!-- Collapsed forecastle & forward well deck -->
+          <path d="M 60 96 L 62 78 L 100 78 L 102 96" fill="#0b1419" stroke="rgba(170,220,215,0.55)" stroke-width="1.2"/>
+          <!-- Foremast stump -->
+          <path d="M 78 78 L 78 52" stroke="rgba(200,235,230,0.7)" stroke-width="2.4" stroke-linecap="round"/>
+          <!-- Porthole glints catching floodlights -->
+          <circle cx="52" cy="132" r="2.2" fill="rgba(190,245,235,0.8)"/>
+          <circle cx="70" cy="132" r="2.2" fill="rgba(190,245,235,0.55)"/>
+          <circle cx="88" cy="132" r="2.2" fill="rgba(190,245,235,0.7)"/>
+          <circle cx="106" cy="132" r="2.2" fill="rgba(190,245,235,0.45)"/>
+          <!-- Fractured midship break (torn girder edges) -->
+          <path d="M 130 190 L 134 150 L 128 138 L 138 128 L 132 112 L 142 100 L 150 120 L 146 190 Z" fill="#0a1216" stroke="rgba(200,235,230,0.6)" stroke-width="1.2"/>
+          <!-- Detached stern fragment -->
+          <path d="M 196 190 L 200 132 L 252 132 L 258 190 Z" fill="#0e181e" stroke="rgba(180,225,220,0.6)" stroke-width="1.4"/>
+          <path d="M 200 132 L 252 132" stroke="rgba(170,220,215,0.45)" stroke-width="1"/>
+          <circle cx="216" cy="150" r="2" fill="rgba(190,245,235,0.5)"/>
+          <circle cx="234" cy="150" r="2" fill="rgba(190,245,235,0.65)"/>
+          <!-- Scattered debris field -->
+          <rect x="160" y="186" width="10" height="5" fill="rgba(140,190,185,0.5)"/>
+          <rect x="266" y="188" width="14" height="4" fill="rgba(140,190,185,0.45)"/>
+          <rect x="288" y="184" width="8" height="6" fill="rgba(140,190,185,0.5)"/>
+          <circle cx="178" cy="190" r="3" fill="rgba(140,190,185,0.4)"/>
+          <!-- Rusticle streaks weeping from hull -->
+          <path d="M 50 140 Q 48 160 52 178" stroke="rgba(190,120,80,0.55)" stroke-width="1.4" fill="none"/>
+          <path d="M 96 140 Q 98 162 94 180" stroke="rgba(190,120,80,0.45)" stroke-width="1.2" fill="none"/>
+          <path d="M 224 150 Q 222 168 226 184" stroke="rgba(190,120,80,0.5)" stroke-width="1.2" fill="none"/>
+          <!-- Survey depth callout -->
+          <path d="M 300 60 L 300 190" stroke="rgba(162,237,221,0.5)" stroke-width="1" stroke-dasharray="4 3"/>
+          <circle cx="300" cy="60" r="2.5" fill="none" stroke="rgba(162,237,221,0.7)" stroke-width="1"/>
+          <circle cx="300" cy="190" r="2.5" fill="none" stroke="rgba(162,237,221,0.7)" stroke-width="1"/>
+          <text x="308" y="128" fill="rgba(200,240,235,0.85)" font-size="10" letter-spacing="2">3800 M</text>
+        </svg>
+        <div class="plate-annotations">
+          <span><b>01.</b> Raked bow prow, upright in sediment</span>
+          <span><b>02.</b> Fractured midship break zone</span>
+          <span><b>03.</b> Stern section &amp; debris field</span>
+          <span><b>04.</b> Rusticle microbial colonies</span>
+        </div>
+      </div>
+    `,
+  },
+];
+
 export function zoneAt(depth: number): { name: string; subtitle: string } {
   if (depth < 1) return { name: 'OCEAN SURFACE', subtitle: 'Open water' };
   if (depth < 200) return { name: 'SUNLIGHT ZONE', subtitle: 'Epipelagic' };

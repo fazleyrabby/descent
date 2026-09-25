@@ -10,9 +10,11 @@ export type WorldMetrics = {
   sonarDistance: number | null;
   sonarTargetName: string | null;
   isThrusting: boolean;
+  isBoosting: boolean;
   reached1000: boolean;
   reached2000: boolean;
   reached3000: boolean;
+  reached3800: boolean;
   reached4000: boolean;
   reached5000: boolean;
   reached6000: boolean;
@@ -73,6 +75,7 @@ export class OceanWorld {
   private lastTime = 0;
   private lastFrame = 16;
   private isThrusting = false;
+  private isBoosting = false;
   private bubbleTimer = 0;
   private lastDepth = 0;
   private waterTransition: 'breach' | 'plunge' | null = null;
@@ -215,15 +218,20 @@ export class OceanWorld {
     const left = this.pressed.has('KeyA') || this.pressed.has('ArrowLeft');
     const right = this.pressed.has('KeyD') || this.pressed.has('ArrowRight');
     const up = this.pressed.has('KeyW') || this.pressed.has('ArrowUp') || this.pressed.has('Space');
-    const down = this.pressed.has('KeyS') || this.pressed.has('ArrowDown') || this.pressed.has('ShiftLeft') || this.pressed.has('ShiftRight');
+    const down = this.pressed.has('KeyS') || this.pressed.has('ArrowDown');
+    // Hold Shift alongside any thrust direction for a 2.2x thruster boost.
+    const shift = this.pressed.has('ShiftLeft') || this.pressed.has('ShiftRight');
+    const boosting = shift && (left || right || up || down);
+    const boostMul = boosting ? 2.2 : 1;
+    this.isBoosting = boosting;
     const horizontal = Number(right) - Number(left);
     const vertical = this.scanAssist ? 0 : Number(down) - Number(up);
 
     this.isThrusting = horizontal !== 0 || vertical !== 0 || Math.abs(this.horizontalSpeed) > 0.8 || Math.abs(this.verticalSpeed) > 2;
 
     const prevDepth = this.depth;
-    this.horizontalSpeed += (horizontal * 8 - this.horizontalSpeed) * (1 - Math.exp(-dt * 3.1));
-    this.verticalSpeed += (vertical * 34 - this.verticalSpeed) * (1 - Math.exp(-dt * 2.5));
+    this.horizontalSpeed += (horizontal * 8 * boostMul - this.horizontalSpeed) * (1 - Math.exp(-dt * 3.1));
+    this.verticalSpeed += (vertical * 34 * boostMul - this.verticalSpeed) * (1 - Math.exp(-dt * 2.5));
     this.vehicle.position.x += this.horizontalSpeed * dt;
     this.vehicle.position.y = clamp(this.vehicle.position.y - this.verticalSpeed * dt, -11000, 3);
     const currDepth = this.depth;
@@ -344,6 +352,11 @@ export class OceanWorld {
     return { x: amphipodCurrX, depth: amphipodDepth };
   }
 
+  private titanicPosition() {
+    // Fixed historic wreck site: RMS Titanic, ~3,800 m North Atlantic abyss.
+    return { x: this.wrapCoord(64, 260), depth: 3800 };
+  }
+
   private documentedTargets() {
     return [
       { id: 'blue-whale', name: 'Blue whale', pos: this.whalePosition(), maxSightDist: 42 },
@@ -354,6 +367,7 @@ export class OceanWorld {
       { id: 'sea-pig', name: 'Abyssal sea pig', pos: this.seaPigPosition(), maxSightDist: 22 },
       { id: 'mariana-snailfish', name: 'Mariana snailfish', pos: this.marianaSnailfishPosition(), maxSightDist: 26 },
       { id: 'supergiant-amphipod', name: 'Supergiant hadal amphipod', pos: this.supergiantAmphipodPosition(), maxSightDist: 24 },
+      { id: 'rms-titanic', name: 'RMS Titanic', pos: this.titanicPosition(), maxSightDist: 52 },
     ];
   }
 
@@ -408,9 +422,11 @@ export class OceanWorld {
       sonarDistance,
       sonarTargetName,
       isThrusting: this.isThrusting,
+      isBoosting: this.isBoosting,
       reached1000: this.depth >= 998,
       reached2000: this.depth >= 1998,
       reached3000: this.depth >= 2998,
+      reached3800: this.depth >= 3796,
       reached4000: this.depth >= 3998,
       reached5000: this.depth >= 4998,
       reached6000: this.depth >= 5998,
@@ -464,6 +480,7 @@ export class OceanWorld {
     if (depth > 1700 && depth < 2450) this.drawMidOceanRidge(darkness);
     if (depth > 2950 && depth < 3550) this.drawWhaleFall(darkness);
     if (depth > 3700 && depth < 5600) this.drawAbyssalPlain(darkness);
+    if (depth > 3480 && depth < 4150) this.drawTitanic(darkness);
     if (depth > 5500 && depth < 6800) this.drawHadalFault(darkness);
     if (depth > 6700 && depth < 10400) this.drawHadalTrench(darkness);
     if (depth > 10200) this.drawChallengerDeep(darkness);
@@ -988,6 +1005,174 @@ export class OceanWorld {
 
       ctx.restore();
     }
+  }
+
+  /**
+   * Historic Wreck Site: RMS TITANIC (1912) at worldX = 64, depth = 3,800 m
+   *  - Upright raked bow section half-buried in abyssal sediment
+   *  - Fractured midship break with detached stern fragment
+   *  - Scattered debris field, rusticle streaks, floodlight porthole glints
+   */
+  private drawTitanic(darkness: number) {
+    const ctx = this.ctx;
+    const wreckDepth = 3800;
+    const floorY = this.screenY(wreckDepth);
+    if (floorY > this.height + 250 || floorY < -260) return;
+
+    const titanicWorldX = this.titanicPosition().x;
+    const wreckScreenX = this.screenX(titanicWorldX);
+    if (wreckScreenX < -260 || wreckScreenX > this.width + 260) return;
+
+    this.activeCreatures.push({
+      screenX: wreckScreenX,
+      screenY: floorY - 72,
+      name: 'RMS TITANIC (1912)',
+      category: 'Historic Shipwreck Site · ~3,800 m',
+      isHero: false,
+      radius: 80,
+      distM: Math.hypot(titanicWorldX - this.vehicle.position.x, wreckDepth - this.depth),
+    });
+
+    const wy = floorY - 6;
+    ctx.save();
+    ctx.translate(wreckScreenX, wy);
+
+    // Abyssal sediment mound swallowing the keel
+    ctx.beginPath();
+    ctx.moveTo(-150, 14);
+    ctx.quadraticCurveTo(-70, -2, 0, 8);
+    ctx.quadraticCurveTo(80, 16, 150, 6);
+    ctx.lineTo(150, 34);
+    ctx.lineTo(-150, 34);
+    ctx.closePath();
+    ctx.fillStyle = '#0b1418';
+    ctx.strokeStyle = 'rgba(140, 200, 195, 0.3)';
+    ctx.lineWidth = 1.2;
+    ctx.fill();
+    ctx.stroke();
+
+    // Bow hull section (upright, raked prow facing port/left)
+    ctx.beginPath();
+    ctx.moveTo(-118, 10);
+    ctx.lineTo(-112, -52);
+    ctx.lineTo(-100, -78);
+    ctx.lineTo(-20, -78);
+    ctx.lineTo(-10, -52);
+    ctx.lineTo(-8, 10);
+    ctx.closePath();
+    ctx.fillStyle = '#131e24';
+    ctx.strokeStyle = 'rgba(195, 230, 225, 0.72)';
+    ctx.lineWidth = 1.5;
+    ctx.fill();
+    ctx.stroke();
+
+    // Hull sheer strake + deck plating lines
+    ctx.strokeStyle = 'rgba(170, 220, 215, 0.5)';
+    ctx.lineWidth = 1;
+    for (const dy of [-52, -32, -12]) {
+      ctx.beginPath();
+      ctx.moveTo(-111, dy); ctx.lineTo(-9, dy);
+      ctx.stroke();
+    }
+
+    // Collapsed forecastle head + forward well deck
+    ctx.beginPath();
+    ctx.rect(-88, -96, 44, 18);
+    ctx.fillStyle = '#0c151a';
+    ctx.strokeStyle = 'rgba(170, 220, 215, 0.55)';
+    ctx.lineWidth = 1.2;
+    ctx.fill();
+    ctx.stroke();
+
+    // Fallen foremast spar
+    ctx.beginPath();
+    ctx.moveTo(-66, -96);
+    ctx.lineTo(-52, -128);
+    ctx.strokeStyle = 'rgba(200, 235, 230, 0.65)';
+    ctx.lineWidth = 2.2;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+
+    // Porthole glints catching the floodlights
+    ctx.fillStyle = 'rgba(190, 245, 235, 0.75)';
+    for (let p = 0; p < 5; p++) {
+      ctx.globalAlpha = 0.35 + (p % 3) * 0.2;
+      ctx.beginPath();
+      ctx.arc(-96 + p * 17, -40, 2.2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // Hull name board
+    ctx.fillStyle = 'rgba(205, 240, 235, 0.6)';
+    ctx.font = '600 6px "Space Grotesk", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('RMS TITANIC', -60, -60);
+
+    // Fractured midship break (torn girder edges)
+    ctx.beginPath();
+    ctx.moveTo(-8, 10);
+    ctx.lineTo(-4, -30);
+    ctx.lineTo(-12, -44);
+    ctx.lineTo(-2, -58);
+    ctx.lineTo(-8, -78);
+    ctx.lineTo(4, -60);
+    ctx.lineTo(0, -38);
+    ctx.lineTo(8, -18);
+    ctx.lineTo(4, 10);
+    ctx.closePath();
+    ctx.fillStyle = '#090f13';
+    ctx.strokeStyle = 'rgba(200, 235, 230, 0.55)';
+    ctx.lineWidth = 1.1;
+    ctx.fill();
+    ctx.stroke();
+
+    // Detached stern fragment, heeled to starboard
+    ctx.save();
+    ctx.translate(66, 0);
+    ctx.rotate(0.1);
+    ctx.beginPath();
+    ctx.moveTo(-34, 10);
+    ctx.lineTo(-30, -48);
+    ctx.lineTo(28, -48);
+    ctx.lineTo(34, 10);
+    ctx.closePath();
+    ctx.fillStyle = '#0e181e';
+    ctx.strokeStyle = 'rgba(180, 225, 220, 0.6)';
+    ctx.lineWidth = 1.4;
+    ctx.fill();
+    ctx.stroke();
+    ctx.strokeStyle = 'rgba(170, 220, 215, 0.4)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(-30, -48); ctx.lineTo(28, -48);
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(190, 245, 235, 0.55)';
+    ctx.beginPath(); ctx.arc(-14, -30, 2, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(4, -30, 2, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+
+    // Scattered debris field (boilers, hull plating, coal)
+    ctx.fillStyle = 'rgba(140, 190, 185, 0.5)';
+    const debris: [number, number, number, number][] = [
+      [18, 8, 10, 5], [40, 10, 14, 4], [112, 8, 12, 5],
+      [128, 10, 8, 6], [-136, 10, 9, 4], [52, 6, 6, 4],
+    ];
+    for (const [dx, dy, w, h] of debris) ctx.fillRect(dx, dy, w, h);
+    ctx.beginPath(); ctx.arc(30, 10, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(-128, 12, 2.5, 0, Math.PI * 2); ctx.fill();
+
+    // Rusticle streaks weeping down the hull
+    ctx.strokeStyle = 'rgba(190, 120, 80, 0.5)';
+    ctx.lineWidth = 1.3;
+    for (const [rx, wob] of [[-90, 3], [-60, -3], [66, 3]] as [number, number][]) {
+      ctx.beginPath();
+      ctx.moveTo(rx, -44);
+      ctx.quadraticCurveTo(rx + wob, -18, rx - wob, 6);
+      ctx.stroke();
+    }
+
+    ctx.restore();
   }
 
   private drawHadalFault(darkness: number) {

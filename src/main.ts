@@ -8,7 +8,7 @@ import '@fontsource/space-grotesk/latin-600.css';
 import '@fontsource/space-grotesk/latin-700.css';
 import './styles.css';
 import { OceanWorld, type WorldMetrics, type Quality } from './world';
-import { documentedSpecimens, type Specimen, zoneAt } from './content';
+import { documentedSpecimens, documentedSites, type Specimen, type Site, zoneAt } from './content';
 import { initVisitorCounter } from './visitorCounter';
 
 const root = document.querySelector<HTMLDivElement>('#app');
@@ -68,6 +68,7 @@ root.innerHTML = `
       <div class="directive-keys">
         <span><kbd>W</kbd><kbd>S</kbd> Dive / Rise</span>
         <span><kbd>A</kbd><kbd>D</kbd> Drift</span>
+        <span><kbd>Shift</kbd> Boost</span>
         <span><kbd>R</kbd> Sonar</span>
         <span><kbd>E</kbd> Scan</span>
         <span><kbd>F</kbd> Lights</span>
@@ -113,6 +114,7 @@ root.innerHTML = `
       <div class="control-strip">
         <span><kbd>A</kbd><kbd>D</kbd> DRIFT</span>
         <span><kbd>W</kbd><kbd>S</kbd> RISE / DIVE</span>
+        <span><kbd>Shift</kbd> BOOST</span>
         <span><kbd>Scroll</kbd> ZOOM</span>
         <span><kbd>F</kbd> LIGHTS</span>
         <span><kbd>R</kbd> SONAR</span>
@@ -190,8 +192,12 @@ root.innerHTML = `
               <span class="key-desc">Rise and dive</span>
             </li>
             <li>
-              <div class="key-combo"><kbd>Space</kbd><span>/</span><kbd>Shift</kbd></div>
-              <span class="key-desc">Alternate rise / dive</span>
+              <div class="key-combo"><kbd>Space</kbd></div>
+              <span class="key-desc">Alternate rise</span>
+            </li>
+            <li>
+              <div class="key-combo"><kbd>Shift</kbd><span>+</span><kbd>W A S D</kbd></div>
+              <span class="key-desc">Thruster boost (2.2× thrust)</span>
             </li>
             <li>
               <div class="key-combo"><kbd>Scroll</kbd><span>/</span><kbd>Pinch</kbd></div>
@@ -307,9 +313,11 @@ let metrics: WorldMetrics = {
   sonarDistance: null,
   sonarTargetName: null,
   isThrusting: false,
+  isBoosting: false,
   reached1000: false,
   reached2000: false,
   reached3000: false,
+  reached3800: false,
   reached4000: false,
   reached5000: false,
   reached6000: false,
@@ -343,6 +351,8 @@ let reached8000Notified = false;
 let reached9000Notified = false;
 let reached10000Notified = false;
 let reached11000Notified = false;
+let reached3800Notified = false;
+let boostToastShown = false;
 let lastAudioZone = '';
 let toastTimer: number | undefined;
 
@@ -375,7 +385,9 @@ let scanGain: GainNode | null = null;
 let volume = 0.35;
 let muted = readMuted();
 let discoveredIds: string[] = readDiscoveries();
+let discoveredSiteIds: string[] = readDiscoveredSites();
 let selectedSpecimenId: string = documentedSpecimens[0].id;
+let selectedSiteId: string | null = null;
 
 function readDiscoveries(): string[] {
   try {
@@ -399,6 +411,25 @@ function saveDiscoveries() {
     if (discoveredIds.includes('vampire-squid')) {
       localStorage.setItem('descent-v1-vampire-squid', '1');
     }
+  } catch { /* session storage */ }
+}
+
+function readDiscoveredSites(): string[] {
+  try {
+    const raw = localStorage.getItem('descent-v1-discovered-sites');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
+    }
+    return [];
+  } catch {
+    return [];
+  }
+}
+
+function saveDiscoveredSites() {
+  try {
+    localStorage.setItem('descent-v1-discovered-sites', JSON.stringify(discoveredSiteIds));
   } catch { /* session storage */ }
 }
 
@@ -936,7 +967,7 @@ function journalContent() {
   if (list) {
     list.innerHTML = documentedSpecimens.map((spec) => {
       const isCat = discoveredIds.includes(spec.id);
-      const isSel = spec.id === selectedSpecimenId;
+      const isSel = spec.id === selectedSpecimenId && !selectedSiteId;
       return `
         <button class="entry-tab ${isSel ? 'is-selected' : ''} ${isCat ? 'is-catalogued' : ''}" data-specimen="${spec.id}" type="button">
           ${spec.index} <strong>${spec.name}</strong>
@@ -946,17 +977,42 @@ function journalContent() {
           </small>
         </button>
       `;
+    }).join('') + `
+      <div class="journal-section-label"><span>HISTORIC SITES</span></div>
+      ` + documentedSites.map((site) => {
+      const isCat = discoveredSiteIds.includes(site.id);
+      const isSel = site.id === selectedSiteId;
+      return `
+        <button class="entry-tab ${isSel ? 'is-selected' : ''} ${isCat ? 'is-catalogued' : ''}" data-site="${site.id}" type="button">
+          ${site.index} <strong>${site.name}</strong>
+          <small>
+            <span>${site.depth}</span>
+            <span>${isCat ? 'DOCUMENTED' : 'UNSURVEYED'}</span>
+          </small>
+        </button>
+      `;
     }).join('');
 
     list.querySelectorAll<HTMLButtonElement>('.entry-tab').forEach((tab) => {
       tab.addEventListener('click', () => {
-        const id = tab.getAttribute('data-specimen');
-        if (id) {
-          selectedSpecimenId = id;
+        const specId = tab.getAttribute('data-specimen');
+        const siteId = tab.getAttribute('data-site');
+        if (siteId) {
+          selectedSiteId = siteId;
+          journalContent();
+        } else if (specId) {
+          selectedSpecimenId = specId;
+          selectedSiteId = null;
           journalContent();
         }
       });
     });
+  }
+
+  const selectedSite = selectedSiteId ? documentedSites.find((s) => s.id === selectedSiteId) : undefined;
+  if (selectedSite) {
+    renderSiteEntry(selectedSite);
+    return;
   }
 
   const current = documentedSpecimens.find((s) => s.id === selectedSpecimenId) || documentedSpecimens[0];
@@ -1009,6 +1065,53 @@ function journalContent() {
   `;
 }
 
+function renderSiteEntry(site: Site) {
+  const entry = el<HTMLElement>('journalEntry');
+  const isDocumented = discoveredSiteIds.includes(site.id);
+
+  if (!isDocumented) {
+    entry.innerHTML = `
+      <div class="entry-kicker">HISTORIC SITE // UNSURVEYED STRUCTURE · ${site.depthTier.toUpperCase()}</div>
+      <h3>${site.name}</h3>
+      <p class="latin">Structural scan required · Site undocumented</p>
+      <div class="recon-plate">
+        <div class="recon-reticle"></div>
+        <div class="plate-badge">STRUCTURAL TARGET // ${site.depth.toUpperCase()}</div>
+        <p>Submersible sensors detect a large structural return consistent with a historic wreck in the <strong>${site.location}</strong>. Close to survey range and hold <kbd>E</kbd> while targeting the structure.</p>
+      </div>
+      <div class="entry-facts">
+        <div><span>EXPECTED DEPTH</span><strong>${site.depth}</strong></div>
+        <div><span>LOCATION</span><strong>${site.location}</strong></div>
+        <div><span>SITE KIND</span><strong>${site.kind}</strong></div>
+        <div><span>FIELD STATUS</span><strong>AWAITING SURVEY</strong></div>
+      </div>
+      <p>${site.description}</p>
+      <div class="entry-source">
+        <span>SURVEY DIRECTIVE</span>
+        <small>Descend to ${site.depth}. Ping sonar (<kbd>R</kbd>) to triangulate the large structure contact, maneuver within 50 meters, and hold <kbd>E</kbd> while targeting the wreck to complete the structural survey.</small>
+      </div>
+    `;
+    return;
+  }
+
+  entry.innerHTML = `
+    <div class="entry-kicker">HISTORIC SITE // DOCUMENTED WRECK · ${site.depthTier.toUpperCase()}</div>
+    <h3>${site.name}</h3>
+    <p class="latin">${site.kind}</p>
+    ${site.svg}
+    <div class="entry-facts">
+      ${site.facts.map((fact) => `<div><span>${fact.label}</span><strong>${fact.value}</strong></div>`).join('')}
+    </div>
+    <p>${site.description}</p>
+    <p>${site.detail}</p>
+    <div class="entry-source">
+      <span>SCIENTIFIC SOURCE & INSTITUTION</span>
+      <a href="${site.source.url}" target="_blank" rel="noopener noreferrer">${site.source.title} ↗</a>
+      <small>${site.source.publisher} · Accessed ${site.source.accessedOn}</small>
+    </div>
+  `;
+}
+
 function setPause(next: boolean) {
   if (next) cancelScan();
   paused = next;
@@ -1037,7 +1140,14 @@ function setControls(next: boolean) {
 }
 
 function finishScan() {
-  const specimenId = metrics.targetSpecimenId || 'vampire-squid';
+  const targetId = metrics.targetSpecimenId || 'vampire-squid';
+  // Historic sites scan into the journal separately from species.
+  const site = documentedSites.find((s) => s.id === targetId);
+  if (site) {
+    finishSiteScan(site);
+    return;
+  }
+  const specimenId = targetId;
   const specimen = documentedSpecimens.find((s) => s.id === specimenId) || documentedSpecimens[1];
   cancelScan();
   world.markDiscovered(specimenId);
@@ -1046,11 +1156,27 @@ function finishScan() {
     saveDiscoveries();
   }
   selectedSpecimenId = specimenId;
+  selectedSiteId = null;
   journalContent();
   discoveryAudio();
   show(el<HTMLElement>('scanMeter'), false);
   show(el<HTMLElement>('targetPrompt'), false);
   toast(`SPECIES CATALOGUED · ${specimen.name.toUpperCase()} [OPEN JOURNAL: J]`);
+}
+
+function finishSiteScan(site: Site) {
+  cancelScan();
+  world.markDiscovered(site.id);
+  if (!discoveredSiteIds.includes(site.id)) {
+    discoveredSiteIds.push(site.id);
+    saveDiscoveredSites();
+  }
+  selectedSiteId = site.id;
+  journalContent();
+  discoveryAudio();
+  show(el<HTMLElement>('scanMeter'), false);
+  show(el<HTMLElement>('targetPrompt'), false);
+  toast(`HISTORIC SITE DOCUMENTED · ${site.name.toUpperCase()} [OPEN JOURNAL: J]`);
 }
 
 function onTick(next: WorldMetrics) {
@@ -1079,6 +1205,13 @@ function onTick(next: WorldMetrics) {
     reached3000Notified = true;
     milestoneAudio();
     toast('3,000 M REACHED · ABYSSAL WHALE FALL ECOSYSTEM');
+  }
+
+  // 3,800 m RMS Titanic Wreck Site Check
+  if (metrics.reached3800 && !reached3800Notified) {
+    reached3800Notified = true;
+    milestoneAudio();
+    toast('3,800 M REACHED · RMS TITANIC WRECK SITE · PING SONAR');
   }
 
   // 4,000 m Abyssal Plain Boundary Milestone Check
@@ -1147,6 +1280,12 @@ function onTick(next: WorldMetrics) {
   // Pilot onboarding tips
   updatePilotTip();
 
+  // One-time thruster boost hint on first engagement
+  if (metrics.isBoosting && !boostToastShown) {
+    boostToastShown = true;
+    toast('THRUSTER BOOST ENGAGED · 2.2X THRUST');
+  }
+
   // Auto-dismiss surface directive if descended past 5m
   if (metrics.depth > 5 && !el<HTMLElement>('surfaceDirective').classList.contains('is-dismissed')) {
     el<HTMLElement>('surfaceDirective').classList.add('is-hidden');
@@ -1193,7 +1332,8 @@ function onTick(next: WorldMetrics) {
   if (metrics.targetInSight && metrics.targetSpecimenName) {
     const promptText = el<HTMLElement>('targetPromptText');
     if (promptText) {
-      promptText.innerHTML = `SPECIMEN IN SIGHT: ${metrics.targetSpecimenName.toUpperCase()}<br><em>HOLD E TO SCAN</em>`;
+      const isSite = documentedSites.some((s) => s.id === metrics.targetSpecimenId);
+      promptText.innerHTML = `${isSite ? 'STRUCTURE' : 'SPECIMEN'} IN SIGHT: ${metrics.targetSpecimenName.toUpperCase()}<br><em>HOLD E TO SCAN</em>`;
     }
   }
   show(el<HTMLElement>('scanMeter'), scanProgress > 0);
@@ -1212,7 +1352,7 @@ function onTick(next: WorldMetrics) {
 
 try {
   world = new OceanWorld(canvas, onTick);
-  world.setDiscovered(discoveredIds);
+  world.setDiscovered([...discoveredIds, ...discoveredSiteIds]);
   journalContent();
   world.start();
   initVisitorCounter();
@@ -1283,6 +1423,7 @@ el<HTMLInputElement>('reducedMotion').addEventListener('change', (e) => {
 el<HTMLButtonElement>('resetProgress').addEventListener('click', () => {
   try {
     localStorage.removeItem('descent-v1-discovered-species');
+    localStorage.removeItem('descent-v1-discovered-sites');
     localStorage.removeItem('descent-v1-vampire-squid');
     localStorage.removeItem('descent-v1-guide-completed');
     localStorage.removeItem('descent-v1-muted');
