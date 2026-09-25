@@ -9,6 +9,7 @@ import '@fontsource/space-grotesk/latin-700.css';
 import './styles.css';
 import { OceanWorld, type WorldMetrics, type Quality } from './world';
 import { documentedSpecimens, type Specimen, zoneAt } from './content';
+import { initVisitorCounter } from './visitorCounter';
 
 const root = document.querySelector<HTMLDivElement>('#app');
 if (!root) throw new Error('Missing app root');
@@ -23,6 +24,7 @@ root.innerHTML = `
       <div class="brand"><span class="brand-mark" aria-hidden="true">◉</span><span>DESCENT</span><span class="brand-rule"></span><span class="brand-sub">EXPEDITION 01</span></div>
       <div class="top-actions">
         <span class="signal"><i></i> SYSTEMS ONLINE</span>
+        <div id="visitor-counter-mount"></div>
         <button id="controlsBtn" class="text-button" type="button" aria-label="Controls manual">MANUAL <span class="key-badge">?</span></button>
         <button id="muteBtn" class="text-button" type="button" aria-label="Toggle audio">AUDIO <span id="muteLabel">ON</span></button>
         <button id="journalBtn" class="text-button" type="button">FIELD JOURNAL <span id="journalCount">00/08</span></button>
@@ -1207,6 +1209,7 @@ try {
   world.setDiscovered(discoveredIds);
   journalContent();
   world.start();
+  initVisitorCounter();
 } catch (error) {
   console.error(error);
   show(el<HTMLElement>('fatal'), true);

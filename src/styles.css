@@ -1411,3 +1411,78 @@ a { color: var(--aqua); }
   color: #fff;
   border-color: #fff;
 }
+
+/* Visitor Telemetry Widget */
+.visitor-counter {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: rgba(3, 22, 34, 0.75);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #e6f7f7;
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  line-height: 1.2;
+  white-space: nowrap;
+  user-select: none;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.visitor-counter:hover {
+  border-color: rgba(162, 237, 221, 0.6);
+  background: rgba(5, 30, 45, 0.85);
+}
+
+.visitor-counter__pulse {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 7px;
+  height: 7px;
+}
+
+.visitor-counter__ping {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 9999px;
+  background: var(--aqua);
+  opacity: 0.75;
+  animation: visitorPing 2.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.visitor-counter__core {
+  position: relative;
+  width: 5px;
+  height: 5px;
+  border-radius: 9999px;
+  background: var(--aqua);
+  box-shadow: 0 0 8px rgba(162, 237, 221, 0.8);
+}
+
+.visitor-counter__label {
+  font-size: 0.55rem;
+  font-weight: 700;
+  color: #8da9ad;
+  letter-spacing: 0.15em;
+}
+
+.visitor-counter__count {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  color: var(--aqua);
+  min-width: 2ch;
+}
+
+@keyframes visitorPing {
+  75%,
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+
