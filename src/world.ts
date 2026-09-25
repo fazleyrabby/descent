@@ -18,6 +18,9 @@ export type WorldMetrics = {
   reached6000: boolean;
   reached7000: boolean;
   reached8000: boolean;
+  reached9000: boolean;
+  reached10000: boolean;
+  reached11000: boolean;
   zoom: number;
   waterTransition: 'breach' | 'plunge' | null;
 };
@@ -136,10 +139,10 @@ export class OceanWorld {
 
     let state = this.seed;
     const random = () => ((state = (state * 1664525 + 1013904223) >>> 0) / 4294967296);
-    for (let i = 0; i < 10000; i++) {
+    for (let i = 0; i < 12000; i++) {
       this.particles.push({
         x: (random() - 0.5) * 440,
-        depth: random() * 8750,
+        depth: random() * 11200,
         radius: 0.35 + random() * 1.5,
         phase: random() * Math.PI * 2,
       });
@@ -222,7 +225,7 @@ export class OceanWorld {
     this.horizontalSpeed += (horizontal * 8 - this.horizontalSpeed) * (1 - Math.exp(-dt * 3.1));
     this.verticalSpeed += (vertical * 34 - this.verticalSpeed) * (1 - Math.exp(-dt * 2.5));
     this.vehicle.position.x += this.horizontalSpeed * dt;
-    this.vehicle.position.y = clamp(this.vehicle.position.y - this.verticalSpeed * dt, -8500, 3);
+    this.vehicle.position.y = clamp(this.vehicle.position.y - this.verticalSpeed * dt, -11000, 3);
     const currDepth = this.depth;
 
     if (prevDepth > 0.4 && currDepth <= 0.4) {
@@ -332,6 +335,15 @@ export class OceanWorld {
     return { x: snailfishCurrX, depth: snailfishDepth };
   }
 
+  private supergiantAmphipodPosition() {
+    const amphipodBaseX = 35;
+    const amphipodX = this.wrapCoord(amphipodBaseX, 170);
+    const amphipodSpeed = 1.6;
+    const amphipodCurrX = amphipodX + (this.elapsed * amphipodSpeed) % 170 - 85;
+    const amphipodDepth = 10820 + Math.sin(this.elapsed * 0.28) * 12;
+    return { x: amphipodCurrX, depth: amphipodDepth };
+  }
+
   private documentedTargets() {
     return [
       { id: 'blue-whale', name: 'Blue whale', pos: this.whalePosition(), maxSightDist: 42 },
@@ -341,6 +353,7 @@ export class OceanWorld {
       { id: 'gulper-eel', name: 'Gulper eel', pos: this.gulperEelPosition(), maxSightDist: 28 },
       { id: 'sea-pig', name: 'Abyssal sea pig', pos: this.seaPigPosition(), maxSightDist: 22 },
       { id: 'mariana-snailfish', name: 'Mariana snailfish', pos: this.marianaSnailfishPosition(), maxSightDist: 26 },
+      { id: 'supergiant-amphipod', name: 'Supergiant hadal amphipod', pos: this.supergiantAmphipodPosition(), maxSightDist: 24 },
     ];
   }
 
@@ -403,6 +416,9 @@ export class OceanWorld {
       reached6000: this.depth >= 5998,
       reached7000: this.depth >= 6998,
       reached8000: this.depth >= 7998,
+      reached9000: this.depth >= 8998,
+      reached10000: this.depth >= 9998,
+      reached11000: this.depth >= 10850,
       zoom: this.zoom,
       waterTransition: this.waterTransition,
     };
@@ -449,7 +465,8 @@ export class OceanWorld {
     if (depth > 2950 && depth < 3550) this.drawWhaleFall(darkness);
     if (depth > 3700 && depth < 5600) this.drawAbyssalPlain(darkness);
     if (depth > 5500 && depth < 6800) this.drawHadalFault(darkness);
-    if (depth > 6700) this.drawHadalTrench(darkness);
+    if (depth > 6700 && depth < 10400) this.drawHadalTrench(darkness);
+    if (depth > 10200) this.drawChallengerDeep(darkness);
 
     // 5. Marine Snow Particles (enhanced with headlight cone scatter)
     this.drawParticles(darkness);
@@ -462,6 +479,7 @@ export class OceanWorld {
     if (depth > 2400 && depth < 3100) this.drawGulperEel();
     if (depth > 4900 && depth < 5500) this.drawSeaPig();
     if (depth > 7500 && depth < 8300) this.drawMarianaSnailfish();
+    if (depth > 10500) this.drawSupergiantAmphipod();
 
     // 8. Headlight Cones & Volumetric Glow
     this.drawLightBeam(darkness);
@@ -1260,6 +1278,206 @@ export class OceanWorld {
 
         ctx.restore();
       }
+    }
+  }
+
+  /**
+   * Terminal Geological Seafloor: Challenger Deep (10,928 m – 11,000 m)
+   * The absolute deepest depression in the Earth's hydrosphere.
+   * Features:
+   * 1. Terminal biogenic diatomaceous silt & yellowish-grey pelagic ooze seafloor
+   * 2. Tectonic Mariana subduction plate boundary where Pacific Plate plunges into mantle
+   * 3. Historic Exploration Artifact: Bathyscaphe TRIESTE (1960, Jacques Piccard & Don Walsh)
+   *    - Massive gasoline buoyancy float hull, Terni forged steel crew sphere, water ballast funnels
+   * 4. Historic Exploration Artifact: DEEPSEA CHALLENGER (2012, James Cameron)
+   *    - Vertical green ISOFLOAT syntactic foam beam, spherical pilot sphere, LED lighting tower
+   */
+  private drawChallengerDeep(darkness: number) {
+    const ctx = this.ctx;
+    const terminalDepth = 10928;
+    const floorY = this.screenY(terminalDepth);
+    if (floorY > this.height + 250) return;
+
+    // 1. Terminal Mariana Trench Basalt Bedrock Slopes
+    ctx.beginPath();
+    ctx.moveTo(-40, this.height + 40);
+    ctx.lineTo(-40, floorY - 60);
+    ctx.lineTo(this.width * 0.25, floorY - 24);
+    ctx.lineTo(this.width * 0.5, floorY - 4);
+    ctx.lineTo(this.width * 0.75, floorY - 18);
+    ctx.lineTo(this.width + 40, floorY - 50);
+    ctx.lineTo(this.width + 40, this.height + 40);
+    ctx.closePath();
+    ctx.fillStyle = '#010203';
+    ctx.fill();
+
+    // 2. Thick Diatomaceous Pelagic Ooze & Soft Sediment Layer
+    ctx.beginPath();
+    ctx.moveTo(-40, this.height + 40);
+    ctx.lineTo(-40, floorY + 4);
+    for (let x = -40; x <= this.width + 40; x += 20) {
+      const worldX = this.vehicle.position.x + (x - this.focusX) / this.pxPerMeter;
+      const oozeRoll = Math.sin(worldX * 0.06) * 5 + Math.cos(worldX * 0.12) * 3;
+      ctx.lineTo(x, floorY + oozeRoll);
+    }
+    ctx.lineTo(this.width + 40, this.height + 40);
+    ctx.closePath();
+    const oozeGrad = ctx.createLinearGradient(0, floorY - 10, 0, floorY + 80);
+    oozeGrad.addColorStop(0, '#0c1619');
+    oozeGrad.addColorStop(0.3, '#070f12');
+    oozeGrad.addColorStop(1, '#020507');
+    ctx.fillStyle = oozeGrad;
+    ctx.fill();
+
+    ctx.strokeStyle = 'rgba(120, 185, 175, 0.35)';
+    ctx.lineWidth = 1.4;
+    ctx.stroke();
+
+    // Diatomaceous sediment dust swirls
+    for (let d = 0; d < 8; d++) {
+      const dustX = this.width * (0.08 + d * 0.12);
+      const dustY = floorY - 4 + Math.sin(this.elapsed * 0.8 + d) * 3;
+      ctx.beginPath();
+      ctx.ellipse(dustX, dustY, 8 + (d % 3) * 4, 2.5, 0, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(160, 215, 205, 0.08)';
+      ctx.fill();
+    }
+
+    // 3. Historic Monument: Bathyscaphe TRIESTE (1960) at worldX = -45, depth = 10,916 m
+    const triesteWorldX = this.wrapCoord(-45, 260);
+    const triesteScreenX = this.screenX(triesteWorldX);
+    if (triesteScreenX > -120 && triesteScreenX < this.width + 120) {
+      const ty = floorY - 22;
+
+      this.activeCreatures.push({
+        screenX: triesteScreenX,
+        screenY: ty - 32,
+        name: 'BATHYSCAPHE TRIESTE (1960)',
+        category: 'Historic First Manned Descent · Piccard & Walsh · 10,916 m',
+        isHero: false,
+        radius: 48,
+        distM: Math.hypot(triesteWorldX - this.vehicle.position.x, 10916 - this.depth),
+      });
+
+      ctx.save();
+      ctx.translate(triesteScreenX, ty);
+
+      // Huge elongated cylindrical float hull (filled with lighter-than-water gasoline)
+      ctx.beginPath();
+      ctx.roundRect(-42, -32, 84, 22, 6);
+      ctx.fillStyle = '#162228';
+      ctx.strokeStyle = 'rgba(195, 230, 225, 0.7)';
+      ctx.lineWidth = 1.4;
+      ctx.fill();
+      ctx.stroke();
+
+      // Trieste hull plating seams & rivets
+      ctx.strokeStyle = 'rgba(110, 160, 170, 0.4)';
+      ctx.lineWidth = 0.8;
+      for (let s = -30; s <= 30; s += 15) {
+        ctx.beginPath();
+        ctx.moveTo(s, -32); ctx.lineTo(s, -10);
+        ctx.stroke();
+      }
+
+      // Observation deck conning tower
+      ctx.beginPath();
+      ctx.rect(-10, -42, 20, 10);
+      ctx.fillStyle = '#0f1a20';
+      ctx.strokeStyle = 'rgba(170, 220, 215, 0.6)';
+      ctx.lineWidth = 1.2;
+      ctx.fill();
+      ctx.stroke();
+
+      // Heavy Terni forged-steel crew pressure sphere (attached underneath float)
+      ctx.beginPath();
+      ctx.arc(0, 0, 13, 0, Math.PI * 2);
+      ctx.fillStyle = '#081116';
+      ctx.strokeStyle = 'rgba(230, 245, 245, 0.9)';
+      ctx.lineWidth = 1.8;
+      ctx.fill();
+      ctx.stroke();
+
+      // Quartz cone viewport window
+      ctx.beginPath();
+      ctx.arc(6, 2, 3.5, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(120, 235, 220, 0.55)';
+      ctx.fill();
+
+      // Commemorative exploration plaque tag
+      ctx.font = '600 6px "Space Grotesk", sans-serif';
+      ctx.fillStyle = 'rgba(215, 245, 240, 0.75)';
+      ctx.fillText('TRIESTE 1960', -18, -18);
+
+      ctx.restore();
+    }
+
+    // 4. Historic Monument: DEEPSEA CHALLENGER (2012) at worldX = 65, depth = 10,908 m
+    const dcWorldX = this.wrapCoord(65, 260);
+    const dcScreenX = this.screenX(dcWorldX);
+    if (dcScreenX > -100 && dcScreenX < this.width + 100) {
+      const dcy = floorY - 26;
+
+      this.activeCreatures.push({
+        screenX: dcScreenX,
+        screenY: dcy - 40,
+        name: 'DEEPSEA CHALLENGER (2012)',
+        category: 'Historic Solo Descent · James Cameron · 10,908 m',
+        isHero: false,
+        radius: 46,
+        distM: Math.hypot(dcWorldX - this.vehicle.position.x, 10908 - this.depth),
+      });
+
+      ctx.save();
+      ctx.translate(dcScreenX, dcy);
+
+      // Distinctive vertical beam profile of specialized green ISOFLOAT syntactic foam
+      ctx.beginPath();
+      ctx.roundRect(-10, -75, 20, 56, 4);
+      ctx.fillStyle = '#0d2822';
+      ctx.strokeStyle = 'rgba(80, 215, 160, 0.85)';
+      ctx.lineWidth = 1.5;
+      ctx.fill();
+      ctx.stroke();
+
+      // Vertical thruster raceways
+      for (const th of [-55, -40, -25]) {
+        ctx.beginPath();
+        ctx.arc(10, th, 4, -Math.PI / 2, Math.PI / 2);
+        ctx.fillStyle = '#081a16';
+        ctx.strokeStyle = '#52d9a3';
+        ctx.lineWidth = 1;
+        ctx.fill();
+        ctx.stroke();
+      }
+
+      // Spherical pilot pressure sphere seated at base of vertical beam
+      ctx.beginPath();
+      ctx.arc(0, -6, 12, 0, Math.PI * 2);
+      ctx.fillStyle = '#051210';
+      ctx.strokeStyle = 'rgba(150, 245, 200, 0.95)';
+      ctx.lineWidth = 1.8;
+      ctx.fill();
+      ctx.stroke();
+
+      // High-power LED lighting panel array at top of mast
+      const ledPulse = (this.elapsed * 1.8) % 1 > 0.8;
+      ctx.fillStyle = ledPulse ? 'rgba(210, 255, 235, 0.95)' : 'rgba(40, 110, 85, 0.7)';
+      ctx.fillRect(-8, -80, 16, 5);
+
+      if (ledPulse) {
+        ctx.beginPath();
+        ctx.arc(0, -78, 16, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(160, 255, 220, 0.2)';
+        ctx.fill();
+      }
+
+      // Historic inscription
+      ctx.font = '600 5.5px "Space Grotesk", sans-serif';
+      ctx.fillStyle = 'rgba(160, 245, 205, 0.8)';
+      ctx.fillText('DC-2012', -9, -48);
+
+      ctx.restore();
     }
   }
 
@@ -2720,6 +2938,93 @@ export class OceanWorld {
         }
       }
     }
+
+    // M. Deep Hadal Benthic Holothurians (Elpidiidae / Peniagone) (8,800m – 10,700m)
+    if (this.depth > 8700 && this.depth < 10800) {
+      for (let h = 0; h < 3; h++) {
+        const hBaseX = h * 45 - 30;
+        const hWorldX = this.wrapCoord(hBaseX, 150);
+        const hDepth = 9400 + h * 420;
+        const hsx = this.screenX(hWorldX);
+        const hsy = this.screenY(hDepth);
+
+        if (hsx > -40 && hsx < this.width + 40 && hsy > -30 && hsy < this.height + 30) {
+          if (h === 0) {
+            this.activeCreatures.push({
+              screenX: hsx,
+              screenY: hsy,
+              name: 'HADAL SEA CUCUMBER',
+              category: 'Ambient scenery · Peniagone sp. · Hadalpelagic',
+              radius: 22,
+              distM: Math.hypot(hWorldX - this.vehicle.position.x, hDepth - this.depth),
+            });
+          }
+
+          ctx.save();
+          ctx.translate(hsx, hsy);
+          const hWalk = Math.sin(this.elapsed * 1.8 + h) * 2;
+
+          // Translucent pale gelatinous body
+          ctx.beginPath();
+          ctx.ellipse(0, 0, 16, 7, 0, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(230, 242, 250, 0.45)';
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+          ctx.lineWidth = 1;
+          ctx.fill();
+          ctx.stroke();
+
+          // Sail-like dorsal anterior velum (sensory lobe)
+          ctx.beginPath();
+          ctx.moveTo(8, -6);
+          ctx.lineTo(12 + hWalk, -18);
+          ctx.lineTo(2, -8);
+          ctx.fillStyle = 'rgba(215, 235, 250, 0.6)';
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+          ctx.lineWidth = 0.8;
+          ctx.fill();
+          ctx.stroke();
+
+          // Elongated tube-feet pairs walking along sediment
+          for (let f = -2; f <= 2; f++) {
+            const fKick = Math.sin(this.elapsed * 2.5 + h + f) * 2;
+            ctx.beginPath();
+            ctx.moveTo(f * 5, 5);
+            ctx.lineTo(f * 5 - 2, 11 + fKick);
+            ctx.strokeStyle = 'rgba(220, 240, 255, 0.75)';
+            ctx.lineWidth = 1.2;
+            ctx.stroke();
+          }
+
+          ctx.restore();
+        }
+      }
+    }
+
+    // N. Abyssal/Hadal Giant Monothalamous Foraminifera (Bathysiphon mats) (9,800m – 10,950m)
+    if (this.depth > 9700) {
+      for (let fm = -2; fm <= 2; fm++) {
+        const fWorldX = this.wrapCoord(fm * 35 + 8, 120);
+        const fsx = this.screenX(fWorldX);
+        const fFloorY = this.screenY(10924);
+        if (fsx < -30 || fsx > this.width + 30 || fFloorY < -20 || fFloorY > this.height + 40) continue;
+
+        ctx.save();
+        ctx.translate(fsx, fFloorY);
+        // Slender agglutinated tube protruding upright from sediment
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(Math.sin(fm) * 3, -16);
+        ctx.strokeStyle = 'rgba(185, 215, 220, 0.65)';
+        ctx.lineWidth = 1.6;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(Math.sin(fm) * 3, -16, 1.8, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(220, 245, 250, 0.7)';
+        ctx.fill();
+        ctx.restore();
+      }
+    }
   }
 
   /**
@@ -3335,6 +3640,154 @@ export class OceanWorld {
     ctx.fill();
     ctx.stroke();
     ctx.restore();
+
+    ctx.restore();
+  }
+
+  /**
+   * Hero Creature: Supergiant Hadal Amphipod (Alicella gigantea)
+   * The largest amphipod on Earth (~34 cm), exhibiting extreme deep-sea gigantism.
+   * Authored with 5 dynamic anatomical layers:
+   * 1. Massive curved C-shaped translucent pearlescent chitinous carapace
+   * 2. 7 distinct articulated body segments with flexing overlapping plates
+   * 3. Paired prehensile gnathopods (feeding claws) and walking peraeopods
+   * 4. Rapidly fluttering swimming pleopod fan paddles generating gentle benthic propulsion
+   * 5. Elongated sweeping sensory antennae seeking organic debris in pitch blackness
+   */
+  private drawSupergiantAmphipod() {
+    const ctx = this.ctx;
+    const target = this.supergiantAmphipodPosition();
+    const x = this.screenX(target.x);
+    const y = this.screenY(target.depth);
+    if (x < -120 || x > this.width + 120 || y < -120 || y > this.height + 120) return;
+
+    this.activeCreatures.push({
+      screenX: x,
+      screenY: y,
+      name: 'SUPERGIANT HADAL AMPHIPOD',
+      category: this.isDiscovered('supergiant-amphipod')
+        ? 'Catalogued · NOAA Exploration Record'
+        : 'Documented Species · Alicella gigantea',
+      isHero: true,
+      radius: 40 * this.zoom,
+      distM: Math.hypot(target.x - this.vehicle.position.x, target.depth - this.depth),
+    });
+
+    // Piezolyte bio-aura
+    const aura = ctx.createRadialGradient(x, y, 4, x, y, 80 * this.zoom);
+    aura.addColorStop(0, 'rgba(190, 245, 255, 0.2)');
+    aura.addColorStop(0.5, 'rgba(140, 215, 235, 0.06)');
+    aura.addColorStop(1, 'rgba(10, 25, 35, 0)');
+    ctx.fillStyle = aura;
+    ctx.fillRect(x - 80 * this.zoom, y - 80 * this.zoom, 160 * this.zoom, 160 * this.zoom);
+
+    ctx.save();
+    ctx.translate(x, y);
+
+    const flutter = Math.sin(this.elapsed * 5.5);
+    const curlWave = Math.sin(this.elapsed * 2.2) * 0.08;
+    const antennaWave = Math.sin(this.elapsed * 3.2);
+
+    ctx.rotate(curlWave);
+    ctx.scale(this.zoom, this.zoom);
+
+    // 1. Articulated C-shaped chitinous carapace (Pleon & Pereon)
+    ctx.beginPath();
+    ctx.moveTo(-36, -6);
+    ctx.quadraticCurveTo(-34, -26, -10, -32);
+    ctx.quadraticCurveTo(24, -34, 38, -12);
+    ctx.quadraticCurveTo(46, 12, 30, 28);
+    ctx.quadraticCurveTo(14, 38, -6, 32);
+    ctx.quadraticCurveTo(8, 22, 16, 10);
+    ctx.quadraticCurveTo(24, -8, 8, -18);
+    ctx.quadraticCurveTo(-14, -22, -26, -10);
+    ctx.closePath();
+
+    const shellGrad = ctx.createLinearGradient(-30, -30, 30, 30);
+    shellGrad.addColorStop(0, 'rgba(252, 255, 255, 0.95)');
+    shellGrad.addColorStop(0.45, 'rgba(215, 242, 248, 0.85)');
+    shellGrad.addColorStop(1, 'rgba(165, 215, 230, 0.75)');
+    ctx.fillStyle = shellGrad;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)';
+    ctx.lineWidth = 1.4;
+    ctx.fill();
+    ctx.stroke();
+
+    // 2. Articulated segment boundaries
+    ctx.strokeStyle = 'rgba(110, 185, 205, 0.65)';
+    ctx.lineWidth = 1.0;
+    for (let seg = 0; seg < 6; seg++) {
+      const segAngle = -Math.PI * 0.7 + seg * 0.42;
+      const r1 = 18;
+      const r2 = 32;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(segAngle) * r1 + 6, Math.sin(segAngle) * r1 + 2);
+      ctx.lineTo(Math.cos(segAngle) * r2 + 6, Math.sin(segAngle) * r2 + 2);
+      ctx.stroke();
+    }
+
+    // 3. Internal digestive tract & lipid organ glow
+    ctx.beginPath();
+    ctx.ellipse(4, -8, 14, 5, 0.35, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(225, 130, 110, 0.65)';
+    ctx.fill();
+
+    // 4. Prehensile gnathopods & walking thoracic legs
+    for (let leg = 0; leg < 5; leg++) {
+      const legKick = Math.sin(this.elapsed * 4.5 + leg * 1.2) * 3;
+      const lx = -18 + leg * 10;
+      const ly = -6 + leg * 4;
+      ctx.beginPath();
+      ctx.moveTo(lx, ly);
+      ctx.lineTo(lx - 6, ly + 14 + legKick);
+      ctx.lineTo(lx - 12, ly + 22 + legKick);
+      ctx.strokeStyle = 'rgba(215, 245, 252, 0.9)';
+      ctx.lineWidth = 1.4;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+    }
+
+    // 5. Rapidly fluttering swimming pleopod fan paddles
+    for (let p = 0; p < 3; p++) {
+      const pleoFlutter = Math.sin(this.elapsed * 14 + p * 1.5) * 4;
+      const px = 18 + p * 6;
+      const py = 16 + p * 5;
+      ctx.beginPath();
+      ctx.moveTo(px, py);
+      ctx.lineTo(px - 8 + pleoFlutter, py + 12);
+      ctx.strokeStyle = 'rgba(180, 235, 245, 0.75)';
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.ellipse(px - 8 + pleoFlutter, py + 12, 3, 1.5, 0.4, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(210, 250, 255, 0.65)';
+      ctx.fill();
+    }
+
+    // 6. Long sweeping sensory antennae (primary & secondary flagella)
+    ctx.beginPath();
+    ctx.moveTo(-36, -8);
+    ctx.bezierCurveTo(-55, -16 + antennaWave * 4, -80, -20 - antennaWave * 6, -108, -14 + antennaWave * 8);
+    ctx.strokeStyle = 'rgba(245, 252, 255, 0.92)';
+    ctx.lineWidth = 1.3;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(-34, -2);
+    ctx.bezierCurveTo(-52, 4 - antennaWave * 3, -75, 10 + antennaWave * 5, -96, 18 - antennaWave * 6);
+    ctx.strokeStyle = 'rgba(220, 245, 255, 0.8)';
+    ctx.lineWidth = 1.1;
+    ctx.stroke();
+
+    // Vestigial white ocular cluster
+    ctx.beginPath();
+    ctx.arc(-30, -14, 2.5, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+    ctx.strokeStyle = 'rgba(160, 220, 230, 0.7)';
+    ctx.lineWidth = 0.8;
+    ctx.fill();
+    ctx.stroke();
 
     ctx.restore();
   }

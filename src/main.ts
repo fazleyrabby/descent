@@ -25,7 +25,7 @@ root.innerHTML = `
         <span class="signal"><i></i> SYSTEMS ONLINE</span>
         <button id="controlsBtn" class="text-button" type="button" aria-label="Controls manual">MANUAL <span class="key-badge">?</span></button>
         <button id="muteBtn" class="text-button" type="button" aria-label="Toggle audio">AUDIO <span id="muteLabel">ON</span></button>
-        <button id="journalBtn" class="text-button" type="button">FIELD JOURNAL <span id="journalCount">00/07</span></button>
+        <button id="journalBtn" class="text-button" type="button">FIELD JOURNAL <span id="journalCount">00/08</span></button>
         <button id="pauseBtn" class="icon-button" type="button" aria-label="Pause expedition">Ⅱ</button>
       </div>
     </header>
@@ -62,7 +62,7 @@ root.innerHTML = `
     <!-- Initial surface flight directive banner -->
     <div id="surfaceDirective" class="directive-card">
       <div class="directive-head"><span class="directive-dot"></span><span>EXPEDITION DIRECTIVE</span><button id="dismissDirective" class="directive-close" type="button" aria-label="Dismiss directive">×</button></div>
-      <p>Dive from the sunlit surface down through the 2,000 m hydrothermal rift, 4,000 m abyssal plain, and 6,000 m subduction fault into the <strong>8,500 m Hadal Trench Chasm</strong>. Locate <strong>7 documented species</strong> with sonar (<kbd>R</kbd>), scan with (<kbd>E</kbd>), and compile your scientific Field Journal (<kbd>J</kbd>).</p>
+      <p>Dive from the sunlit surface down through the 2,000 m hydrothermal rift, 4,000 m abyssal plain, and 6,000 m subduction fault all the way to <strong>11,000 m at Challenger Deep</strong>. Locate <strong>8 documented species</strong> with sonar (<kbd>R</kbd>), scan with (<kbd>E</kbd>), and compile your scientific Field Journal (<kbd>J</kbd>).</p>
       <div class="directive-keys">
         <span><kbd>W</kbd><kbd>S</kbd> Dive / Rise</span>
         <span><kbd>A</kbd><kbd>D</kbd> Drift</span>
@@ -79,11 +79,11 @@ root.innerHTML = `
       <button id="dismissTipBtn" class="tip-close" type="button" aria-label="Dismiss tip">×</button>
     </div>
 
-    <!-- 8,500m Milestone Celebration Card -->
+    <!-- 11,000m Milestone Celebration Card -->
     <div id="milestoneCard" class="milestone-card is-hidden" role="alert">
-      <div class="milestone-tag">EXPEDITION MILESTONE · 8,500 M</div>
-      <h3>Mariana Trench Hadal Chasm Reached</h3>
-      <p>You have descended through the Hadal trench chasm to 8,500 m depth. Hydrostatic pressure exceeds 850 atmospheres (~12,500 psi). At Free-Fall Lander NEREUS-II and the serpentine cold seeps, the endemic Mariana Snailfish thrives in total darkness. Open your field journal (<kbd>J</kbd>) to review your findings, or continue exploring.</p>
+      <div class="milestone-tag">EXPEDITION MILESTONE · 11,000 M</div>
+      <h3>Challenger Deep Seafloor Reached</h3>
+      <p>You have reached Earth's absolute deepest ocean trench floor at 10,928–11,000 m depth. Hydrostatic pressure exceeds 1,080 atmospheres (>16,000 psi). Resting on the soft diatomaceous pelagic ooze alongside the historic monuments of Bathyscaphe <em>Trieste</em> (1960) and <em>Deepsea Challenger</em> (2012), the supergiant amphipod <em>Alicella gigantea</em> thrives. Open your field journal (<kbd>J</kbd>) to complete your survey.</p>
       <button id="milestoneCloseBtn" class="primary-button" type="button"><span>ACKNOWLEDGE & EXPLORE</span><span class="button-arrow">↗</span></button>
     </div>
 
@@ -107,7 +107,7 @@ root.innerHTML = `
     </div>
 
     <div class="bottom-bar">
-      <div class="bottom-left"><span class="latitude">SIMULATED EXPEDITION</span><span class="bottom-rule"></span><span>0 → 8,500 M</span></div>
+      <div class="bottom-left"><span class="latitude">SIMULATED EXPEDITION</span><span class="bottom-rule"></span><span>0 → 11,000 M</span></div>
       <div class="control-strip">
         <span><kbd>A</kbd><kbd>D</kbd> DRIFT</span>
         <span><kbd>W</kbd><kbd>S</kbd> RISE / DIVE</span>
@@ -143,7 +143,7 @@ root.innerHTML = `
       <div class="scope-circle scope-three"></div>
       <div class="scope-axis"></div>
       <span class="scope-label scope-label-top">SURFACE / 000 M</span>
-      <span class="scope-label scope-label-bottom">ABYSS / 2,000 M</span>
+      <span class="scope-label scope-label-bottom">CHALLENGER DEEP / 11,000 M</span>
       <div class="scope-ping"></div>
     </div>
     <div class="intro-bottom"><span>01 / DESCENT PROTOTYPE</span><span>SIMULATED OCEAN · SOURCED DISCOVERIES</span></div>
@@ -279,7 +279,7 @@ root.innerHTML = `
   <aside id="debug" class="debug is-hidden">
     <div>DEBUG / SEED 183729</div>
     <div id="debugStats">—</div>
-    <label>TELEPORT DEPTH <input id="debugDepth" type="range" min="0" max="8500" step="1" value="0" /></label>
+    <label>TELEPORT DEPTH <input id="debugDepth" type="range" min="0" max="11000" step="1" value="0" /></label>
     <button id="debugLight" type="button">TOGGLE LIGHTS</button>
   </aside>
   <div id="fatal" class="fatal is-hidden" role="alert">
@@ -313,6 +313,9 @@ let metrics: WorldMetrics = {
   reached6000: false,
   reached7000: false,
   reached8000: false,
+  reached9000: false,
+  reached10000: false,
+  reached11000: false,
   zoom: 1.0,
   waterTransition: null,
 };
@@ -335,6 +338,9 @@ let reached5000Notified = false;
 let reached6000Notified = false;
 let reached7000Notified = false;
 let reached8000Notified = false;
+let reached9000Notified = false;
+let reached10000Notified = false;
+let reached11000Notified = false;
 let lastAudioZone = '';
 let toastTimer: number | undefined;
 
@@ -624,15 +630,23 @@ function updateAudio() {
     // Tectonic plate subduction shear rumble and friction hiss
     noiseFreq = 50 + faultProximity * 60;
     noiseLevel = 0.014 + faultProximity * 0.02;
-  } else {
+  } else if (depth < 8500) {
     // Mariana Trench Chasm & Cold Seeps (6,700m - 8,500m)
-    const trenchRatio = Math.min((depth - 6700) / 1800, 1);
-    cutoff = 48 - trenchRatio * 14;
-    droneFreq = 15 - trenchRatio * 2; // Extreme low-frequency hadal canyon reverberation
-    subGain = 0.14 + trenchRatio * 0.03;
-    // Cold seep effluent discharge and sheer basalt wall echo hiss
-    noiseFreq = 42 + trenchRatio * 35;
-    noiseLevel = 0.012 + trenchRatio * 0.018;
+    const trenchRatio = (depth - 6700) / 1800;
+    cutoff = 48 - trenchRatio * 12;
+    droneFreq = 15 - trenchRatio * 2; // Low-frequency hadal canyon reverberation
+    subGain = 0.14 + trenchRatio * 0.02;
+    noiseFreq = 42 + trenchRatio * 25;
+    noiseLevel = 0.012 + trenchRatio * 0.015;
+  } else {
+    // Challenger Deep Terminal Seafloor (8,500m - 11,000m)
+    const abyssRatio = Math.min((depth - 8500) / 2500, 1);
+    cutoff = 36 - abyssRatio * 10;
+    droneFreq = 13 - abyssRatio * 2; // Deepest 11 Hz sub-audible infrasound bedrock resonance
+    subGain = 0.16 + abyssRatio * 0.04;
+    // Crushing hydrostatic pressure stillness & gentle diatomaceous sediment displacement
+    noiseFreq = 34 + abyssRatio * 18;
+    noiseLevel = 0.008 + abyssRatio * 0.012;
   }
 
   ambientFilter.frequency.setTargetAtTime(cutoff, now, 0.25);
@@ -878,6 +892,12 @@ function journalContent() {
   el<HTMLElement>('journalDiscoveredCount').textContent = `${count} of ${total} Species (${Math.round((count / total) * 100)}%)`;
   el<HTMLElement>('journalStatus').textContent = count === total
     ? 'ALL SPECIES CATALOGUED'
+    : metrics.reached11000
+    ? '11,000 M CHALLENGER DEEP'
+    : metrics.reached10000
+    ? '10,000 M HADAL TRENCH FLOOR'
+    : metrics.reached9000
+    ? '9,000 M LOWER HADAL ZONE'
     : metrics.reached8000
     ? '8,000 M MARIANA HADAL CHASM'
     : metrics.reached7000
@@ -899,7 +919,7 @@ function journalContent() {
   const badgeContainer = el<HTMLElement>('surveyBadgeContainer');
   if (badgeContainer) {
     badgeContainer.innerHTML = count === total
-      ? `<div class="survey-complete-badge">★ EXPEDITION SURVEY COMPLETE · 7/7 CATALOGUED</div>`
+      ? `<div class="survey-complete-badge">★ EXPEDITION SURVEY COMPLETE · 8/8 CATALOGUED</div>`
       : '';
   }
 
@@ -1088,12 +1108,26 @@ function onTick(next: WorldMetrics) {
     toast('8,000 M REACHED · MARIANA TRENCH CHASM & HABITAT BOUNDARY');
   }
 
-  // 8,500 m Expedition Boundary Celebration Card
-  if (metrics.depth >= 8450 && !milestoneTriggered) {
+  // 9,000 m Lower Hadal Zone Milestone Check
+  if (metrics.reached9000 && !reached9000Notified) {
+    reached9000Notified = true;
+    milestoneAudio();
+    toast('9,000 M REACHED · LOWER HADAL ZONE & ULTRA-DEEP FAULT');
+  }
+
+  // 10,000 m Extreme Trench Abyss Milestone Check
+  if (metrics.reached10000 && !reached10000Notified) {
+    reached10000Notified = true;
+    milestoneAudio();
+    toast('10,000 M REACHED · 10 KM ULTRA-DEEP TRENCH ENTRY');
+  }
+
+  // 11,000 m Challenger Deep Seafloor Celebration Card
+  if (metrics.reached11000 && !milestoneTriggered) {
     milestoneTriggered = true;
     show(el<HTMLElement>('milestoneCard'), true);
     milestoneAudio();
-    toast('8,500 M REACHED · EXPEDITION TERMINAL BOUNDARY');
+    toast('10,928 M REACHED · CHALLENGER DEEP TERMINAL SEAFLOOR');
   }
 
   // Water breach and plunge surface transitions
@@ -1139,7 +1173,7 @@ function onTick(next: WorldMetrics) {
   el<HTMLElement>('zoneSubtitle').textContent = zone.subtitle;
   el<HTMLElement>('pressure').textContent = `~${(1 + depth / 10).toFixed(1)} atm`;
   el<HTMLElement>('light').textContent = `${Math.round(Math.pow(1 - Math.min(depth / 1000, 1), 2.6) * 100)}%`;
-  el<HTMLElement>('depthProgress').style.width = `${Math.min(depth / 8500, 1) * 100}%`;
+  el<HTMLElement>('depthProgress').style.width = `${Math.min(depth / 11000, 1) * 100}%`;
   el<HTMLElement>('fpsDisplay').textContent = `${Math.round(1000 / Math.max(metrics.frameMs, 1))} FPS`;
   const zoomDisplay = el<HTMLElement>('zoomDisplay');
   if (zoomDisplay) {
@@ -1302,7 +1336,7 @@ function triggerSonar() {
   if (res.distance !== null && res.distance < 160) {
     toast(`ACOUSTIC CONTACT DETECTED · ${Math.round(res.distance)} M ${res.name ? `[${res.name.toUpperCase()}]` : ''}`);
   } else {
-    toast(discoveredIds.length === documentedSpecimens.length ? 'ALL 7 REGIONAL SPECIES CATALOGUED' : 'NO UNCATALOGUED CONTACT IN RANGE');
+    toast(discoveredIds.length === documentedSpecimens.length ? 'ALL 8 REGIONAL SPECIES CATALOGUED' : 'NO UNCATALOGUED CONTACT IN RANGE');
   }
 }
 

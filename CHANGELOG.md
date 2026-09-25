@@ -6,6 +6,13 @@ User-visible changes to DESCENT are recorded here. Add new work under **Unreleas
 
 ### Added
 
+- Deep-ocean expedition expansion from 8,500 m to 11,000 m down to the ultimate terminal seafloor at **Challenger Deep** (10,928–11,000 m), completing the entire continuous oceanic descent column from surface to Earth's deepest point under >1,080 atmospheres (>16,000 psi) of hydrostatic pressure.
+- 8th documented hero species: Supergiant Hadal Amphipod (*Alicella gigantea*, target depth 10,820 m, NOAA Ocean Exploration sourced), complete with an authored scientific SVG plate, interactive taxonomy reticle, active sonar triangulation, and an animated in-game model featuring an articulated pearlescent chitinous carapace, flexing body segments, prehensile gnathopods, fluttering swimming pleopods, and sweeping sensory antennae.
+- Challenger Deep Terminal Seafloor environment (10,928 m) with rolling biogenic diatomaceous silt and yellowish-grey pelagic ooze, sediment dust swirls, and tectonic Mariana subduction plate bedrock slopes.
+- Historic oceanographic exploration monument: Bathyscaphe *Trieste* (1960, Jacques Piccard & Don Walsh, 10,916 m) featuring the gasoline buoyancy float hull, forged steel crew sphere, conning tower, and quartz viewport.
+- Historic oceanographic exploration monument: *Deepsea Challenger* (2012, James Cameron, 10,908 m) featuring the vertical green ISOFLOAT syntactic foam beam, spherical pilot sphere, thruster raceways, and pulsing high-power LED light tower.
+- Ambient hadal fauna and benthic formations across 8,800–10,950 m: translucent Hadal Sea Cucumbers (*Peniagone* sp.) with dorsal sails and walking tube-feet, and giant tubular foraminifera colonies (*Bathysiphon* mats).
+- 11 Hz sub-audible infrasound bedrock acoustic synthesis simulating extreme deep-trench pressure damping and soft diatomaceous sediment displacement.
 - Deep-ocean expedition expansion from 6,000 m down to 8,500 m into the Hadal Trench Chasm, extending the submersible descent through the extreme hadalpelagic zone under >850 atmospheres of hydrostatic pressure.
 - 7th documented hero species: Mariana Snailfish (*Pseudoliparis swirei*, target depth 7,850 m, Schmidt Ocean Institute / University of Washington sourced), complete with an authored scientific SVG plate, interactive taxonomy reticle, active sonar triangulation, and animated in-game model featuring a translucent gelatinous scale-less body, visible visceral organ cavity, flapping pectoral wings, and undulating tadpole swimming motion.
 - Mariana Trench Hadal Chasm geological environment (>6,700 m) featuring colossal V-shaped basalt walls, shear fault compression lines, and Serpentine Hydrothermal Cold Seeps at 7,200 m discharging carbonate mineral plumes from authigenic chimneys.

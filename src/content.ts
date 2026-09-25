@@ -571,6 +571,96 @@ export const documentedSpecimens: Specimen[] = [
       </div>
     `,
   },
+  {
+    id: 'supergiant-amphipod',
+    index: '08',
+    name: 'Supergiant hadal amphipod',
+    scientificName: 'Alicella gigantea',
+    depth: '8,500–10,950 m',
+    depthTier: 'hadalpelagic',
+    targetDepth: 10820,
+    habitat: 'Challenger Deep · Hadal seafloor',
+    realSize: 'Up to 34 cm (13.4 in); 20x standard amphipod size',
+    classification: 'ARTHROPODA · AMPHIPODA · ALICELLIDAE',
+    description:
+      'The largest amphipod species on Earth, exhibiting extreme deep-sea gigantism. While typical benthic amphipods measure just 1–2 cm, Alicella gigantea grows up to 34 cm in the crushing cold and pitch-black conditions of the hadal trenches.',
+    detail:
+      'Specimens collected from the deepest ocean trenches utilize specialized piezolyte enzymes and high-pressure-resistant cell membranes to survive over 1,080 atmospheres of hydrostatic pressure. Sourced from NOAA Ocean Exploration records.',
+    source: {
+      title: 'NOAA Ocean Exploration · Supergiant Amphipods',
+      url: 'https://oceanexplorer.noaa.gov/explorations/16challenger/welcome.html',
+      publisher: 'NOAA Office of Ocean Exploration and Research',
+      accessedOn: '2026-09-25',
+    },
+    annotations: [
+      { num: '01.', label: 'Articulated chitinous pleon plates' },
+      { num: '02.', label: 'Elongated primary sensory flagellum' },
+      { num: '03.', label: 'Prehensile gnathopods (feeding claws)' },
+      { num: '04.', label: 'Swimming pleopod fan paddles' },
+    ],
+    svg: `
+      <div class="specimen-plate">
+        <div class="plate-badge">CLASSIFICATION // ARTHROPODA · AMPHIPODA · ALICELLIDAE</div>
+        <svg class="specimen-diagram" viewBox="0 0 340 240" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="amphipodAura" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#bcecf5" stop-opacity="0.22"/>
+              <stop offset="100%" stop-color="#bcecf5" stop-opacity="0"/>
+            </radialGradient>
+            <linearGradient id="chitinShell" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#f8fcff"/>
+              <stop offset="50%" stop-color="#d4edf2"/>
+              <stop offset="100%" stop-color="#a8d5df"/>
+            </linearGradient>
+            <linearGradient id="innerOrgan" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="rgba(240,165,145,0.7)"/>
+              <stop offset="100%" stop-color="rgba(195,110,90,0.85)"/>
+            </linearGradient>
+          </defs>
+          <circle cx="170" cy="120" r="110" fill="url(#amphipodAura)" />
+          
+          <!-- Curved C-shaped articulated body segments (Pleon & Pereon) -->
+          <path d="M 95 110 C 90 70 140 50 195 65 C 245 80 265 125 240 165 C 220 195 175 195 145 180 C 135 175 138 165 150 168 C 175 178 208 172 222 148 C 242 116 225 82 185 74 C 145 66 108 85 110 115 Z" fill="url(#chitinShell)" stroke="rgba(255,255,255,0.95)" stroke-width="1.8"/>
+
+          <!-- Articulated segment seams -->
+          <path d="M 140 60 Q 142 85 132 105" stroke="rgba(100,160,180,0.6)" stroke-width="1.2" fill="none"/>
+          <path d="M 165 62 Q 168 90 156 112" stroke="rgba(100,160,180,0.6)" stroke-width="1.2" fill="none"/>
+          <path d="M 195 68 Q 200 98 185 122" stroke="rgba(100,160,180,0.6)" stroke-width="1.2" fill="none"/>
+          <path d="M 225 82 Q 228 112 210 136" stroke="rgba(100,160,180,0.6)" stroke-width="1.2" fill="none"/>
+          <path d="M 245 106 Q 242 132 225 152" stroke="rgba(100,160,180,0.6)" stroke-width="1.2" fill="none"/>
+          <path d="M 245 138 Q 235 158 215 170" stroke="rgba(100,160,180,0.6)" stroke-width="1.2" fill="none"/>
+
+          <!-- Internal digestive hepatopancreas glow -->
+          <path d="M 130 92 Q 170 82 205 102 Q 170 115 130 92 Z" fill="url(#innerOrgan)"/>
+
+          <!-- Prehensile gnathopods and peraeopods (walking/grasping legs) -->
+          <path d="M 105 120 L 85 145 L 75 140" stroke="#d5f0f5" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+          <path d="M 120 122 L 100 155 L 90 150" stroke="#d5f0f5" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+          <path d="M 140 120 L 125 162 L 115 160" stroke="#d5f0f5" stroke-width="2.0" stroke-linecap="round" fill="none"/>
+          <path d="M 160 120 L 155 168 L 148 172" stroke="#d5f0f5" stroke-width="2.0" stroke-linecap="round" fill="none"/>
+          <path d="M 185 125 L 188 172 L 182 178" stroke="#d5f0f5" stroke-width="2.0" stroke-linecap="round" fill="none"/>
+
+          <!-- Swimming pleopods (abdominal paddle fans) -->
+          <path d="M 205 150 Q 195 175 185 185" stroke="rgba(190,240,250,0.85)" stroke-width="1.6" fill="none"/>
+          <path d="M 220 155 Q 212 180 202 192" stroke="rgba(190,240,250,0.85)" stroke-width="1.6" fill="none"/>
+          <path d="M 232 162 Q 226 185 218 198" stroke="rgba(190,240,250,0.85)" stroke-width="1.6" fill="none"/>
+
+          <!-- Long primary sensory antennae -->
+          <path d="M 98 105 C 75 95 45 92 18 100" stroke="rgba(240,252,255,0.9)" stroke-width="1.5" fill="none"/>
+          <path d="M 98 112 C 70 115 42 125 22 138" stroke="rgba(215,245,255,0.8)" stroke-width="1.3" fill="none"/>
+
+          <!-- Vestigial pigmentless ocular patch -->
+          <circle cx="102" cy="104" r="3.5" fill="rgba(255,255,255,0.8)" stroke="rgba(160,215,225,0.6)" stroke-width="0.8"/>
+        </svg>
+        <div class="plate-annotations">
+          <span><b>01.</b> Articulated chitinous pleon</span>
+          <span><b>02.</b> Sensory antennae</span>
+          <span><b>03.</b> Prehensile gnathopods</span>
+          <span><b>04.</b> Swimming pleopods</span>
+        </div>
+      </div>
+    `,
+  },
 ];
 
 export const vampireSquid = documentedSpecimens[1];
@@ -581,5 +671,6 @@ export function zoneAt(depth: number): { name: string; subtitle: string } {
   if (depth < 1000) return { name: 'TWILIGHT ZONE', subtitle: 'Mesopelagic' };
   if (depth < 4000) return { name: 'MIDNIGHT ZONE', subtitle: 'Bathypelagic' };
   if (depth < 6000) return { name: 'ABYSSAL ZONE', subtitle: 'Abyssopelagic' };
-  return { name: 'HADAL ZONE', subtitle: 'Hadalpelagic · Trench Subduction' };
+  if (depth < 10500) return { name: 'HADAL ZONE', subtitle: 'Hadalpelagic · Mariana Trench' };
+  return { name: 'CHALLENGER DEEP', subtitle: 'Earth\'s Deepest Seafloor · 11,000 m' };
 }
