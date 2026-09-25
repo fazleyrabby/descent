@@ -62,6 +62,10 @@ User-visible changes to DESCENT are recorded here. Add new work under **Unreleas
 
 ### Changed
 
+- Multiplied previously solitary sea creatures across all oceanic zones into natural pods, family groups, and schooling encounters to eliminate empty water voids:
+  - **Epipelagic (0–200 m):** Blue Whales now cruise as a mother and escort pair; Pelagic Apex Sharks roam in a patrol trio at staggered depths; Bottlenose Dolphins travel in multiple cohesive pods with calves; Harbor Seals dive in active colonies; Pelagic Manta Rays glide in formation; and Moon Jelly aggregations have been expanded.
+  - **Mesopelagic (200–1,000 m):** Giant Pacific Octopuses and foraging Sperm Whales now appear across multiple depth bands; Dumbo Octopuses flutter in hovering pods; and Lanternfish and Comb Jelly frequencies have been increased.
+  - **Bathypelagic & Abyss (1,000–5,000 m):** Deep-Sea Phantom Jellies, Abyssal Anglerfish, Bluntnose Sixgill Sharks, Giant Squids, Black Swallowers, Deep-Sea Dragonfish, and Deep-Sea Glass Squids now populate the deep ocean with multiple staggered encounters and varied spatial headings.
 - Enhanced mobile and tablet HUD responsiveness across all viewport breakpoints (`<=1100px`, `<=768px`, `<=480px`, and landscape `@media (max-height: 520px)`):
   - Repositioned the active sonar radar panel to the upper right beneath the masthead on mobile portrait viewports, eliminating overlap with the touch action buttons and virtual D-pad.
   - Added CSS safe-area insets (`env(safe-area-inset-top)` and `env(safe-area-inset-bottom)`) for modern bezel-less iOS and Android displays.

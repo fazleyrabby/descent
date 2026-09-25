@@ -1589,48 +1589,55 @@ export class OceanWorld {
       }
     }
 
-    // B. Gliding Manta Ray Silhouette (cruises horizontally at 40-75m)
-    const rayBaseX = 15;
-    const rayX = this.wrapCoord(rayBaseX, 130);
-    const rayDepth = 55 + Math.sin(this.elapsed * 0.2) * 8;
-    const raySx = this.screenX(rayX + (this.elapsed * 4) % 130 - 65);
-    const raySy = this.screenY(rayDepth);
-    if (raySx > -60 && raySx < this.width + 60 && raySy > -40 && raySy < this.height + 40) {
-      this.activeCreatures.push({
-        screenX: raySx,
-        screenY: raySy,
-        name: 'PELAGIC RAY',
-        category: 'Ambient scenery · Epipelagic',
-        radius: 32,
-        distM: Math.hypot(rayX - this.vehicle.position.x, rayDepth - this.depth),
-      });
+    // B. Gliding Manta Ray Family (cruises horizontally at 40-75m, multiple individuals)
+    for (const r of [
+      { baseX: 15, depthBase: 52, speed: 4.0, dir: 1, scale: 1.0, flapRate: 1.8, delay: 0 },
+      { baseX: -35, depthBase: 68, speed: 3.5, dir: -1, scale: 0.85, flapRate: 2.1, delay: 1.4 },
+      { baseX: 85, depthBase: 60, speed: 4.3, dir: 1, scale: 0.72, flapRate: 2.3, delay: 2.7 },
+    ]) {
+      const rayX = this.wrapCoord(r.baseX, 130);
+      const rayDepth = r.depthBase + Math.sin(this.elapsed * 0.2 + r.delay) * 8;
+      const rayProgress = ((this.elapsed * r.speed * r.dir + r.delay * 25) % 130 + 130) % 130 - 65;
+      const raySx = this.screenX(rayX + rayProgress);
+      const raySy = this.screenY(rayDepth);
+      if (raySx > -60 && raySx < this.width + 60 && raySy > -40 && raySy < this.height + 40) {
+        this.activeCreatures.push({
+          screenX: raySx,
+          screenY: raySy,
+          name: 'PELAGIC RAY',
+          category: 'Ambient scenery · Epipelagic',
+          radius: 32 * r.scale,
+          distM: Math.hypot(rayX - this.vehicle.position.x, rayDepth - this.depth),
+        });
 
-      ctx.save();
-      ctx.translate(raySx, raySy);
-      const wingFlap = Math.sin(this.elapsed * 1.8) * 4;
-      ctx.beginPath();
-      ctx.moveTo(22, 0); // Head / cephalic horns
-      ctx.lineTo(26, -3);
-      ctx.lineTo(23, -5);
-      ctx.lineTo(15, -6);
-      ctx.quadraticCurveTo(4, -18 + wingFlap, -8, -26 + wingFlap * 1.3); // Port wing tip
-      ctx.quadraticCurveTo(-14, -8, -18, 0); // Trailing wing edge
-      ctx.lineTo(-32, 0); // Tail
-      ctx.lineTo(-18, 0);
-      ctx.quadraticCurveTo(-14, 8, -8, 26 - wingFlap * 1.3); // Starboard wing tip
-      ctx.quadraticCurveTo(4, 18 - wingFlap, 15, 6);
-      ctx.lineTo(23, 5);
-      ctx.lineTo(26, 3);
-      ctx.closePath();
-      ctx.fillStyle = `rgba(10, 42, 54, ${0.5 * (1 - darkness)})`;
-      ctx.fill();
-      ctx.restore();
+        ctx.save();
+        ctx.translate(raySx, raySy);
+        ctx.scale(r.scale * r.dir, r.scale);
+        const wingFlap = Math.sin(this.elapsed * r.flapRate + r.delay) * 4;
+        ctx.beginPath();
+        ctx.moveTo(22, 0); // Head / cephalic horns
+        ctx.lineTo(26, -3);
+        ctx.lineTo(23, -5);
+        ctx.lineTo(15, -6);
+        ctx.quadraticCurveTo(4, -18 + wingFlap, -8, -26 + wingFlap * 1.3); // Port wing tip
+        ctx.quadraticCurveTo(-14, -8, -18, 0); // Trailing wing edge
+        ctx.lineTo(-32, 0); // Tail
+        ctx.lineTo(-18, 0);
+        ctx.quadraticCurveTo(-14, 8, -8, 26 - wingFlap * 1.3); // Starboard wing tip
+        ctx.quadraticCurveTo(4, 18 - wingFlap, 15, 6);
+        ctx.lineTo(23, 5);
+        ctx.lineTo(26, 3);
+        ctx.closePath();
+        ctx.fillStyle = `rgba(10, 42, 54, ${0.5 * (1 - darkness)})`;
+        ctx.fill();
+        ctx.restore();
+      }
     }
 
     // C. Translucent Surface Moon Jellies (15m – 90m)
-    for (let j = 0; j < 5; j++) {
-      const jx = this.wrapCoord(j * 26, 95);
-      const jd = 30 + j * 16 + Math.sin(this.elapsed * 0.4 + j) * 6;
+    for (let j = 0; j < 7; j++) {
+      const jx = this.wrapCoord(j * 20 - 25, 95);
+      const jd = 24 + j * 12 + Math.sin(this.elapsed * 0.4 + j) * 6;
       const jsx = this.screenX(jx) + Math.sin(this.elapsed * 0.25 + j) * 8;
       const jsy = this.screenY(jd);
       if (jsx < -30 || jsx > this.width + 30 || jsy < -30 || jsy > this.height + 30) continue;
@@ -1661,244 +1668,237 @@ export class OceanWorld {
       ctx.restore();
     }
 
-    // D. Pod of Bottlenose Dolphins (12m – 45m)
-    const dolphinBaseX = 65;
-    const dolphinX = this.wrapCoord(dolphinBaseX, 150);
-    const dolphinSpeed = 7;
-    const dolphinCurrX = dolphinX + (this.elapsed * dolphinSpeed) % 150 - 75;
-    const dolphinDepth = 22 + Math.sin(this.elapsed * 0.4) * 6;
-    const dsx = this.screenX(dolphinCurrX);
-    const dsy = this.screenY(dolphinDepth);
+    // D. Pods of Bottlenose Dolphins (12m – 55m, 2 separate cruising pods)
+    for (const pod of [
+      { baseX: 65, depthBase: 22, speed: 7, dir: 1, offsets: [{ dx: 0, dy: 0, s: 1.0 }, { dx: -24, dy: 9, s: 0.75 }, { dx: -45, dy: -6, s: 0.85 }] },
+      { baseX: -55, depthBase: 38, speed: 6.2, dir: -1, offsets: [{ dx: 0, dy: 0, s: 0.95 }, { dx: -22, dy: 8, s: 0.7 }] },
+    ]) {
+      const dolphinX = this.wrapCoord(pod.baseX, 150);
+      const dolphinCurrX = dolphinX + ((this.elapsed * pod.speed * pod.dir) % 150 + 150) % 150 - 75;
+      const dolphinDepth = pod.depthBase + Math.sin(this.elapsed * 0.4 + pod.baseX) * 6;
+      const dsx = this.screenX(dolphinCurrX);
+      const dsy = this.screenY(dolphinDepth);
 
-    if (dsx > -80 && dsx < this.width + 80 && dsy > -40 && dsy < this.height + 40) {
-      this.activeCreatures.push({
-        screenX: dsx,
-        screenY: dsy,
-        name: 'BOTTLENOSE DOLPHINS',
-        category: 'Ambient scenery · Epipelagic',
-        radius: 36,
-        distM: Math.hypot(dolphinCurrX - this.vehicle.position.x, dolphinDepth - this.depth),
-      });
+      if (dsx > -100 && dsx < this.width + 100 && dsy > -40 && dsy < this.height + 40) {
+        this.activeCreatures.push({
+          screenX: dsx,
+          screenY: dsy,
+          name: 'BOTTLENOSE DOLPHINS',
+          category: 'Ambient scenery · Epipelagic',
+          radius: 40,
+          distM: Math.hypot(dolphinCurrX - this.vehicle.position.x, dolphinDepth - this.depth),
+        });
 
-      // Draw pod leader and calf/partner
-      for (const offset of [{ dx: 0, dy: 0, s: 1.0 }, { dx: -24, dy: 9, s: 0.75 }]) {
+        // Draw individual dolphins in the pod
+        for (const offset of pod.offsets) {
+          ctx.save();
+          ctx.translate(dsx + offset.dx * pod.dir, dsy + offset.dy);
+          ctx.scale(offset.s * pod.dir, offset.s);
+
+          const swimWave = Math.sin(this.elapsed * 4 + offset.dx * 0.1);
+          ctx.rotate(swimWave * 0.08);
+
+          ctx.beginPath();
+          ctx.moveTo(26, 0);
+          ctx.quadraticCurveTo(20, -5, 12, -7);
+          ctx.lineTo(2, -8);
+          ctx.quadraticCurveTo(-2, -16, -7, -17);
+          ctx.quadraticCurveTo(-5, -9, -9, -7);
+          ctx.quadraticCurveTo(-18, -4, -26, swimWave * 3);
+          ctx.lineTo(-32, -6 + swimWave * 4);
+          ctx.lineTo(-29, swimWave * 3);
+          ctx.lineTo(-32, 6 + swimWave * 4);
+          ctx.lineTo(-26, swimWave * 3);
+          ctx.quadraticCurveTo(-16, 5, 2, 7);
+          ctx.lineTo(6, 13);
+          ctx.lineTo(8, 7);
+          ctx.quadraticCurveTo(16, 5, 22, 2);
+          ctx.closePath();
+          ctx.fillStyle = `rgba(12, 45, 58, ${0.7 * (1 - darkness)})`;
+          ctx.fill();
+          ctx.restore();
+        }
+      }
+    }
+
+    // E. Diving Harbor Seals (18m – 65m, colony of active divers)
+    for (const seal of [
+      { baseX: -40, depthBase: 35, speed: 0.3, dir: 1, scale: 1.0, delay: 0 },
+      { baseX: 45, depthBase: 48, speed: 0.38, dir: -1, scale: 0.9, delay: 1.8 },
+      { baseX: 110, depthBase: 28, speed: 0.25, dir: 1, scale: 0.8, delay: 3.2 },
+    ]) {
+      const sealX = this.wrapCoord(seal.baseX, 110);
+      const sealDepth = seal.depthBase + Math.sin(this.elapsed * 0.5 + seal.delay) * 10;
+      const ssx = this.screenX(sealX + Math.sin(this.elapsed * seal.speed + seal.delay) * 16);
+      const ssy = this.screenY(sealDepth);
+
+      if (ssx > -50 && ssx < this.width + 50 && ssy > -40 && ssy < this.height + 40) {
+        this.activeCreatures.push({
+          screenX: ssx,
+          screenY: ssy,
+          name: 'HARBOR SEAL',
+          category: 'Ambient scenery · Epipelagic',
+          radius: 24 * seal.scale,
+          distM: Math.hypot(sealX - this.vehicle.position.x, sealDepth - this.depth),
+        });
+
         ctx.save();
-        ctx.translate(dsx + offset.dx, dsy + offset.dy);
-        ctx.scale(offset.s, offset.s);
-
-        const swimWave = Math.sin(this.elapsed * 4 + offset.dx * 0.1);
-        ctx.rotate(swimWave * 0.08);
+        ctx.translate(ssx, ssy);
+        ctx.scale(seal.scale * seal.dir, seal.scale);
+        const roll = Math.sin(this.elapsed * 0.8 + seal.delay) * 0.2;
+        const kick = Math.sin(this.elapsed * 3.5 + seal.delay) * 3;
+        ctx.rotate(roll + 0.15);
 
         ctx.beginPath();
-        // Rostrum / beak
-        ctx.moveTo(26, 0);
-        ctx.quadraticCurveTo(20, -5, 12, -7);
-        ctx.lineTo(2, -8);
-        // Curved dorsal fin
-        ctx.quadraticCurveTo(-2, -16, -7, -17);
-        ctx.quadraticCurveTo(-5, -9, -9, -7);
-        // Peduncle
-        ctx.quadraticCurveTo(-18, -4, -26, swimWave * 3);
-        // Flukes (tail)
-        ctx.lineTo(-32, -6 + swimWave * 4);
-        ctx.lineTo(-29, swimWave * 3);
-        ctx.lineTo(-32, 6 + swimWave * 4);
-        ctx.lineTo(-26, swimWave * 3);
-        // Belly and pectoral fin
-        ctx.quadraticCurveTo(-16, 5, 2, 7);
-        ctx.lineTo(6, 13);
-        ctx.lineTo(8, 7);
-        ctx.quadraticCurveTo(16, 5, 22, 2);
+        ctx.arc(14, 0, 5.5, 0, Math.PI * 2);
+        ctx.moveTo(10, -5);
+        ctx.quadraticCurveTo(0, -7, -10, -5);
+        ctx.quadraticCurveTo(-18, -3, -22, kick);
+        ctx.lineTo(-28, -4 + kick);
+        ctx.lineTo(-23, kick);
+        ctx.lineTo(-28, 4 + kick);
+        ctx.lineTo(-20, kick);
+        ctx.quadraticCurveTo(-10, 5, 0, 7);
+        ctx.lineTo(4, 12);
+        ctx.lineTo(7, 6);
+        ctx.quadraticCurveTo(11, 4, 14, 0);
         ctx.closePath();
-        ctx.fillStyle = `rgba(12, 45, 58, ${0.7 * (1 - darkness)})`;
+        ctx.fillStyle = `rgba(16, 50, 62, ${0.68 * (1 - darkness)})`;
         ctx.fill();
         ctx.restore();
       }
     }
 
-    // E. Diving Harbor Seal (18m – 55m)
-    const sealBaseX = -40;
-    const sealX = this.wrapCoord(sealBaseX, 110);
-    const sealDepth = 35 + Math.sin(this.elapsed * 0.5) * 10;
-    const ssx = this.screenX(sealX + Math.sin(this.elapsed * 0.3) * 14);
-    const ssy = this.screenY(sealDepth);
+    // F. Pelagic Apex Sharks (55m – 140m, patrol group across epipelagic depths)
+    for (const sh of [
+      { baseX: -85, depthBase: 85, speed: 5.0, dir: 1, scale: 1.0, delay: 0 },
+      { baseX: 35, depthBase: 115, speed: 4.4, dir: -1, scale: 0.88, delay: 1.6 },
+      { baseX: 125, depthBase: 70, speed: 5.4, dir: 1, scale: 0.78, delay: 3.1 },
+    ]) {
+      const sharkX = this.wrapCoord(sh.baseX, 160);
+      const sharkCurrX = sharkX + ((this.elapsed * sh.speed * sh.dir + sh.delay * 30) % 160 + 160) % 160 - 80;
+      const sharkDepth = sh.depthBase + Math.sin(this.elapsed * 0.22 + sh.delay) * 12;
+      const shsx = this.screenX(sharkCurrX);
+      const shsy = this.screenY(sharkDepth);
 
-    if (ssx > -50 && ssx < this.width + 50 && ssy > -40 && ssy < this.height + 40) {
-      this.activeCreatures.push({
-        screenX: ssx,
-        screenY: ssy,
-        name: 'HARBOR SEAL',
-        category: 'Ambient scenery · Epipelagic',
-        radius: 24,
-        distM: Math.hypot(sealX - this.vehicle.position.x, sealDepth - this.depth),
-      });
+      if (shsx > -80 && shsx < this.width + 80 && shsy > -50 && shsy < this.height + 50) {
+        this.activeCreatures.push({
+          screenX: shsx,
+          screenY: shsy,
+          name: 'PELAGIC SHARK',
+          category: 'Ambient scenery · Epipelagic',
+          radius: 38 * sh.scale,
+          distM: Math.hypot(sharkCurrX - this.vehicle.position.x, sharkDepth - this.depth),
+        });
 
-      ctx.save();
-      ctx.translate(ssx, ssy);
-      const roll = Math.sin(this.elapsed * 0.8) * 0.2;
-      const kick = Math.sin(this.elapsed * 3.5) * 3;
-      ctx.rotate(roll + 0.15);
+        ctx.save();
+        ctx.translate(shsx, shsy);
+        ctx.scale(sh.scale * sh.dir, sh.scale);
+        const wag = Math.sin(this.elapsed * 2.8 + sh.delay) * 4.5;
+        const bodyFlex = Math.sin(this.elapsed * 2.8 + sh.delay) * 0.07;
+        ctx.rotate(bodyFlex);
 
-      ctx.beginPath();
-      // Round inquisitive head
-      ctx.arc(14, 0, 5.5, 0, Math.PI * 2);
-      ctx.moveTo(10, -5);
-      // Streamlined body
-      ctx.quadraticCurveTo(0, -7, -10, -5);
-      ctx.quadraticCurveTo(-18, -3, -22, kick);
-      // Hind flippers
-      ctx.lineTo(-28, -4 + kick);
-      ctx.lineTo(-23, kick);
-      ctx.lineTo(-28, 4 + kick);
-      ctx.lineTo(-20, kick);
-      ctx.quadraticCurveTo(-10, 5, 0, 7);
-      // Fore flipper
-      ctx.lineTo(4, 12);
-      ctx.lineTo(7, 6);
-      ctx.quadraticCurveTo(11, 4, 14, 0);
-      ctx.closePath();
-      ctx.fillStyle = `rgba(16, 50, 62, ${0.68 * (1 - darkness)})`;
-      ctx.fill();
-      ctx.restore();
+        ctx.beginPath();
+        ctx.moveTo(34, 0);
+        ctx.quadraticCurveTo(24, -7, 10, -9);
+        ctx.lineTo(2, -22);
+        ctx.quadraticCurveTo(0, -21, -3, -9);
+        ctx.lineTo(-18, -6);
+        ctx.lineTo(-21, -11);
+        ctx.lineTo(-23, -5);
+        ctx.lineTo(-32, wag * 0.5);
+        ctx.lineTo(-44, -16 + wag);
+        ctx.quadraticCurveTo(-38, wag, -34, wag * 0.5);
+        ctx.lineTo(-41, 10 + wag);
+        ctx.lineTo(-31, wag * 0.5);
+        ctx.lineTo(-20, 5);
+        ctx.lineTo(-16, 9);
+        ctx.lineTo(-14, 5);
+        ctx.quadraticCurveTo(-5, 6, 8, 7);
+        ctx.lineTo(2, 22);
+        ctx.quadraticCurveTo(4, 18, 12, 6);
+        ctx.quadraticCurveTo(24, 5, 34, 0);
+        ctx.closePath();
+        ctx.fillStyle = `rgba(8, 32, 44, ${0.78 * (1 - darkness)})`;
+        ctx.fill();
+
+        ctx.strokeStyle = `rgba(160, 220, 230, ${0.2 * (1 - darkness)})`;
+        ctx.lineWidth = 1;
+        for (let g = 0; g < 4; g++) {
+          ctx.beginPath();
+          ctx.moveTo(14 - g * 2.2, -3);
+          ctx.lineTo(13 - g * 2.2, 3);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
     }
 
-    // F. Pelagic Apex Shark (55m – 140m)
-    const sharkBaseX = -85;
-    const sharkX = this.wrapCoord(sharkBaseX, 160);
-    const sharkSpeed = 5;
-    const sharkCurrX = sharkX + (this.elapsed * sharkSpeed) % 160 - 80;
-    const sharkDepth = 85 + Math.sin(this.elapsed * 0.22) * 12;
-    const shsx = this.screenX(sharkCurrX);
-    const shsy = this.screenY(sharkDepth);
+    // G. Majestic Blue Whales (95m – 195m, mother and escort pair)
+    for (const w of [
+      { baseX: 110, depthBase: 135, speed: 3.2, dir: 1, scale: 1.0, delay: 0, isHeroTarget: true },
+      { baseX: -80, depthBase: 160, speed: 2.9, dir: -1, scale: 0.82, delay: 1.9, isHeroTarget: false },
+    ]) {
+      const whaleX = this.wrapCoord(w.baseX, 220);
+      const whaleCurrX = whaleX + ((this.elapsed * w.speed * w.dir + w.delay * 40) % 220 + 220) % 220 - 110;
+      const whaleDepth = w.depthBase + Math.sin(this.elapsed * 0.15 + w.delay) * 14;
+      const wsx = this.screenX(whaleCurrX);
+      const wsy = this.screenY(whaleDepth);
 
-    if (shsx > -80 && shsx < this.width + 80 && shsy > -50 && shsy < this.height + 50) {
-      this.activeCreatures.push({
-        screenX: shsx,
-        screenY: shsy,
-        name: 'PELAGIC SHARK',
-        category: 'Ambient scenery · Epipelagic',
-        radius: 38,
-        distM: Math.hypot(sharkCurrX - this.vehicle.position.x, sharkDepth - this.depth),
-      });
+      if (wsx > -140 && wsx < this.width + 140 && wsy > -70 && wsy < this.height + 70) {
+        this.activeCreatures.push({
+          screenX: wsx,
+          screenY: wsy,
+          name: 'BLUE WHALE',
+          category: this.isDiscovered('blue-whale')
+            ? 'Catalogued · NOAA Sourced Record'
+            : 'Documented Species · Balaenoptera musculus',
+          isHero: true,
+          radius: 65 * w.scale,
+          distM: Math.hypot(whaleCurrX - this.vehicle.position.x, whaleDepth - this.depth),
+        });
 
-      ctx.save();
-      ctx.translate(shsx, shsy);
-      const wag = Math.sin(this.elapsed * 2.8) * 4.5;
-      const bodyFlex = Math.sin(this.elapsed * 2.8) * 0.07;
-      ctx.rotate(bodyFlex);
+        ctx.save();
+        ctx.translate(wsx, wsy);
+        ctx.scale(w.scale * w.dir, w.scale);
+        const flukeWave = Math.sin(this.elapsed * 1.2 + w.delay) * 5;
+        const flipperWave = Math.sin(this.elapsed * 1.5 + w.delay) * 3;
 
-      ctx.beginPath();
-      // Conical snout
-      ctx.moveTo(34, 0);
-      ctx.quadraticCurveTo(24, -7, 10, -9);
-      // Iconic tall dorsal fin
-      ctx.lineTo(2, -22);
-      ctx.quadraticCurveTo(0, -21, -3, -9);
-      // Second dorsal
-      ctx.lineTo(-18, -6);
-      ctx.lineTo(-21, -11);
-      ctx.lineTo(-23, -5);
-      // Caudal keel & heterocercal tail
-      ctx.lineTo(-32, wag * 0.5);
-      ctx.lineTo(-44, -16 + wag);
-      ctx.quadraticCurveTo(-38, wag, -34, wag * 0.5);
-      ctx.lineTo(-41, 10 + wag);
-      ctx.lineTo(-31, wag * 0.5);
-      // Pelvic and anal fins
-      ctx.lineTo(-20, 5);
-      ctx.lineTo(-16, 9);
-      ctx.lineTo(-14, 5);
-      // Pectoral fin
-      ctx.lineTo(6, 7);
-      ctx.lineTo(-2, 22);
-      ctx.quadraticCurveTo(4, 18, 12, 6);
-      // Lower jaw and snout
-      ctx.quadraticCurveTo(24, 5, 34, 0);
-      ctx.closePath();
-      ctx.fillStyle = `rgba(8, 32, 44, ${0.78 * (1 - darkness)})`;
-      ctx.fill();
-
-      // Gill slits silhouette
-      ctx.strokeStyle = `rgba(160, 220, 230, ${0.2 * (1 - darkness)})`;
-      ctx.lineWidth = 1;
-      for (let g = 0; g < 4; g++) {
         ctx.beginPath();
-        ctx.moveTo(14 - g * 2.2, -3);
-        ctx.lineTo(13 - g * 2.2, 3);
-        ctx.stroke();
-      }
-      ctx.restore();
-    }
+        ctx.moveTo(70, -2);
+        ctx.quadraticCurveTo(45, -16, 10, -17);
+        ctx.quadraticCurveTo(-30, -15, -55, -8);
+        ctx.lineTo(-58, -13);
+        ctx.lineTo(-61, -7);
+        ctx.quadraticCurveTo(-75, -4, -88, flukeWave);
+        ctx.lineTo(-98, -16 + flukeWave * 1.2);
+        ctx.quadraticCurveTo(-94, flukeWave, -90, flukeWave);
+        ctx.lineTo(-98, 16 + flukeWave * 1.2);
+        ctx.lineTo(-88, flukeWave);
+        ctx.quadraticCurveTo(-60, 10, -20, 16);
+        ctx.quadraticCurveTo(20, 18, 55, 10);
+        ctx.quadraticCurveTo(68, 5, 70, -2);
+        ctx.closePath();
+        ctx.fillStyle = `rgba(6, 26, 38, ${0.72 * (1 - darkness)})`;
+        ctx.fill();
 
-    // G. Majestic Blue Whale (95m – 195m)
-    const whaleBaseX = 110;
-    const whaleX = this.wrapCoord(whaleBaseX, 220);
-    const whaleSpeed = 3.2;
-    const whaleCurrX = whaleX + (this.elapsed * whaleSpeed) % 220 - 110;
-    const whaleDepth = 135 + Math.sin(this.elapsed * 0.15) * 14;
-    const wsx = this.screenX(whaleCurrX);
-    const wsy = this.screenY(whaleDepth);
-
-    if (wsx > -140 && wsx < this.width + 140 && wsy > -70 && wsy < this.height + 70) {
-      this.activeCreatures.push({
-        screenX: wsx,
-        screenY: wsy,
-        name: 'BLUE WHALE',
-        category: this.isDiscovered('blue-whale')
-          ? 'Catalogued · NOAA Sourced Record'
-          : 'Documented Species · Balaenoptera musculus',
-        isHero: true,
-        radius: 65,
-        distM: Math.hypot(whaleCurrX - this.vehicle.position.x, whaleDepth - this.depth),
-      });
-
-      ctx.save();
-      ctx.translate(wsx, wsy);
-      const flukeWave = Math.sin(this.elapsed * 1.2) * 5;
-      const flipperWave = Math.sin(this.elapsed * 1.5) * 3;
-
-      ctx.beginPath();
-      // Broad rostrum and head
-      ctx.moveTo(70, -2);
-      ctx.quadraticCurveTo(45, -16, 10, -17);
-      // Massive back with small dorsal fin near tail
-      ctx.quadraticCurveTo(-30, -15, -55, -8);
-      ctx.lineTo(-58, -13);
-      ctx.lineTo(-61, -7);
-      // Peduncle
-      ctx.quadraticCurveTo(-75, -4, -88, flukeWave);
-      // Expansive flukes
-      ctx.lineTo(-98, -16 + flukeWave * 1.2);
-      ctx.quadraticCurveTo(-94, flukeWave, -90, flukeWave);
-      ctx.lineTo(-98, 16 + flukeWave * 1.2);
-      ctx.lineTo(-88, flukeWave);
-      // Belly with ventral throat grooves
-      ctx.quadraticCurveTo(-60, 10, -20, 16);
-      ctx.quadraticCurveTo(20, 18, 55, 10);
-      ctx.quadraticCurveTo(68, 5, 70, -2);
-      ctx.closePath();
-      ctx.fillStyle = `rgba(6, 26, 38, ${0.72 * (1 - darkness)})`;
-      ctx.fill();
-
-      // Long pectoral flipper
-      ctx.beginPath();
-      ctx.moveTo(25, 8);
-      ctx.quadraticCurveTo(15, 28 + flipperWave, -5, 34 + flipperWave);
-      ctx.quadraticCurveTo(8, 20, 28, 8);
-      ctx.fillStyle = `rgba(4, 20, 30, ${0.8 * (1 - darkness)})`;
-      ctx.fill();
-
-      // Ventral throat pleats
-      ctx.strokeStyle = `rgba(140, 200, 215, ${0.12 * (1 - darkness)})`;
-      ctx.lineWidth = 0.9;
-      for (let pl = 0; pl < 5; pl++) {
         ctx.beginPath();
-        ctx.moveTo(58 - pl * 2, 7 + pl * 1.8);
-        ctx.quadraticCurveTo(25, 14 + pl * 1.6, -10, 10 + pl * 1.2);
-        ctx.stroke();
-      }
+        ctx.moveTo(25, 8);
+        ctx.quadraticCurveTo(15, 28 + flipperWave, -5, 34 + flipperWave);
+        ctx.quadraticCurveTo(8, 20, 28, 8);
+        ctx.fillStyle = `rgba(4, 20, 30, ${0.8 * (1 - darkness)})`;
+        ctx.fill();
 
-      ctx.restore();
+        ctx.strokeStyle = `rgba(140, 200, 215, ${0.12 * (1 - darkness)})`;
+        ctx.lineWidth = 0.9;
+        for (let pl = 0; pl < 5; pl++) {
+          ctx.beginPath();
+          ctx.moveTo(58 - pl * 2, 7 + pl * 1.8);
+          ctx.quadraticCurveTo(25, 14 + pl * 1.6, -10, 10 + pl * 1.2);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
     }
   }
 
@@ -2072,388 +2072,417 @@ export class OceanWorld {
       }
     }
 
-    // E. Giant Pacific Octopus (230m – 370m)
-    const octoBaseX = 35;
-    const octoX = this.wrapCoord(octoBaseX, 135);
-    const octoDepth = 290 + Math.sin(this.elapsed * 0.3) * 16;
-    const osx = this.screenX(octoX);
-    const osy = this.screenY(octoDepth);
+    // E. Giant Pacific Octopuses (230m – 390m, multiple deep-sea specimens)
+    for (const oct of [
+      { baseX: 35, depthBase: 290, scale: 1.0, delay: 0 },
+      { baseX: -75, depthBase: 340, scale: 0.85, delay: 2.1 },
+    ]) {
+      const octoX = this.wrapCoord(oct.baseX, 135);
+      const octoDepth = oct.depthBase + Math.sin(this.elapsed * 0.3 + oct.delay) * 16;
+      const osx = this.screenX(octoX);
+      const osy = this.screenY(octoDepth);
 
-    if (osx > -70 && osx < this.width + 70 && osy > -70 && osy < this.height + 70) {
-      this.activeCreatures.push({
-        screenX: osx,
-        screenY: osy,
-        name: 'GIANT OCTOPUS',
-        category: 'Ambient scenery · Mesopelagic',
-        radius: 34,
-        distM: Math.hypot(octoX - this.vehicle.position.x, octoDepth - this.depth),
-      });
+      if (osx > -70 && osx < this.width + 70 && osy > -70 && osy < this.height + 70) {
+        this.activeCreatures.push({
+          screenX: osx,
+          screenY: osy,
+          name: 'GIANT OCTOPUS',
+          category: 'Ambient scenery · Mesopelagic',
+          radius: 34 * oct.scale,
+          distM: Math.hypot(octoX - this.vehicle.position.x, octoDepth - this.depth),
+        });
 
-      ctx.save();
-      ctx.translate(osx, osy);
-      const mantlePulse = 1 + Math.sin(this.elapsed * 1.3) * 0.08;
-      ctx.scale(mantlePulse, mantlePulse);
+        ctx.save();
+        ctx.translate(osx, osy);
+        ctx.scale(oct.scale, oct.scale);
+        const mantlePulse = 1 + Math.sin(this.elapsed * 1.3 + oct.delay) * 0.08;
+        ctx.scale(mantlePulse, mantlePulse);
 
-      // Bulbous Mantle Head
-      ctx.beginPath();
-      ctx.ellipse(0, -18, 14, 18, 0, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(48, 18, 28, 0.65)';
-      ctx.strokeStyle = 'rgba(145, 60, 85, 0.45)';
-      ctx.lineWidth = 1.2;
-      ctx.fill();
-      ctx.stroke();
-
-      // Lateral Eyes
-      for (const eyeSide of [-1, 1]) {
+        // Bulbous Mantle Head
         ctx.beginPath();
-        ctx.arc(eyeSide * 9, -5, 2.4, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(180, 220, 230, 0.6)';
+        ctx.ellipse(0, -18, 14, 18, 0, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(48, 18, 28, 0.65)';
+        ctx.strokeStyle = 'rgba(145, 60, 85, 0.45)';
+        ctx.lineWidth = 1.2;
         ctx.fill();
-      }
-
-      // 8 Gracefully Curling Tentacles
-      for (let t = -3.5; t <= 3.5; t += 1) {
-        const tWave = Math.sin(this.elapsed * 1.6 + t * 0.8);
-        const tCurl = Math.cos(this.elapsed * 1.2 + t * 0.7);
-        const startX = t * 3.2;
-        const startY = -1;
-        const cp1x = startX + t * 5 + tWave * 6;
-        const cp1y = startY + 16;
-        const cp2x = startX + t * 9 + tCurl * 12;
-        const cp2y = startY + 34;
-        const endX = startX + t * 6 + tWave * 16;
-        const endY = startY + 48;
-
-        ctx.beginPath();
-        ctx.moveTo(startX, startY);
-        ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, endX, endY);
-        ctx.strokeStyle = 'rgba(92, 34, 52, 0.7)';
-        ctx.lineWidth = 2.4 - Math.abs(t) * 0.2;
         ctx.stroke();
 
-        // Tiny suckers highlight
-        ctx.beginPath();
-        ctx.arc(cp2x, cp2y, 1.2, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(195, 120, 150, 0.45)';
-        ctx.fill();
+        // Lateral Eyes
+        for (const eyeSide of [-1, 1]) {
+          ctx.beginPath();
+          ctx.arc(eyeSide * 9, -5, 2.4, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(180, 220, 230, 0.6)';
+          ctx.fill();
+        }
+
+        // 8 Gracefully Curling Tentacles
+        for (let t = -3.5; t <= 3.5; t += 1) {
+          const tWave = Math.sin(this.elapsed * 1.6 + t * 0.8 + oct.delay);
+          const tCurl = Math.cos(this.elapsed * 1.2 + t * 0.7 + oct.delay);
+          const startX = t * 3.2;
+          const startY = -1;
+          const cp1x = startX + t * 5 + tWave * 6;
+          const cp1y = startY + 16;
+          const cp2x = startX + t * 9 + tCurl * 12;
+          const cp2y = startY + 34;
+          const endX = startX + t * 6 + tWave * 16;
+          const endY = startY + 48;
+
+          ctx.beginPath();
+          ctx.moveTo(startX, startY);
+          ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, endX, endY);
+          ctx.strokeStyle = 'rgba(92, 34, 52, 0.7)';
+          ctx.lineWidth = 2.4 - Math.abs(t) * 0.2;
+          ctx.stroke();
+
+          // Tiny suckers highlight
+          ctx.beginPath();
+          ctx.arc(cp2x, cp2y, 1.2, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(195, 120, 150, 0.45)';
+          ctx.fill();
+        }
+        ctx.restore();
       }
-      ctx.restore();
     }
 
-    // F. Sperm Whale (Physeter macrocephalus) on Deep Foraging Dive (430m – 620m)
-    const spermBaseX = -70;
-    const spermX = this.wrapCoord(spermBaseX, 190);
-    const spermSpeed = 4.2;
-    const spermCurrX = spermX + (this.elapsed * spermSpeed) % 190 - 95;
-    const spermDepth = 510 + Math.sin(this.elapsed * 0.18) * 22;
-    const spsx = this.screenX(spermCurrX);
-    const spsy = this.screenY(spermDepth);
+    // F. Sperm Whales (Physeter macrocephalus) on Deep Foraging Dives (430m – 620m, solitary bulls and sub-adult pod)
+    for (const sp of [
+      { baseX: -70, depthBase: 510, speed: 4.2, dir: 1, scale: 1.0, delay: 0 },
+      { baseX: 60, depthBase: 570, speed: 3.6, dir: -1, scale: 0.82, delay: 1.7 },
+    ]) {
+      const spermX = this.wrapCoord(sp.baseX, 190);
+      const spermCurrX = spermX + ((this.elapsed * sp.speed * sp.dir + sp.delay * 35) % 190 + 190) % 190 - 95;
+      const spermDepth = sp.depthBase + Math.sin(this.elapsed * 0.18 + sp.delay) * 22;
+      const spsx = this.screenX(spermCurrX);
+      const spsy = this.screenY(spermDepth);
 
-    if (spsx > -120 && spsx < this.width + 120 && spsy > -60 && spsy < this.height + 60) {
-      this.activeCreatures.push({
-        screenX: spsx,
-        screenY: spsy,
-        name: 'SPERM WHALE (DEEP DIVER)',
-        category: 'Ambient scenery · Mesopelagic',
-        radius: 55,
-        distM: Math.hypot(spermCurrX - this.vehicle.position.x, spermDepth - this.depth),
-      });
+      if (spsx > -120 && spsx < this.width + 120 && spsy > -60 && spsy < this.height + 60) {
+        this.activeCreatures.push({
+          screenX: spsx,
+          screenY: spsy,
+          name: 'SPERM WHALE (DEEP DIVER)',
+          category: 'Ambient scenery · Mesopelagic',
+          radius: 55 * sp.scale,
+          distM: Math.hypot(spermCurrX - this.vehicle.position.x, spermDepth - this.depth),
+        });
 
-      ctx.save();
-      ctx.translate(spsx, spsy);
-      const diveAngle = 0.14 + Math.sin(this.elapsed * 0.5) * 0.05;
-      const tailBeat = Math.sin(this.elapsed * 1.5) * 6;
-      ctx.rotate(diveAngle);
+        ctx.save();
+        ctx.translate(spsx, spsy);
+        ctx.scale(sp.scale * sp.dir, sp.scale);
+        const diveAngle = 0.14 + Math.sin(this.elapsed * 0.5 + sp.delay) * 0.05;
+        const tailBeat = Math.sin(this.elapsed * 1.5 + sp.delay) * 6;
+        ctx.rotate(diveAngle);
 
-      ctx.beginPath();
-      // Massive blunt, squared-off block head
-      ctx.moveTo(55, -16);
-      ctx.lineTo(55, 12);
-      // Underslung lower jaw
-      ctx.lineTo(25, 12);
-      ctx.lineTo(25, 6);
-      ctx.lineTo(10, 6);
-      // Belly line
-      ctx.quadraticCurveTo(-20, 10, -50, 6);
-      // Dorsal hump and ridges
-      ctx.lineTo(-72, tailBeat);
-      // Deep-notched triangular flukes
-      ctx.lineTo(-84, -14 + tailBeat * 1.2);
-      ctx.quadraticCurveTo(-78, tailBeat, -75, tailBeat);
-      ctx.lineTo(-84, 14 + tailBeat * 1.2);
-      ctx.lineTo(-72, tailBeat);
-      // Dorsal ridge
-      ctx.quadraticCurveTo(-50, -4, -30, -7);
-      ctx.lineTo(-24, -13);
-      ctx.lineTo(-18, -8);
-      // Top of massive barrel forehead
-      ctx.quadraticCurveTo(15, -14, 55, -16);
-      ctx.closePath();
-      ctx.fillStyle = 'rgba(12, 28, 38, 0.76)';
-      ctx.strokeStyle = 'rgba(50, 110, 130, 0.35)';
-      ctx.lineWidth = 1.2;
-      ctx.fill();
-      ctx.stroke();
-
-      // Paddle-shaped pectoral fin
-      ctx.beginPath();
-      ctx.ellipse(14, 8, 8, 4, 0.3, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(8, 22, 30, 0.85)';
-      ctx.fill();
-
-      // Single blowhole siphonal slit at left snout tip
-      ctx.beginPath();
-      ctx.moveTo(52, -14);
-      ctx.lineTo(46, -15);
-      ctx.strokeStyle = 'rgba(120, 200, 220, 0.45)';
-      ctx.stroke();
-
-      ctx.restore();
-    }
-
-    // G. Dumbo Octopus (Grimpoteuthis) (590m – 730m)
-    const dumboBaseX = -20;
-    const dumboX = this.wrapCoord(dumboBaseX, 115);
-    const dumboDepth = 660 + Math.sin(this.elapsed * 0.4) * 14;
-    const dmSx = this.screenX(dumboX);
-    const dmSy = this.screenY(dumboDepth);
-
-    if (dmSx > -40 && dmSx < this.width + 40 && dmSy > -40 && dmSy < this.height + 40) {
-      this.activeCreatures.push({
-        screenX: dmSx,
-        screenY: dmSy,
-        name: 'DUMBO OCTOPUS',
-        category: 'Ambient scenery · Mesopelagic',
-        radius: 20,
-        distM: Math.hypot(dumboX - this.vehicle.position.x, dumboDepth - this.depth),
-      });
-
-      ctx.save();
-      ctx.translate(dmSx, dmSy);
-      const earFlap = Math.sin(this.elapsed * 3.5) * 5;
-      const bPulse = 1 + Math.sin(this.elapsed * 1.4) * 0.08;
-      ctx.scale(bPulse, bPulse);
-
-      // Flapping ear-like fins
-      for (const earSide of [-1, 1]) {
         ctx.beginPath();
-        ctx.moveTo(earSide * 7, -6);
-        ctx.quadraticCurveTo(earSide * (18 + earFlap * 0.5), -14 + earSide * earFlap, earSide * 16, -2);
-        ctx.quadraticCurveTo(earSide * 11, -3, earSide * 7, -4);
-        ctx.fillStyle = 'rgba(235, 160, 185, 0.55)';
-        ctx.strokeStyle = 'rgba(255, 190, 210, 0.7)';
+        // Massive blunt, squared-off block head
+        ctx.moveTo(55, -16);
+        ctx.lineTo(55, 12);
+        // Underslung lower jaw
+        ctx.lineTo(25, 12);
+        ctx.lineTo(25, 6);
+        ctx.lineTo(10, 6);
+        // Belly line
+        ctx.quadraticCurveTo(-20, 10, -50, 6);
+        // Dorsal hump and ridges
+        ctx.lineTo(-72, tailBeat);
+        // Deep-notched triangular flukes
+        ctx.lineTo(-84, -14 + tailBeat * 1.2);
+        ctx.quadraticCurveTo(-78, tailBeat, -75, tailBeat);
+        ctx.lineTo(-84, 14 + tailBeat * 1.2);
+        ctx.lineTo(-72, tailBeat);
+        // Dorsal ridge
+        ctx.quadraticCurveTo(-50, -4, -30, -7);
+        ctx.lineTo(-24, -13);
+        ctx.lineTo(-18, -8);
+        // Top of massive barrel forehead
+        ctx.quadraticCurveTo(15, -14, 55, -16);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(12, 28, 38, 0.76)';
+        ctx.strokeStyle = 'rgba(50, 110, 130, 0.35)';
+        ctx.lineWidth = 1.2;
+        ctx.fill();
+        ctx.stroke();
+
+        // Paddle-shaped pectoral fin
+        ctx.beginPath();
+        ctx.ellipse(14, 8, 8, 4, 0.3, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(8, 22, 30, 0.85)';
+        ctx.fill();
+
+        // Single blowhole siphonal slit at left snout tip
+        ctx.beginPath();
+        ctx.moveTo(52, -14);
+        ctx.lineTo(46, -15);
+        ctx.strokeStyle = 'rgba(120, 200, 220, 0.45)';
+        ctx.stroke();
+
+        ctx.restore();
+      }
+    }
+
+    // G. Dumbo Octopuses (Grimpoteuthis) (590m – 730m, gentle hovering swarm)
+    for (const dm of [
+      { baseX: -20, depthBase: 660, dir: 1, scale: 1.0, delay: 0 },
+      { baseX: 45, depthBase: 620, dir: -1, scale: 0.88, delay: 1.3 },
+      { baseX: -85, depthBase: 700, dir: 1, scale: 0.75, delay: 2.7 },
+    ]) {
+      const dumboX = this.wrapCoord(dm.baseX, 115);
+      const dumboDepth = dm.depthBase + Math.sin(this.elapsed * 0.4 + dm.delay) * 14;
+      const dmSx = this.screenX(dumboX);
+      const dmSy = this.screenY(dumboDepth);
+
+      if (dmSx > -40 && dmSx < this.width + 40 && dmSy > -40 && dmSy < this.height + 40) {
+        this.activeCreatures.push({
+          screenX: dmSx,
+          screenY: dmSy,
+          name: 'DUMBO OCTOPUS',
+          category: 'Ambient scenery · Mesopelagic',
+          radius: 20 * dm.scale,
+          distM: Math.hypot(dumboX - this.vehicle.position.x, dumboDepth - this.depth),
+        });
+
+        ctx.save();
+        ctx.translate(dmSx, dmSy);
+        ctx.scale(dm.scale * dm.dir, dm.scale);
+        const earFlap = Math.sin(this.elapsed * 3.5 + dm.delay) * 5;
+        const bPulse = 1 + Math.sin(this.elapsed * 1.4 + dm.delay) * 0.08;
+        ctx.scale(bPulse, bPulse);
+
+        // Flapping ear-like fins
+        for (const earSide of [-1, 1]) {
+          ctx.beginPath();
+          ctx.moveTo(earSide * 7, -6);
+          ctx.quadraticCurveTo(earSide * (18 + earFlap * 0.5), -14 + earSide * earFlap, earSide * 16, -2);
+          ctx.quadraticCurveTo(earSide * 11, -3, earSide * 7, -4);
+          ctx.fillStyle = 'rgba(235, 160, 185, 0.55)';
+          ctx.strokeStyle = 'rgba(255, 190, 210, 0.7)';
+          ctx.lineWidth = 1;
+          ctx.fill();
+          ctx.stroke();
+        }
+
+        // Rounded soft dome mantle
+        ctx.beginPath();
+        ctx.arc(0, -2, 10, Math.PI, 0);
+        ctx.quadraticCurveTo(10, 8, 0, 7);
+        ctx.quadraticCurveTo(-10, 8, -10, -2);
+        ctx.fillStyle = 'rgba(180, 80, 115, 0.45)';
+        ctx.strokeStyle = 'rgba(225, 130, 165, 0.55)';
         ctx.lineWidth = 1;
         ctx.fill();
         ctx.stroke();
-      }
 
-      // Rounded soft dome mantle
-      ctx.beginPath();
-      ctx.arc(0, -2, 10, Math.PI, 0);
-      ctx.quadraticCurveTo(10, 8, 0, 7);
-      ctx.quadraticCurveTo(-10, 8, -10, -2);
-      ctx.fillStyle = 'rgba(180, 80, 115, 0.45)';
-      ctx.strokeStyle = 'rgba(225, 130, 165, 0.55)';
-      ctx.lineWidth = 1;
-      ctx.fill();
-      ctx.stroke();
+        // Dark large deep-sea eyes
+        for (const es of [-1, 1]) {
+          ctx.beginPath();
+          ctx.arc(es * 5.5, 0, 2.2, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(25, 45, 55, 0.85)';
+          ctx.fill();
+        }
 
-      // Dark large deep-sea eyes
-      for (const es of [-1, 1]) {
+        // Webbed skirt tentacles
         ctx.beginPath();
-        ctx.arc(es * 5.5, 0, 2.2, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(25, 45, 55, 0.85)';
-        ctx.fill();
-      }
+        ctx.moveTo(-9, 7);
+        for (let arm = -3; arm <= 3; arm++) {
+          const ax = arm * 2.8;
+          const ay = 14 + Math.sin(this.elapsed * 2.5 + arm + dm.delay) * 2;
+          ctx.lineTo(ax, ay);
+        }
+        ctx.lineTo(9, 7);
+        ctx.strokeStyle = 'rgba(215, 120, 155, 0.5)';
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
 
-      // Webbed skirt tentacles
-      ctx.beginPath();
-      ctx.moveTo(-9, 7);
-      for (let arm = -3; arm <= 3; arm++) {
-        const ax = arm * 2.8;
-        const ay = 14 + Math.sin(this.elapsed * 2.5 + arm) * 2;
-        ctx.lineTo(ax, ay);
+        ctx.restore();
       }
-      ctx.lineTo(9, 7);
-      ctx.strokeStyle = 'rgba(215, 120, 155, 0.5)';
-      ctx.lineWidth = 1.2;
-      ctx.stroke();
-
-      ctx.restore();
     }
   }
 
   private drawAbyssalLife(darkness: number) {
     const ctx = this.ctx;
 
-    // A. Solitary Deep-Sea Phantom Jelly / Giant Medusa (810m – 930m)
-    const jellyBaseX = 42;
-    const jellyX = this.wrapCoord(jellyBaseX, 140);
-    const jellyDepth = 860 + Math.sin(this.elapsed * 0.25) * 12;
-    const jsx = this.screenX(jellyX);
-    const jsy = this.screenY(jellyDepth);
+    // A. Deep-Sea Phantom Jellies / Giant Medusae (810m – 940m, multiple eerie drifters)
+    for (const jm of [
+      { baseX: 42, depthBase: 860, scale: 1.0, delay: 0 },
+      { baseX: -65, depthBase: 890, scale: 0.85, delay: 2.3 },
+    ]) {
+      const jellyX = this.wrapCoord(jm.baseX, 140);
+      const jellyDepth = jm.depthBase + Math.sin(this.elapsed * 0.25 + jm.delay) * 12;
+      const jsx = this.screenX(jellyX);
+      const jsy = this.screenY(jellyDepth);
 
-    if (jsx > -60 && jsx < this.width + 60 && jsy > -60 && jsy < this.height + 80) {
-      this.activeCreatures.push({
-        screenX: jsx,
-        screenY: jsy,
-        name: 'PHANTOM JELLY MEDUSA',
-        category: 'Ambient scenery · Bathypelagic',
-        radius: 32,
-        distM: Math.hypot(jellyX - this.vehicle.position.x, jellyDepth - this.depth),
-      });
+      if (jsx > -60 && jsx < this.width + 60 && jsy > -60 && jsy < this.height + 80) {
+        this.activeCreatures.push({
+          screenX: jsx,
+          screenY: jsy,
+          name: 'PHANTOM JELLY MEDUSA',
+          category: 'Ambient scenery · Bathypelagic',
+          radius: 32 * jm.scale,
+          distM: Math.hypot(jellyX - this.vehicle.position.x, jellyDepth - this.depth),
+        });
 
-      const jPulse = 1 + Math.sin(this.elapsed * 0.9) * 0.12;
-      ctx.save();
-      ctx.translate(jsx, jsy);
-      ctx.scale(jPulse, 1 / jPulse);
+        const jPulse = 1 + Math.sin(this.elapsed * 0.9 + jm.delay) * 0.12;
+        ctx.save();
+        ctx.translate(jsx, jsy);
+        ctx.scale(jm.scale * jPulse, jm.scale / jPulse);
 
-      // Huge dark velvety umbrella bell
-      ctx.beginPath();
-      ctx.arc(0, 0, 24, Math.PI, 0);
-      ctx.quadraticCurveTo(12, 10, 0, 8);
-      ctx.quadraticCurveTo(-12, 10, -24, 0);
-      ctx.closePath();
-      ctx.fillStyle = 'rgba(38, 12, 22, 0.55)';
-      ctx.strokeStyle = 'rgba(135, 52, 78, 0.45)';
-      ctx.lineWidth = 1.3;
-      ctx.fill();
-      ctx.stroke();
-
-      // Long ribbon oral arms drifting in the abyss
-      for (let a = -2; a <= 2; a++) {
+        // Huge dark velvety umbrella bell
         ctx.beginPath();
-        ctx.moveTo(a * 7, 6);
-        ctx.bezierCurveTo(a * 10 + Math.sin(this.elapsed * 0.7 + a) * 8, 30, a * 14 + Math.sin(this.elapsed * 0.5 - a) * 12, 55, a * 8, 85);
-        ctx.strokeStyle = 'rgba(110, 40, 60, 0.42)';
-        ctx.lineWidth = 1.5;
+        ctx.arc(0, 0, 24, Math.PI, 0);
+        ctx.quadraticCurveTo(12, 10, 0, 8);
+        ctx.quadraticCurveTo(-12, 10, -24, 0);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(38, 12, 22, 0.55)';
+        ctx.strokeStyle = 'rgba(135, 52, 78, 0.45)';
+        ctx.lineWidth = 1.3;
+        ctx.fill();
         ctx.stroke();
+
+        // Long ribbon oral arms drifting in the abyss
+        for (let a = -2; a <= 2; a++) {
+          ctx.beginPath();
+          ctx.moveTo(a * 7, 6);
+          ctx.bezierCurveTo(a * 10 + Math.sin(this.elapsed * 0.7 + a + jm.delay) * 8, 30, a * 14 + Math.sin(this.elapsed * 0.5 - a + jm.delay) * 12, 55, a * 8, 85);
+          ctx.strokeStyle = 'rgba(110, 40, 60, 0.42)';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        }
+        ctx.restore();
       }
-      ctx.restore();
     }
 
-    // B. Rare Deep-Sea Anglerfish Silhouette (870m – 965m)
-    const anglerBaseX = 85;
-    const anglerX = this.wrapCoord(anglerBaseX, 170);
-    const anglerDepth = 910 + Math.sin(this.elapsed * 0.3) * 7;
-    const asx = this.screenX(anglerX);
-    const asy = this.screenY(anglerDepth);
+    // B. Deep-Sea Anglerfish (870m – 980m, ambush predators lurking in the deep)
+    for (const ang of [
+      { baseX: 85, depthBase: 910, scale: 1.0, dir: 1, delay: 0 },
+      { baseX: -40, depthBase: 945, scale: 0.88, dir: -1, delay: 1.8 },
+      { baseX: 140, depthBase: 885, scale: 0.78, dir: 1, delay: 3.4 },
+    ]) {
+      const anglerX = this.wrapCoord(ang.baseX, 170);
+      const anglerDepth = ang.depthBase + Math.sin(this.elapsed * 0.3 + ang.delay) * 7;
+      const asx = this.screenX(anglerX);
+      const asy = this.screenY(anglerDepth);
 
-    if (asx > -40 && asx < this.width + 40 && asy > -40 && asy < this.height + 40) {
-      this.activeCreatures.push({
-        screenX: asx,
-        screenY: asy,
-        name: 'ABYSSAL ANGLERFISH',
-        category: 'Ambient scenery · Bathypelagic',
-        radius: 22,
-        distM: Math.hypot(anglerX - this.vehicle.position.x, anglerDepth - this.depth),
-      });
+      if (asx > -40 && asx < this.width + 40 && asy > -40 && asy < this.height + 40) {
+        this.activeCreatures.push({
+          screenX: asx,
+          screenY: asy,
+          name: 'ABYSSAL ANGLERFISH',
+          category: 'Ambient scenery · Bathypelagic',
+          radius: 22 * ang.scale,
+          distM: Math.hypot(anglerX - this.vehicle.position.x, anglerDepth - this.depth),
+        });
 
-      ctx.save();
-      ctx.translate(asx, asy);
-      // Stout body
-      ctx.beginPath();
-      ctx.moveTo(12, 0);
-      ctx.bezierCurveTo(10, -10, -8, -10, -14, -2);
-      ctx.lineTo(-20, -6);
-      ctx.lineTo(-20, 6);
-      ctx.lineTo(-14, 2);
-      ctx.bezierCurveTo(-8, 12, 8, 12, 12, 0);
-      ctx.closePath();
-      ctx.fillStyle = 'rgba(8, 20, 26, 0.82)';
-      ctx.strokeStyle = 'rgba(45, 95, 110, 0.35)';
-      ctx.lineWidth = 1;
-      ctx.fill();
-      ctx.stroke();
+        ctx.save();
+        ctx.translate(asx, asy);
+        ctx.scale(ang.scale * ang.dir, ang.scale);
+        // Stout body
+        ctx.beginPath();
+        ctx.moveTo(12, 0);
+        ctx.bezierCurveTo(10, -10, -8, -10, -14, -2);
+        ctx.lineTo(-20, -6);
+        ctx.lineTo(-20, 6);
+        ctx.lineTo(-14, 2);
+        ctx.bezierCurveTo(-8, 12, 8, 12, 12, 0);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(8, 20, 26, 0.82)';
+        ctx.strokeStyle = 'rgba(45, 95, 110, 0.35)';
+        ctx.lineWidth = 1;
+        ctx.fill();
+        ctx.stroke();
 
-      // Illicium (lure spine) & Glowing Esca Bulb
-      ctx.beginPath();
-      ctx.moveTo(6, -8);
-      ctx.quadraticCurveTo(16, -18, 18, -12);
-      ctx.strokeStyle = 'rgba(90, 180, 195, 0.6)';
-      ctx.lineWidth = 1;
-      ctx.stroke();
+        // Illicium (lure spine) & Glowing Esca Bulb
+        ctx.beginPath();
+        ctx.moveTo(6, -8);
+        ctx.quadraticCurveTo(16, -18, 18, -12);
+        ctx.strokeStyle = 'rgba(90, 180, 195, 0.6)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
 
-      const lureGlow = 0.6 + 0.4 * Math.sin(this.elapsed * 3);
-      ctx.beginPath();
-      ctx.arc(18, -12, 2.2, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(130, 255, 235, ${lureGlow})`;
-      ctx.fill();
-      ctx.restore();
+        const lureGlow = 0.6 + 0.4 * Math.sin(this.elapsed * 3 + ang.delay);
+        ctx.beginPath();
+        ctx.arc(18, -12, 2.2, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(130, 255, 235, ${lureGlow})`;
+        ctx.fill();
+        ctx.restore();
+      }
     }
 
-    // C. Ancient Deep-Sea Bluntnose Sixgill Shark (790m – 1,180m)
-    const deepSharkBaseX = -50;
-    const deepSharkX = this.wrapCoord(deepSharkBaseX, 165);
-    const deepSharkSpeed = 3.6;
-    const deepSharkCurrX = deepSharkX + (this.elapsed * deepSharkSpeed) % 165 - 82;
-    const deepSharkDepth = 865 + Math.sin(this.elapsed * 0.16) * 15;
-    const dssx = this.screenX(deepSharkCurrX);
-    const dssy = this.screenY(deepSharkDepth);
+    // C. Ancient Deep-Sea Bluntnose Sixgill Sharks (790m – 1,180m, ancient scavengers cruising the dark)
+    for (const dsh of [
+      { baseX: -50, depthBase: 865, speed: 3.6, dir: 1, scale: 1.0, delay: 0 },
+      { baseX: 75, depthBase: 950, speed: 3.1, dir: -1, scale: 0.86, delay: 2.1 },
+    ]) {
+      const deepSharkX = this.wrapCoord(dsh.baseX, 165);
+      const deepSharkCurrX = deepSharkX + ((this.elapsed * dsh.speed * dsh.dir + dsh.delay * 35) % 165 + 165) % 165 - 82;
+      const deepSharkDepth = dsh.depthBase + Math.sin(this.elapsed * 0.16 + dsh.delay) * 15;
+      const dssx = this.screenX(deepSharkCurrX);
+      const dssy = this.screenY(deepSharkDepth);
 
-    if (dssx > -90 && dssx < this.width + 90 && dssy > -50 && dssy < this.height + 50) {
-      this.activeCreatures.push({
-        screenX: dssx,
-        screenY: dssy,
-        name: 'BLUNTNOSE SIXGILL SHARK',
-        category: 'Ambient scenery · Bathypelagic',
-        radius: 42,
-        distM: Math.hypot(deepSharkCurrX - this.vehicle.position.x, deepSharkDepth - this.depth),
-      });
+      if (dssx > -90 && dssx < this.width + 90 && dssy > -50 && dssy < this.height + 50) {
+        this.activeCreatures.push({
+          screenX: dssx,
+          screenY: dssy,
+          name: 'BLUNTNOSE SIXGILL SHARK',
+          category: 'Ambient scenery · Bathypelagic',
+          radius: 42 * dsh.scale,
+          distM: Math.hypot(deepSharkCurrX - this.vehicle.position.x, deepSharkDepth - this.depth),
+        });
 
-      ctx.save();
-      ctx.translate(dssx, dssy);
-      const tailWag = Math.sin(this.elapsed * 2.0) * 4;
-      const bodyRoll = Math.sin(this.elapsed * 2.0) * 0.05;
-      ctx.rotate(bodyRoll);
+        ctx.save();
+        ctx.translate(dssx, dssy);
+        ctx.scale(dsh.scale * dsh.dir, dsh.scale);
+        const tailWag = Math.sin(this.elapsed * 2.0 + dsh.delay) * 4;
+        const bodyRoll = Math.sin(this.elapsed * 2.0 + dsh.delay) * 0.05;
+        ctx.rotate(bodyRoll);
 
-      ctx.beginPath();
-      // Heavy rounded snout
-      ctx.moveTo(38, 0);
-      ctx.quadraticCurveTo(32, -8, 12, -9);
-      // Smooth back with single dorsal fin far back
-      ctx.quadraticCurveTo(-15, -8, -26, -6);
-      ctx.lineTo(-28, -13);
-      ctx.lineTo(-33, -6);
-      // Peduncle & long upper caudal lobe
-      ctx.lineTo(-44, tailWag * 0.5);
-      ctx.lineTo(-60, -18 + tailWag);
-      ctx.quadraticCurveTo(-54, tailWag, -48, tailWag * 0.5);
-      ctx.lineTo(-54, 8 + tailWag);
-      ctx.lineTo(-42, tailWag * 0.5);
-      // Anal fin & belly
-      ctx.lineTo(-30, 5);
-      ctx.lineTo(-26, 9);
-      ctx.lineTo(-22, 5);
-      // Broad pectoral fin
-      ctx.quadraticCurveTo(-5, 6, 8, 7);
-      ctx.lineTo(2, 21);
-      ctx.quadraticCurveTo(8, 17, 16, 6);
-      // Lower jaw and blunt snout
-      ctx.quadraticCurveTo(28, 5, 38, 0);
-      ctx.closePath();
-      ctx.fillStyle = 'rgba(8, 22, 28, 0.88)';
-      ctx.strokeStyle = 'rgba(40, 85, 95, 0.4)';
-      ctx.lineWidth = 1.2;
-      ctx.fill();
-      ctx.stroke();
-
-      // Fluorescent green deep-sea eye tapetum
-      ctx.beginPath();
-      ctx.arc(26, -3, 2.3, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(100, 255, 170, 0.65)';
-      ctx.fill();
-
-      // Six distinct gill slits silhouette
-      ctx.strokeStyle = 'rgba(60, 120, 135, 0.4)';
-      ctx.lineWidth = 1;
-      for (let g = 0; g < 6; g++) {
         ctx.beginPath();
-        ctx.moveTo(14 - g * 2.2, -3);
-        ctx.lineTo(13 - g * 2.2, 4);
+        // Heavy rounded snout
+        ctx.moveTo(38, 0);
+        ctx.quadraticCurveTo(32, -8, 12, -9);
+        // Smooth back with single dorsal fin far back
+        ctx.quadraticCurveTo(-15, -8, -26, -6);
+        ctx.lineTo(-28, -13);
+        ctx.lineTo(-33, -6);
+        // Peduncle & long upper caudal lobe
+        ctx.lineTo(-44, tailWag * 0.5);
+        ctx.lineTo(-60, -18 + tailWag);
+        ctx.quadraticCurveTo(-54, tailWag, -48, tailWag * 0.5);
+        ctx.lineTo(-54, 8 + tailWag);
+        ctx.lineTo(-42, tailWag * 0.5);
+        // Anal fin & belly
+        ctx.lineTo(-30, 5);
+        ctx.lineTo(-26, 9);
+        ctx.lineTo(-22, 5);
+        // Broad pectoral fin
+        ctx.quadraticCurveTo(-5, 6, 8, 7);
+        ctx.lineTo(2, 21);
+        ctx.quadraticCurveTo(8, 17, 16, 6);
+        // Lower jaw and blunt snout
+        ctx.quadraticCurveTo(28, 5, 38, 0);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(8, 22, 28, 0.88)';
+        ctx.strokeStyle = 'rgba(40, 85, 95, 0.4)';
+        ctx.lineWidth = 1.2;
+        ctx.fill();
         ctx.stroke();
+
+        // Fluorescent green deep-sea eye tapetum
+        ctx.beginPath();
+        ctx.arc(26, -3, 2.3, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(100, 255, 170, 0.65)';
+        ctx.fill();
+
+        // Six distinct gill slits silhouette
+        ctx.strokeStyle = 'rgba(60, 120, 135, 0.4)';
+        ctx.lineWidth = 1;
+        for (let g = 0; g < 6; g++) {
+          ctx.beginPath();
+          ctx.moveTo(14 - g * 2.2, -3);
+          ctx.lineTo(13 - g * 2.2, 4);
+          ctx.stroke();
+        }
+        ctx.restore();
       }
-      ctx.restore();
     }
 
     // D. Midwater Bathypelagic Gateway Mooring / Sensor Node (1,000m)
@@ -2556,208 +2585,222 @@ export class OceanWorld {
     }
 
     // F. Black Swallower (Chiasmodon niger) (1,300m – 1,650m)
-    const swallowerBaseX = -90;
-    const swallowerX = this.wrapCoord(swallowerBaseX, 150);
-    const swallowerSpeed = 1.8;
-    const swallowerCurrX = swallowerX + (this.elapsed * swallowerSpeed) % 150 - 75;
-    const swallowerDepth = 1420 + Math.sin(this.elapsed * 0.28) * 14;
-    const swx = this.screenX(swallowerCurrX);
-    const swy = this.screenY(swallowerDepth);
+    for (const sw of [
+      { baseX: -90, depthBase: 1420, speed: 1.8, dir: 1, scale: 1.0, delay: 0 },
+      { baseX: 40, depthBase: 1540, speed: 2.2, dir: -1, scale: 0.85, delay: 1.9 },
+    ]) {
+      const swallowerX = this.wrapCoord(sw.baseX, 150);
+      const swallowerCurrX = swallowerX + ((this.elapsed * sw.speed * sw.dir + sw.delay * 25) % 150 + 150) % 150 - 75;
+      const swallowerDepth = sw.depthBase + Math.sin(this.elapsed * 0.28 + sw.delay) * 14;
+      const swx = this.screenX(swallowerCurrX);
+      const swy = this.screenY(swallowerDepth);
 
-    if (swx > -80 && swx < this.width + 80 && swy > -50 && swy < this.height + 50) {
-      this.activeCreatures.push({
-        screenX: swx,
-        screenY: swy,
-        name: 'BLACK SWALLOWER',
-        category: 'Ambient scenery · Bathypelagic',
-        radius: 26,
-        distM: Math.hypot(swallowerCurrX - this.vehicle.position.x, swallowerDepth - this.depth),
-      });
+      if (swx > -80 && swx < this.width + 80 && swy > -50 && swy < this.height + 50) {
+        this.activeCreatures.push({
+          screenX: swx,
+          screenY: swy,
+          name: 'BLACK SWALLOWER',
+          category: 'Ambient scenery · Bathypelagic',
+          radius: 26 * sw.scale,
+          distM: Math.hypot(swallowerCurrX - this.vehicle.position.x, swallowerDepth - this.depth),
+        });
 
-      ctx.save();
-      ctx.translate(swx, swy);
-      // Elongated body
-      ctx.beginPath();
-      ctx.moveTo(14, 0);
-      ctx.lineTo(4, -5);
-      ctx.lineTo(-14, -4);
-      ctx.lineTo(-24, 0);
-      ctx.lineTo(-14, 3);
-      ctx.lineTo(4, 4);
-      ctx.closePath();
-      ctx.fillStyle = 'rgba(10, 14, 20, 0.92)';
-      ctx.strokeStyle = 'rgba(50, 75, 90, 0.4)';
-      ctx.lineWidth = 1;
-      ctx.fill();
-      ctx.stroke();
+        ctx.save();
+        ctx.translate(swx, swy);
+        ctx.scale(sw.scale * sw.dir, sw.scale);
+        // Elongated body
+        ctx.beginPath();
+        ctx.moveTo(14, 0);
+        ctx.lineTo(4, -5);
+        ctx.lineTo(-14, -4);
+        ctx.lineTo(-24, 0);
+        ctx.lineTo(-14, 3);
+        ctx.lineTo(4, 4);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(10, 14, 20, 0.92)';
+        ctx.strokeStyle = 'rgba(50, 75, 90, 0.4)';
+        ctx.lineWidth = 1;
+        ctx.fill();
+        ctx.stroke();
 
-      // Distended expandable belly pouch
-      ctx.beginPath();
-      ctx.moveTo(8, 3);
-      ctx.quadraticCurveTo(-4, 18, -14, 3);
-      ctx.closePath();
-      ctx.fillStyle = 'rgba(16, 24, 34, 0.85)';
-      ctx.strokeStyle = 'rgba(70, 110, 125, 0.45)';
-      ctx.lineWidth = 1;
-      ctx.fill();
-      ctx.stroke();
+        // Distended expandable belly pouch
+        ctx.beginPath();
+        ctx.moveTo(8, 3);
+        ctx.quadraticCurveTo(-4, 18, -14, 3);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(16, 24, 34, 0.85)';
+        ctx.strokeStyle = 'rgba(70, 110, 125, 0.45)';
+        ctx.lineWidth = 1;
+        ctx.fill();
+        ctx.stroke();
 
-      // Sharp dentition
-      ctx.beginPath();
-      ctx.moveTo(14, 0); ctx.lineTo(11, -3);
-      ctx.moveTo(11, 0); ctx.lineTo(8, -3);
-      ctx.strokeStyle = 'rgba(180, 235, 245, 0.7)';
-      ctx.lineWidth = 0.8;
-      ctx.stroke();
+        // Sharp dentition
+        ctx.beginPath();
+        ctx.moveTo(14, 0); ctx.lineTo(11, -3);
+        ctx.moveTo(11, 0); ctx.lineTo(8, -3);
+        ctx.strokeStyle = 'rgba(180, 235, 245, 0.7)';
+        ctx.lineWidth = 0.8;
+        ctx.stroke();
 
-      ctx.restore();
+        ctx.restore();
+      }
     }
 
-    // G. Solitary Giant Squid Silhouette (1,300m – 1,750m)
-    const giantSquidBaseX = 120;
-    const giantSquidX = this.wrapCoord(giantSquidBaseX, 200);
-    const giantSquidSpeed = 3.4;
-    const giantSquidCurrX = giantSquidX + (this.elapsed * giantSquidSpeed) % 200 - 100;
-    const giantSquidDepth = 1520 + Math.sin(this.elapsed * 0.18) * 18;
-    const gsqX = this.screenX(giantSquidCurrX);
-    const gsqY = this.screenY(giantSquidDepth);
+    // G. Giant Squids (Architeuthis dux) (1,300m – 1,780m, multiple deep cephalopod hunters)
+    for (const gsq of [
+      { baseX: 120, depthBase: 1520, speed: 3.4, dir: 1, scale: 1.0, delay: 0 },
+      { baseX: -70, depthBase: 1640, speed: 2.9, dir: -1, scale: 0.82, delay: 2.4 },
+    ]) {
+      const giantSquidX = this.wrapCoord(gsq.baseX, 200);
+      const giantSquidCurrX = giantSquidX + ((this.elapsed * gsq.speed * gsq.dir + gsq.delay * 40) % 200 + 200) % 200 - 100;
+      const giantSquidDepth = gsq.depthBase + Math.sin(this.elapsed * 0.18 + gsq.delay) * 18;
+      const gsqX = this.screenX(giantSquidCurrX);
+      const gsqY = this.screenY(giantSquidDepth);
 
-    if (gsqX > -120 && gsqX < this.width + 120 && gsqY > -60 && gsqY < this.height + 60) {
-      this.activeCreatures.push({
-        screenX: gsqX,
-        screenY: gsqY,
-        name: 'GIANT SQUID',
-        category: 'Ambient scenery · Bathypelagic',
-        radius: 50,
-        distM: Math.hypot(giantSquidCurrX - this.vehicle.position.x, giantSquidDepth - this.depth),
-      });
+      if (gsqX > -120 && gsqX < this.width + 120 && gsqY > -60 && gsqY < this.height + 60) {
+        this.activeCreatures.push({
+          screenX: gsqX,
+          screenY: gsqY,
+          name: 'GIANT SQUID',
+          category: 'Ambient scenery · Bathypelagic',
+          radius: 50 * gsq.scale,
+          distM: Math.hypot(giantSquidCurrX - this.vehicle.position.x, giantSquidDepth - this.depth),
+        });
 
-      ctx.save();
-      ctx.translate(gsqX, gsqY);
-      const jetWave = Math.sin(this.elapsed * 1.4) * 0.06;
-      ctx.rotate(jetWave);
+        ctx.save();
+        ctx.translate(gsqX, gsqY);
+        ctx.scale(gsq.scale * gsq.dir, gsq.scale);
+        const jetWave = Math.sin(this.elapsed * 1.4 + gsq.delay) * 0.06;
+        ctx.rotate(jetWave);
 
-      // Massive muscular torpedo mantle
-      ctx.beginPath();
-      ctx.moveTo(-58, 0);
-      ctx.lineTo(-44, -14);
-      ctx.lineTo(-24, -8);
-      ctx.quadraticCurveTo(0, -9, 14, -8);
-      ctx.lineTo(14, 8);
-      ctx.quadraticCurveTo(0, 9, -24, 8);
-      ctx.lineTo(-44, 14);
-      ctx.closePath();
-      ctx.fillStyle = 'rgba(24, 14, 20, 0.88)';
-      ctx.strokeStyle = 'rgba(110, 65, 80, 0.4)';
-      ctx.lineWidth = 1.2;
-      ctx.fill();
-      ctx.stroke();
-
-      // Huge dinner-plate eye
-      ctx.beginPath();
-      ctx.arc(8, -1, 4.5, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(180, 240, 255, 0.7)';
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(8, -1, 2.2, 0, Math.PI * 2);
-      ctx.fillStyle = '#020b12';
-      ctx.fill();
-
-      // 8 Arms cluster
-      for (let arm = -3; arm <= 3; arm++) {
+        // Massive muscular torpedo mantle
         ctx.beginPath();
-        ctx.moveTo(14, arm * 2);
-        ctx.quadraticCurveTo(34, arm * 4 + Math.sin(this.elapsed * 2 + arm) * 4, 48, arm * 3);
-        ctx.strokeStyle = 'rgba(45, 24, 34, 0.85)';
-        ctx.lineWidth = 1.6;
-        ctx.stroke();
-      }
-
-      // 2 Long feeding tentacles extending forward
-      for (const tentSide of [-1, 1]) {
-        ctx.beginPath();
-        ctx.moveTo(14, tentSide * 1.5);
-        const tWave = Math.sin(this.elapsed * 1.8 + tentSide) * 6;
-        ctx.bezierCurveTo(45, tentSide * 4 + tWave, 70, tentSide * 6 - tWave, 92, tentSide * 4);
-        ctx.strokeStyle = 'rgba(75, 38, 52, 0.75)';
+        ctx.moveTo(-58, 0);
+        ctx.lineTo(-44, -14);
+        ctx.lineTo(-24, -8);
+        ctx.quadraticCurveTo(0, -9, 14, -8);
+        ctx.lineTo(14, 8);
+        ctx.quadraticCurveTo(0, 9, -24, 8);
+        ctx.lineTo(-44, 14);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(24, 14, 20, 0.88)';
+        ctx.strokeStyle = 'rgba(110, 65, 80, 0.4)';
         ctx.lineWidth = 1.2;
-        ctx.stroke();
-        // Tentacle club
-        ctx.beginPath();
-        ctx.ellipse(92, tentSide * 4, 6, 2.5, 0, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(95, 45, 65, 0.85)';
         ctx.fill();
+        ctx.stroke();
+
+        // Huge dinner-plate eye
+        ctx.beginPath();
+        ctx.arc(8, -1, 4.5, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(180, 240, 255, 0.7)';
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(8, -1, 2.2, 0, Math.PI * 2);
+        ctx.fillStyle = '#020b12';
+        ctx.fill();
+
+        // 8 Arms cluster
+        for (let arm = -3; arm <= 3; arm++) {
+          ctx.beginPath();
+          ctx.moveTo(14, arm * 2);
+          ctx.quadraticCurveTo(34, arm * 4 + Math.sin(this.elapsed * 2 + arm + gsq.delay) * 4, 48, arm * 3);
+          ctx.strokeStyle = 'rgba(45, 24, 34, 0.85)';
+          ctx.lineWidth = 1.6;
+          ctx.stroke();
+        }
+
+        // 2 Long feeding tentacles extending forward
+        for (const tentSide of [-1, 1]) {
+          ctx.beginPath();
+          ctx.moveTo(14, tentSide * 1.5);
+          const tWave = Math.sin(this.elapsed * 1.8 + tentSide + gsq.delay) * 6;
+          ctx.bezierCurveTo(45, tentSide * 4 + tWave, 70, tentSide * 6 - tWave, 92, tentSide * 4);
+          ctx.strokeStyle = 'rgba(75, 38, 52, 0.75)';
+          ctx.lineWidth = 1.2;
+          ctx.stroke();
+          // Tentacle club
+          ctx.beginPath();
+          ctx.ellipse(92, tentSide * 4, 6, 2.5, 0, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(95, 45, 65, 0.85)';
+          ctx.fill();
+        }
+        ctx.restore();
       }
-      ctx.restore();
     }
 
-    // H. Deep-Sea Dragonfish (Stomiidae) (1,500m – 1,880m)
-    const dragonBaseX = -30;
-    const dragonX = this.wrapCoord(dragonBaseX, 120);
-    const dragonDepth = 1680 + Math.sin(this.elapsed * 0.4) * 14;
-    const drgSx = this.screenX(dragonX);
-    const drgSy = this.screenY(dragonDepth);
+    // H. Deep-Sea Dragonfish (Stomiidae) (1,500m – 1,880m, pack of bioluminescent ambushers)
+    for (const drg of [
+      { baseX: -30, depthBase: 1680, dir: 1, scale: 1.0, delay: 0 },
+      { baseX: 65, depthBase: 1750, dir: -1, scale: 0.85, delay: 1.5 },
+      { baseX: -110, depthBase: 1610, dir: 1, scale: 0.75, delay: 2.8 },
+    ]) {
+      const dragonX = this.wrapCoord(drg.baseX, 120);
+      const dragonDepth = drg.depthBase + Math.sin(this.elapsed * 0.4 + drg.delay) * 14;
+      const drgSx = this.screenX(dragonX);
+      const drgSy = this.screenY(dragonDepth);
 
-    if (drgSx > -40 && drgSx < this.width + 40 && drgSy > -40 && drgSy < this.height + 40) {
-      this.activeCreatures.push({
-        screenX: drgSx,
-        screenY: drgSy,
-        name: 'DEEP-SEA DRAGONFISH',
-        category: 'Ambient scenery · Bathypelagic',
-        radius: 24,
-        distM: Math.hypot(dragonX - this.vehicle.position.x, dragonDepth - this.depth),
-      });
+      if (drgSx > -40 && drgSx < this.width + 40 && drgSy > -40 && drgSy < this.height + 40) {
+        this.activeCreatures.push({
+          screenX: drgSx,
+          screenY: drgSy,
+          name: 'DEEP-SEA DRAGONFISH',
+          category: 'Ambient scenery · Bathypelagic',
+          radius: 24 * drg.scale,
+          distM: Math.hypot(dragonX - this.vehicle.position.x, dragonDepth - this.depth),
+        });
 
-      ctx.save();
-      ctx.translate(drgSx, drgSy);
-      const tailSway = Math.sin(this.elapsed * 3.2) * 3;
+        ctx.save();
+        ctx.translate(drgSx, drgSy);
+        ctx.scale(drg.scale * drg.dir, drg.scale);
+        const tailSway = Math.sin(this.elapsed * 3.2 + drg.delay) * 3;
 
-      // Slender black body
-      ctx.beginPath();
-      ctx.moveTo(16, 0);
-      ctx.lineTo(8, -4);
-      ctx.lineTo(-18, -2);
-      ctx.lineTo(-28, tailSway);
-      ctx.lineTo(-18, 2);
-      ctx.lineTo(8, 4);
-      ctx.closePath();
-      ctx.fillStyle = 'rgba(6, 12, 16, 0.95)';
-      ctx.strokeStyle = 'rgba(55, 80, 95, 0.4)';
-      ctx.lineWidth = 1;
-      ctx.fill();
-      ctx.stroke();
-
-      // Fang teeth protruding from jaw
-      ctx.strokeStyle = 'rgba(210, 245, 255, 0.85)';
-      ctx.lineWidth = 0.8;
-      ctx.beginPath();
-      ctx.moveTo(14, -3); ctx.lineTo(13, 2);
-      ctx.moveTo(11, -3); ctx.lineTo(10, 2);
-      ctx.moveTo(8, -3); ctx.lineTo(7, 2);
-      ctx.stroke();
-
-      // Chin barbel with glowing photophore lure
-      const barbelGlow = 0.6 + 0.4 * Math.sin(this.elapsed * 4.5);
-      ctx.beginPath();
-      ctx.moveTo(10, 3);
-      ctx.quadraticCurveTo(14, 12, 18, 16);
-      ctx.strokeStyle = 'rgba(80, 160, 180, 0.5)';
-      ctx.lineWidth = 0.9;
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.arc(18, 16, 1.8, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(120, 255, 230, ${barbelGlow})`;
-      ctx.fill();
-
-      // Ventral rows of glowing blue photophores
-      for (let p = -8; p <= 6; p += 2.2) {
+        // Slender black body
         ctx.beginPath();
-        ctx.arc(p, 2.8, 0.6, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(100, 220, 255, 0.7)';
+        ctx.moveTo(16, 0);
+        ctx.lineTo(8, -4);
+        ctx.lineTo(-18, -2);
+        ctx.lineTo(-28, tailSway);
+        ctx.lineTo(-18, 2);
+        ctx.lineTo(8, 4);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(6, 12, 16, 0.95)';
+        ctx.strokeStyle = 'rgba(55, 80, 95, 0.4)';
+        ctx.lineWidth = 1;
         ctx.fill();
+        ctx.stroke();
+
+        // Fang teeth protruding from jaw
+        ctx.strokeStyle = 'rgba(210, 245, 255, 0.85)';
+        ctx.lineWidth = 0.8;
+        ctx.beginPath();
+        ctx.moveTo(14, -3); ctx.lineTo(13, 2);
+        ctx.moveTo(11, -3); ctx.lineTo(10, 2);
+        ctx.moveTo(8, -3); ctx.lineTo(7, 2);
+        ctx.stroke();
+
+        // Chin barbel with glowing photophore lure
+        const barbelGlow = 0.6 + 0.4 * Math.sin(this.elapsed * 4.5 + drg.delay);
+        ctx.beginPath();
+        ctx.moveTo(10, 3);
+        ctx.quadraticCurveTo(14, 12, 18, 16);
+        ctx.strokeStyle = 'rgba(80, 160, 180, 0.5)';
+        ctx.lineWidth = 0.9;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(18, 16, 1.8, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(120, 255, 230, ${barbelGlow})`;
+        ctx.fill();
+
+        // Ventral rows of glowing blue photophores
+        for (let p = -8; p <= 6; p += 2.2) {
+          ctx.beginPath();
+          ctx.arc(p, 2.8, 0.6, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(100, 220, 255, 0.7)';
+          ctx.fill();
+        }
+        ctx.restore();
       }
-      ctx.restore();
     }
 
     // I. Benthic Tripod Fish (Bathypterois grallator) standing on seafloor (1,960m – 2,040m and 3,960m – 4,000m)
@@ -2804,56 +2847,60 @@ export class OceanWorld {
       }
     }
 
-    // J. Deep-Sea Glass Squid (Taonius borealis / Cranchiidae) (4,300m – 5,100m)
+    // J. Deep-Sea Glass Squids (Taonius borealis / Cranchiidae) (4,300m – 5,100m, multiple transparent drifting specimens)
     if (this.depth > 4200 && this.depth < 5200) {
-      const gsqBaseX = -70;
-      const gsqX = this.wrapCoord(gsqBaseX, 160);
-      const gsqSpeed = 2.0;
-      const gsqCurrX = gsqX + (this.elapsed * gsqSpeed) % 160 - 80;
-      const gsqDepth = 4750 + Math.sin(this.elapsed * 0.35) * 18;
-      const gsx = this.screenX(gsqCurrX);
-      const gsy = this.screenY(gsqDepth);
+      for (const gsq of [
+        { baseX: -70, depthBase: 4750, speed: 2.0, dir: 1, scale: 1.0, delay: 0 },
+        { baseX: 45, depthBase: 4920, speed: 2.3, dir: -1, scale: 0.85, delay: 1.8 },
+      ]) {
+        const gsqX = this.wrapCoord(gsq.baseX, 160);
+        const gsqCurrX = gsqX + ((this.elapsed * gsq.speed * gsq.dir + gsq.delay * 30) % 160 + 160) % 160 - 80;
+        const gsqDepth = gsq.depthBase + Math.sin(this.elapsed * 0.35 + gsq.delay) * 18;
+        const gsx = this.screenX(gsqCurrX);
+        const gsy = this.screenY(gsqDepth);
 
-      if (gsx > -60 && gsx < this.width + 60 && gsy > -40 && gsy < this.height + 40) {
-        this.activeCreatures.push({
-          screenX: gsx,
-          screenY: gsy,
-          name: 'DEEP-SEA GLASS SQUID',
-          category: 'Ambient scenery · Abyssopelagic',
-          radius: 28,
-          distM: Math.hypot(gsqCurrX - this.vehicle.position.x, gsqDepth - this.depth),
-        });
+        if (gsx > -60 && gsx < this.width + 60 && gsy > -40 && gsy < this.height + 40) {
+          this.activeCreatures.push({
+            screenX: gsx,
+            screenY: gsy,
+            name: 'DEEP-SEA GLASS SQUID',
+            category: 'Ambient scenery · Abyssopelagic',
+            radius: 28 * gsq.scale,
+            distM: Math.hypot(gsqCurrX - this.vehicle.position.x, gsqDepth - this.depth),
+          });
 
-        ctx.save();
-        ctx.translate(gsx, gsy);
-        // Transparent crystal mantle
-        ctx.beginPath();
-        ctx.moveTo(22, 0);
-        ctx.quadraticCurveTo(0, -12, -26, -5);
-        ctx.lineTo(-34, 0);
-        ctx.lineTo(-26, 5);
-        ctx.quadraticCurveTo(0, 12, 22, 0);
-        ctx.closePath();
-        ctx.fillStyle = 'rgba(195, 245, 255, 0.12)';
-        ctx.strokeStyle = 'rgba(160, 235, 245, 0.45)';
-        ctx.lineWidth = 1;
-        ctx.fill();
-        ctx.stroke();
-
-        // Opaque cigar-shaped digestive gland (held vertically)
-        ctx.beginPath();
-        ctx.ellipse(2, 0, 3, 9, 0, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(215, 140, 50, 0.85)';
-        ctx.fill();
-
-        // Iridescent eye photophores
-        for (const ey of [-4, 4]) {
+          ctx.save();
+          ctx.translate(gsx, gsy);
+          ctx.scale(gsq.scale * gsq.dir, gsq.scale);
+          // Transparent crystal mantle
           ctx.beginPath();
-          ctx.arc(16, ey, 2.8, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(255, 240, 140, 0.85)';
+          ctx.moveTo(22, 0);
+          ctx.quadraticCurveTo(0, -12, -26, -5);
+          ctx.lineTo(-34, 0);
+          ctx.lineTo(-26, 5);
+          ctx.quadraticCurveTo(0, 12, 22, 0);
+          ctx.closePath();
+          ctx.fillStyle = 'rgba(195, 245, 255, 0.12)';
+          ctx.strokeStyle = 'rgba(160, 235, 245, 0.45)';
+          ctx.lineWidth = 1;
           ctx.fill();
+          ctx.stroke();
+
+          // Opaque cigar-shaped digestive gland (held vertically)
+          ctx.beginPath();
+          ctx.ellipse(2, 0, 3, 9, 0, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(215, 140, 50, 0.85)';
+          ctx.fill();
+
+          // Iridescent eye photophores
+          for (const ey of [-4, 4]) {
+            ctx.beginPath();
+            ctx.arc(16, ey, 2.8, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255, 240, 140, 0.85)';
+            ctx.fill();
+          }
+          ctx.restore();
         }
-        ctx.restore();
       }
     }
 
