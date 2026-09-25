@@ -6,6 +6,7 @@ User-visible changes to DESCENT are recorded here. Add new work under **Unreleas
 
 ### Added
 
+- Real-life reference photographs for all 8 documented species, bundled locally in `public/species/` (sourced from NOAA, Smithsonian, MBARI, and Wikimedia Commons contributors with photographer credit and license shown in-app). Clicking or tapping any hero creature opens a reference photo modal with depth, habitat, size, scan status, and a Commons source link, also reachable from Field Journal entries.
 - RMS Titanic historic wreck site at ~3,800 m with an upright raked bow section, fractured midship break, detached stern fragment, debris field, rusticle streaks, and floodlight porthole glints, plus sonar triangulation (`R`), proximity survey scanning (`E`), a 3,800 m milestone toast, and the first Field Journal HISTORIC SITES entry with a wreck survey plate (sourced to NOAA Ocean Exploration and Woods Hole Oceanographic Institution).
 - Thruster boost: hold `Shift` with any thrust direction for 2.2× movement speed, with a one-time engagement toast and Flight Manual, directive, and control-strip documentation (`Shift` remapped from alternate-descend; `Space`/`S` still descend).
 - Sonar-reticle SVG favicon (`public/favicon.svg`) wired up in [index.html](index.html), eliminating the `/favicon.ico` 404 on every page load.

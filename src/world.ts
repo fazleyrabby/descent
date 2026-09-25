@@ -35,6 +35,7 @@ type CreatureTag = {
   name: string;
   category: string;
   isHero?: boolean;
+  specimenId?: string;
   radius: number;
   distM: number;
 };
@@ -180,6 +181,19 @@ export class OceanWorld {
     this.sonarTime = this.elapsed;
     const closest = this.getClosestUndiscoveredTarget();
     return closest ? { distance: closest.distance, name: closest.target.name } : { distance: null, name: null };
+  }
+
+  /** Hit-test the latest frame's hero tags for tap/click-to-photo. Topmost match wins. */
+  creatureAtScreen(sx: number, sy: number): { specimenId: string; name: string } | null {
+    for (let i = this.activeCreatures.length - 1; i >= 0; i--) {
+      const tag = this.activeCreatures[i];
+      if (!tag.isHero || !tag.specimenId) continue;
+      const pad = 14;
+      if (Math.hypot(tag.screenX - sx, tag.screenY - sy) <= tag.radius + pad) {
+        return { specimenId: tag.specimenId, name: tag.name };
+      }
+    }
+    return null;
   }
 
   resize() {
@@ -2035,6 +2049,7 @@ export class OceanWorld {
           screenX: wsx,
           screenY: wsy,
           name: 'BLUE WHALE',
+          specimenId: 'blue-whale',
           category: this.isDiscovered('blue-whale')
             ? 'Catalogued · NOAA Sourced Record'
             : 'Documented Species · Balaenoptera musculus',
@@ -2724,6 +2739,7 @@ export class OceanWorld {
         screenX: bsx,
         screenY: bsy,
         name: 'BARRELEYE FISH',
+        specimenId: 'barreleye-fish',
         category: this.isDiscovered('barreleye-fish')
           ? 'Catalogued · MBARI Sourced Record'
           : 'Documented Species · Macropinna microstoma',
@@ -3001,6 +3017,7 @@ export class OceanWorld {
           screenX: tsx,
           screenY: floorY - 14,
           name: 'BENTHIC TRIPOD FISH',
+          specimenId: 'tripod-fish',
           category: this.isDiscovered('tripod-fish')
             ? 'Catalogued · Smithsonian Sourced Record'
             : 'Documented Species · Bathypterois grallator',
@@ -3279,6 +3296,7 @@ export class OceanWorld {
       screenX: x,
       screenY: y,
       name: 'VAMPIRE SQUID',
+      specimenId: 'vampire-squid',
       category: this.discovered ? 'Catalogued · MBARI Sourced Record' : 'Documented Species · Vampyroteuthis infernalis',
       isHero: true,
       radius: 40 * this.zoom,
@@ -3503,7 +3521,8 @@ export class OceanWorld {
     this.activeCreatures.push({
       screenX: x,
       screenY: y,
-      name: 'GULPER EEL',
+        name: 'GULPER EEL',
+        specimenId: 'gulper-eel',
       category: this.isDiscovered('gulper-eel')
         ? 'Catalogued · MBARI Sourced Record'
         : 'Documented Species · Eurypharynx pelecanoides',
@@ -3629,6 +3648,7 @@ export class OceanWorld {
       screenX: x,
       screenY: y,
       name: 'ABYSSAL SEA PIG',
+      specimenId: 'sea-pig',
       category: this.isDiscovered('sea-pig')
         ? 'Catalogued · MBARI Sourced Record'
         : 'Documented Species · Scotoplanes globosa',
@@ -3754,6 +3774,7 @@ export class OceanWorld {
       screenX: x,
       screenY: y,
       name: 'MARIANA SNAILFISH',
+      specimenId: 'mariana-snailfish',
       category: this.isDiscovered('mariana-snailfish')
         ? 'Catalogued · Schmidt Ocean Inst. Record'
         : 'Documented Species · Pseudoliparis swirei',
@@ -3897,6 +3918,7 @@ export class OceanWorld {
       screenX: x,
       screenY: y,
       name: 'SUPERGIANT HADAL AMPHIPOD',
+      specimenId: 'supergiant-amphipod',
       category: this.isDiscovered('supergiant-amphipod')
         ? 'Catalogued · NOAA Exploration Record'
         : 'Documented Species · Alicella gigantea',

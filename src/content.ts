@@ -19,12 +19,26 @@ export type Specimen = {
   };
   annotations: { num: string; label: string }[];
   svg: string;
+  photo: {
+    src: string;
+    caption: string;
+    credit: string;
+    license: string;
+    pageUrl: string;
+  };
 };
 
 export const documentedSpecimens: Specimen[] = [
   {
     id: 'blue-whale',
     index: '01',
+    photo: {
+      src: '/species/blue-whale.jpg',
+      caption: 'Adult blue whale, eastern Pacific Ocean',
+      credit: 'NOAA Fisheries',
+      license: 'Public domain',
+      pageUrl: 'https://commons.wikimedia.org/wiki/File:Bluewhale877.jpg',
+    },
     name: 'Blue whale',
     scientificName: 'Balaenoptera musculus',
     depth: '0–200 m',
@@ -100,6 +114,13 @@ export const documentedSpecimens: Specimen[] = [
   {
     id: 'vampire-squid',
     index: '02',
+    photo: {
+      src: '/species/vampire-squid.jpg',
+      caption: 'Vampire squid model, Natural History Museum, London',
+      credit: 'Emőke Dénes',
+      license: 'CC BY-SA 4.0',
+      pageUrl: 'https://commons.wikimedia.org/wiki/File:Pu_-_Vampyroteuthis_infernalis_-_2.jpg',
+    },
     name: 'Vampire squid',
     scientificName: 'Vampyroteuthis infernalis',
     depth: '600–900 m',
@@ -179,6 +200,13 @@ export const documentedSpecimens: Specimen[] = [
   {
     id: 'barreleye-fish',
     index: '03',
+    photo: {
+      src: '/species/barreleye-fish.jpg',
+      caption: 'Barreleye fish collected on a NOAA Ocean Exploration expedition',
+      credit: 'NOAA Ocean Exploration',
+      license: 'Public domain',
+      pageUrl: 'https://commons.wikimedia.org/wiki/File:Barreleye-fish_GoK.jpg',
+    },
     name: 'Barreleye fish',
     scientificName: 'Macropinna microstoma',
     depth: '600–1,200 m',
@@ -259,6 +287,13 @@ export const documentedSpecimens: Specimen[] = [
   {
     id: 'tripod-fish',
     index: '04',
+    photo: {
+      src: '/species/tripod-fish.jpg',
+      caption: 'Tripod fish photographed on a NOAA expedition',
+      credit: 'NOAA Ocean Exploration',
+      license: 'Public domain',
+      pageUrl: 'https://commons.wikimedia.org/wiki/File:Tripod_fish_NOAA.jpg',
+    },
     name: 'Benthic tripod fish',
     scientificName: 'Bathypterois grallator',
     depth: '1,900–2,000 m',
@@ -328,6 +363,13 @@ export const documentedSpecimens: Specimen[] = [
   {
     id: 'gulper-eel',
     index: '05',
+    photo: {
+      src: '/species/gulper-eel.jpg',
+      caption: 'Gulper eel specimen, Smithsonian collections',
+      credit: 'Sandra Raredon / Smithsonian Institution',
+      license: 'Public domain',
+      pageUrl: 'https://commons.wikimedia.org/wiki/File:Eurypharynx_pelecanoides_SI.jpg',
+    },
     name: 'Gulper eel',
     scientificName: 'Eurypharynx pelecanoides',
     depth: '1,200–3,000 m',
@@ -400,6 +442,13 @@ export const documentedSpecimens: Specimen[] = [
   {
     id: 'sea-pig',
     index: '06',
+    photo: {
+      src: '/species/sea-pig.jpg',
+      caption: 'Sea pig (Scotoplanes globosa) sheltering a crab, Monterey Canyon',
+      credit: 'NOAA / MBARI',
+      license: 'CC BY-SA 3.0',
+      pageUrl: 'https://commons.wikimedia.org/wiki/File:Scotoplanes_globosa_and_crab.jpg',
+    },
     name: 'Abyssal sea pig',
     scientificName: 'Scotoplanes globosa',
     depth: '1,200–6,000 m',
@@ -491,6 +540,13 @@ export const documentedSpecimens: Specimen[] = [
   {
     id: 'mariana-snailfish',
     index: '07',
+    photo: {
+      src: '/species/mariana-snailfish.png',
+      caption: 'Mariana snailfish specimens from the species description',
+      credit: 'Gerringer et al. 2017, Zootaxa',
+      license: 'CC BY 3.0',
+      pageUrl: 'https://commons.wikimedia.org/wiki/File:Pseudoliparis_swirei.png',
+    },
     name: 'Mariana snailfish',
     scientificName: 'Pseudoliparis swirei',
     depth: '6,000–8,200 m',
@@ -574,6 +630,13 @@ export const documentedSpecimens: Specimen[] = [
   {
     id: 'supergiant-amphipod',
     index: '08',
+    photo: {
+      src: '/species/supergiant-amphipod.jpg',
+      caption: 'Live supergiant amphipod feeding at 5,000 m, Mariana Trench',
+      credit: 'Alan Jamieson',
+      license: 'CC BY-SA 4.0',
+      pageUrl: 'https://commons.wikimedia.org/wiki/File:Live_Alicella_gigantea_feeding.jpg',
+    },
     name: 'Supergiant hadal amphipod',
     scientificName: 'Alicella gigantea',
     depth: '8,500–10,950 m',

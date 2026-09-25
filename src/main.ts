@@ -284,6 +284,29 @@ root.innerHTML = `
     </div>
   </section>
 
+  <section id="photoOverlay" class="modal-overlay is-hidden" aria-labelledby="photoTitle">
+    <div class="modal photo-modal">
+      <div class="photo-frame">
+        <img id="photoImage" class="photo-image" alt="Real-life reference photograph of the documented organism" />
+        <button id="closePhotoBtn" class="icon-button photo-close" type="button" aria-label="Close reference photo">×</button>
+      </div>
+      <div class="photo-body">
+        <p class="eyebrow">FIELD REFERENCE PHOTOGRAPH</p>
+        <h2 id="photoTitle"></h2>
+        <p id="photoCaption" class="photo-caption"></p>
+        <div id="photoFacts" class="entry-facts photo-facts"></div>
+        <div class="entry-source">
+          <span>PHOTOGRAPH CREDIT</span>
+          <small id="photoCredit"></small>
+          <a id="photoPageLink" href="#" target="_blank" rel="noopener noreferrer">View on Wikimedia Commons ↗</a>
+        </div>
+        <div class="modal-actions">
+          <button id="photoJournalBtn" class="secondary-button" type="button">OPEN IN FIELD JOURNAL</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <aside id="debug" class="debug is-hidden">
     <div>DEBUG / SEED 183729</div>
     <div id="debugStats">—</div>
@@ -576,7 +599,7 @@ function audioStart() {
 
 function updateAudio() {
   if (!audioContext || !masterGain || !ambientFilter || !engineGain || !engineOsc || !ambientOsc) return;
-  const isPlaying = started && !paused && !journalOpen && !controlsOpen;
+  const isPlaying = started && !paused && !journalOpen && !controlsOpen && !photoOpen;
   masterGain.gain.setTargetAtTime(muted || !isPlaying ? 0 : volume, audioContext.currentTime, 0.1);
 
   const depth = metrics.depth;
@@ -1040,7 +1063,11 @@ function journalContent() {
         <span>RECONNAISSANCE DIRECTIVE</span>
         <small>Descend to ${current.depth}. Ping sonar (<kbd>R</kbd>) to triangulate the specimen contact, maneuver within 20 meters, and hold <kbd>E</kbd> while targeting the organism to complete biometric scanning.</small>
       </div>
+      <div class="modal-actions">
+        <button class="secondary-button" data-photo="${current.id}" type="button">VIEW REFERENCE PHOTO</button>
+      </div>
     `;
+    wirePhotoButtons();
     return;
   }
 
@@ -1062,7 +1089,21 @@ function journalContent() {
       <a href="${current.source.url}" target="_blank" rel="noopener noreferrer">${current.source.title} ↗</a>
       <small>${current.source.publisher} · Accessed ${current.source.accessedOn}</small>
     </div>
+    <div class="modal-actions">
+      <button class="secondary-button" data-photo="${current.id}" type="button">VIEW REFERENCE PHOTO</button>
+    </div>
   `;
+  wirePhotoButtons();
+}
+
+function wirePhotoButtons() {
+  const entry = el<HTMLElement>('journalEntry');
+  entry.querySelectorAll<HTMLButtonElement>('[data-photo]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-photo');
+      if (id) setPhoto(true, id);
+    });
+  });
 }
 
 function renderSiteEntry(site: Site) {
@@ -1117,7 +1158,7 @@ function setPause(next: boolean) {
   paused = next;
   show(el<HTMLElement>('pauseOverlay'), next);
   if (next) world.pause();
-  else if (!journalOpen && !controlsOpen && started) world.start();
+  else if (!journalOpen && !controlsOpen && !photoOpen && started) world.start();
   updateAudio();
 }
 
@@ -1126,7 +1167,7 @@ function setJournal(next: boolean) {
   journalOpen = next;
   show(el<HTMLElement>('journalOverlay'), next);
   if (next) { journalContent(); world.pause(); }
-  else if (!paused && !controlsOpen && started) world.start();
+  else if (!paused && !controlsOpen && !photoOpen && started) world.start();
   updateAudio();
 }
 
@@ -1135,8 +1176,46 @@ function setControls(next: boolean) {
   controlsOpen = next;
   show(el<HTMLElement>('controlsOverlay'), next);
   if (next) world.pause();
-  else if (!paused && !journalOpen && started) world.start();
+  else if (!paused && !journalOpen && !photoOpen && started) world.start();
   updateAudio();
+}
+
+let photoOpen = false;
+
+function setPhoto(next: boolean, specimenId?: string) {
+  if (next && specimenId) renderPhoto(specimenId);
+  if (next) cancelScan();
+  photoOpen = next;
+  show(el<HTMLElement>('photoOverlay'), next);
+  if (next) world.pause();
+  else if (!paused && !journalOpen && !controlsOpen && started) world.start();
+  updateAudio();
+}
+
+function renderPhoto(specimenId: string) {
+  const spec = documentedSpecimens.find((s) => s.id === specimenId);
+  if (!spec) return;
+  const img = el<HTMLImageElement>('photoImage');
+  img.src = spec.photo.src;
+  img.alt = `Real-life reference photograph: ${spec.name} (${spec.photo.caption})`;
+  el<HTMLElement>('photoTitle').textContent = spec.name;
+  el<HTMLElement>('photoCaption').textContent = `${spec.scientificName} · ${spec.photo.caption}`;
+  el<HTMLElement>('photoFacts').innerHTML = `
+    <div><span>REPORTED DEPTH</span><strong>${spec.depth}</strong></div>
+    <div><span>HABITAT</span><strong>${spec.habitat}</strong></div>
+    <div><span>VERIFIED SIZE</span><strong>${spec.realSize}</strong></div>
+    <div><span>FIELD STATUS</span><strong>${discoveredIds.includes(spec.id) ? 'CATALOGUED' : 'UNSCANNED'}</strong></div>
+  `;
+  el<HTMLElement>('photoCredit').textContent = `${spec.photo.credit} · ${spec.photo.license}`;
+  const link = el<HTMLAnchorElement>('photoPageLink');
+  link.href = spec.photo.pageUrl;
+  const journalBtn = el<HTMLButtonElement>('photoJournalBtn');
+  journalBtn.onclick = () => {
+    selectedSpecimenId = spec.id;
+    selectedSiteId = null;
+    setPhoto(false);
+    setJournal(true);
+  };
 }
 
 function finishScan() {
@@ -1379,6 +1458,23 @@ el<HTMLButtonElement>('journalBtn').addEventListener('click', () => setJournal(t
 el<HTMLButtonElement>('closeJournalBtn').addEventListener('click', () => setJournal(false));
 el<HTMLButtonElement>('controlsBtn').addEventListener('click', () => setControls(true));
 el<HTMLButtonElement>('closeControlsBtn').addEventListener('click', () => setControls(false));
+el<HTMLButtonElement>('closePhotoBtn').addEventListener('click', () => setPhoto(false));
+
+// Tap / click a hero creature to open its real-life reference photograph
+canvas.addEventListener('click', (e) => {
+  if (!started || paused || journalOpen || controlsOpen || photoOpen) return;
+  const rect = canvas.getBoundingClientRect();
+  const hit = world.creatureAtScreen(e.clientX - rect.left, e.clientY - rect.top);
+  if (hit) setPhoto(true, hit.specimenId);
+});
+canvas.addEventListener('mousemove', (e) => {
+  if (!started || paused || journalOpen || controlsOpen || photoOpen) {
+    canvas.style.cursor = '';
+    return;
+  }
+  const rect = canvas.getBoundingClientRect();
+  canvas.style.cursor = world.creatureAtScreen(e.clientX - rect.left, e.clientY - rect.top) ? 'pointer' : '';
+});
 el<HTMLButtonElement>('muteBtn').addEventListener('click', () => setMute(!muted));
 el<HTMLInputElement>('muteSetting').addEventListener('change', (e) => setMute((e.target as HTMLInputElement).checked));
 el<HTMLInputElement>('tagsSetting').addEventListener('change', (e) => toggleTags((e.target as HTMLInputElement).checked));
@@ -1439,12 +1535,13 @@ el<HTMLInputElement>('debugDepth').addEventListener('input', (e) => {
 el<HTMLButtonElement>('debugLight').addEventListener('click', () => world.toggleLights());
 
 // Light Dismiss for all modal overlays
-for (const overlayId of ['pauseOverlay', 'journalOverlay', 'controlsOverlay']) {
+for (const overlayId of ['pauseOverlay', 'journalOverlay', 'controlsOverlay', 'photoOverlay']) {
   el<HTMLElement>(overlayId).addEventListener('click', (event) => {
     if (event.target === el<HTMLElement>(overlayId)) {
       if (overlayId === 'pauseOverlay') setPause(false);
       else if (overlayId === 'journalOverlay') setJournal(false);
       else if (overlayId === 'controlsOverlay') setControls(false);
+      else if (overlayId === 'photoOverlay') setPhoto(false);
     }
   });
 }
@@ -1526,6 +1623,7 @@ document.addEventListener('keydown', (event) => {
   if (!started) return;
 
   if (event.code === 'Escape') {
+    if (photoOpen) { setPhoto(false); return; }
     if (controlsOpen) { setControls(false); return; }
     if (journalOpen) { setJournal(false); return; }
     setPause(!paused);
@@ -1542,7 +1640,7 @@ document.addEventListener('keydown', (event) => {
     return;
   }
 
-  if (paused || journalOpen || controlsOpen) return;
+  if (paused || journalOpen || controlsOpen || photoOpen) return;
 
   if (['Space', 'ShiftLeft', 'ShiftRight', 'KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyE', 'KeyF', 'KeyR'].includes(event.code)) {
     event.preventDefault();
