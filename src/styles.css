@@ -96,6 +96,7 @@ a { color: var(--aqua); }
   display: flex;
   align-items: center;
   gap: 1.6rem;
+  margin-left: auto;
 }
 .signal {
   display: flex;
@@ -908,6 +909,11 @@ a { color: var(--aqua); }
   z-index: 10;
   display: grid;
   place-items: center;
+  /* Lock a single centered track so wide intrinsic content (e.g. the
+     journal entry strip) cannot push the column beyond the viewport.
+     Children scroll internally instead of overflowing the screen. */
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
   background: rgba(1, 9, 16, 0.83);
   backdrop-filter: blur(11px);
   padding: 1rem;
@@ -916,10 +922,14 @@ a { color: var(--aqua); }
   background: #061b25;
   border: 1px solid rgba(161, 230, 221, 0.28);
   box-shadow: 0 30px 100px rgba(0, 0, 0, 0.35);
+  max-width: 100%;
+  max-height: 100%;
 }
 .pause-modal {
   width: min(500px, 100%);
   padding: 3rem;
+  max-height: 100%;
+  overflow-y: auto;
 }
 .modal h2 {
   font-family: 'Space Grotesk', sans-serif;
@@ -980,6 +990,7 @@ a { color: var(--aqua); }
 .controls-modal {
   width: min(850px, 95vw);
   padding: 2.5rem;
+  overflow-y: auto;
 }
 .modal-header {
   display: flex;
@@ -1055,6 +1066,7 @@ a { color: var(--aqua); }
   height: min(720px, 90vh);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 .journal-top {
   padding: 2rem 2.5rem;
@@ -1062,12 +1074,15 @@ a { color: var(--aqua); }
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  gap: 1rem;
+  min-width: 0;
 }
 .journal-top h2 { margin: 0; }
 .journal-top h2 span { color: var(--aqua); }
+.journal-top .icon-button, .modal-header .icon-button { flex-shrink: 0; }
 .journal-grid {
   display: grid;
-  grid-template-columns: 260px 1fr;
+  grid-template-columns: 260px minmax(0, 1fr);
   min-height: 0;
   flex: 1;
 }
@@ -1077,6 +1092,8 @@ a { color: var(--aqua); }
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  min-width: 0;
+  min-height: 0;
 }
 .journal-index > span, .entry-kicker, .entry-facts span, .entry-source span {
   display: block;
@@ -1205,6 +1222,9 @@ a { color: var(--aqua); }
 .journal-entry {
   padding: 2.3rem 3rem;
   overflow-y: auto;
+  overflow-x: hidden;
+  min-width: 0;
+  overflow-wrap: break-word;
 }
 .empty-journal {
   height: 100%;
@@ -1291,7 +1311,7 @@ a { color: var(--aqua); }
   display: grid;
   gap: 0.45rem;
 }
-.entry-source a { font-size: 0.86rem; }
+.entry-source a { font-size: 0.86rem; overflow-wrap: anywhere; }
 .entry-source small { color: #8ca8ae; }
 
 .debug {
@@ -1353,27 +1373,40 @@ a { color: var(--aqua); }
 }
 
 @media (max-width: 768px) {
-  /* Masthead & Navigation */
+  /* Masthead & Navigation: two stacked rows (brand + pause on row 1,
+     action cluster on row 2) so nothing clips past the viewport edge. */
   .masthead {
     left: 14px;
     right: 14px;
     top: max(12px, env(safe-area-inset-top, 12px));
-    gap: 0.5rem;
+    flex-wrap: wrap;
+    row-gap: 10px;
+    column-gap: 0.5rem;
   }
   .brand {
+    order: 1;
     font-size: 0.95rem;
     letter-spacing: 0.18em;
   }
-  .brand-sub, .brand-rule, .signal, .bottom-left, .bottom-right, .bottom-right-cluster, .control-strip {
-    display: none !important;
+  #pauseBtn {
+    order: 2;
+    margin-left: auto;
   }
   .top-actions {
-    gap: 0.5rem;
+    order: 3;
+    flex: 1 1 100%;
+    margin-left: 0;
+    justify-content: space-between;
+    gap: 0.4rem;
+  }
+  .brand-sub, .brand-rule, .signal, .bottom-left, .bottom-right, .bottom-right-cluster, .control-strip {
+    display: none !important;
   }
   .text-button {
     font-size: 0.58rem;
     letter-spacing: 0.1em;
     padding: 6px 4px;
+    white-space: nowrap;
   }
   .icon-button {
     width: 34px;
@@ -1387,7 +1420,7 @@ a { color: var(--aqua); }
   /* Depth Instrument Module */
   .depth-module {
     left: 14px;
-    top: calc(max(12px, env(safe-area-inset-top, 12px)) + 52px);
+    top: calc(max(12px, env(safe-area-inset-top, 12px)) + 78px);
     width: 175px;
     pointer-events: none;
   }
@@ -1424,7 +1457,7 @@ a { color: var(--aqua); }
 
   /* Sonar Screen Repositioning (upper right below masthead to avoid d-pad/actions overlap) */
   .sonar-panel {
-    top: calc(max(12px, env(safe-area-inset-top, 12px)) + 52px);
+    top: calc(max(12px, env(safe-area-inset-top, 12px)) + 78px);
     right: 14px;
     bottom: auto;
     width: 125px;
@@ -1452,13 +1485,22 @@ a { color: var(--aqua); }
     line-height: 1.4;
   }
 
-  /* Surface Directive & Pilot Tip */
+  /* Surface Directive & Pilot Tip: directive sits below the depth/sonar
+     instruments so it never covers them; keyboard-only hints are hidden
+     on touch screens (the on-screen buttons carry [R]/[E]/[F]/[J] labels). */
   .directive-card {
-    top: calc(max(12px, env(safe-area-inset-top, 12px)) + 54px);
-    max-width: calc(100vw - 28px);
-    width: calc(100vw - 28px);
+    top: 330px;
+    left: 14px;
+    right: 14px;
+    transform: none;
+    width: auto;
+    max-width: none;
+    max-height: calc(100dvh - 480px);
+    min-height: 0;
+    overflow-y: auto;
     padding: 0.9rem 1.1rem;
   }
+  .directive-keys { display: none; }
   .directive-card p {
     font-size: 0.72rem;
     line-height: 1.5;
@@ -1548,7 +1590,7 @@ a { color: var(--aqua); }
     font-size: 1.6rem;
   }
   .journal-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto 1fr;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
@@ -1623,11 +1665,12 @@ a { color: var(--aqua); }
     font-size: 1.7rem;
   }
   .controls-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 1rem;
   }
   .control-card {
     padding: 1rem;
+    min-width: 0;
   }
   .control-card li {
     grid-template-columns: 90px 1fr;
@@ -1690,14 +1733,14 @@ a { color: var(--aqua); }
   }
   .depth-module {
     left: 10px;
-    top: calc(max(8px, env(safe-area-inset-top, 8px)) + 46px);
+    top: calc(max(8px, env(safe-area-inset-top, 8px)) + 80px);
     width: 145px;
   }
   .depth-readout {
     font-size: clamp(2rem, 8vw, 2.8rem);
   }
   .sonar-panel {
-    top: calc(max(8px, env(safe-area-inset-top, 8px)) + 46px);
+    top: calc(max(8px, env(safe-area-inset-top, 8px)) + 80px);
     right: 10px;
     width: 110px;
     padding: 0.45rem;
@@ -1740,12 +1783,21 @@ a { color: var(--aqua); }
     top: 6px;
     left: 12px;
     right: 12px;
+    flex-wrap: nowrap;
   }
+  .masthead .brand { order: 0; }
+  .masthead .top-actions {
+    order: 0;
+    flex: 0 1 auto;
+    margin-left: auto;
+    justify-content: flex-end;
+  }
+  .masthead #pauseBtn { order: 0; margin-left: 0; }
   .brand-sub, .brand-rule, .signal, .bottom-bar {
     display: none !important;
   }
   .depth-module {
-    top: 40px;
+    top: 46px;
     left: 12px;
     width: 160px;
   }
@@ -1757,7 +1809,7 @@ a { color: var(--aqua); }
     display: none;
   }
   .sonar-panel {
-    top: 40px;
+    top: 46px;
     right: 12px;
     bottom: auto;
     width: 105px;
@@ -1794,9 +1846,16 @@ a { color: var(--aqua); }
     font-size: 0.52rem;
   }
   .directive-card {
-    top: 40px;
+    /* Narrow short screens keep the stacked portrait layout below the
+       instruments; wider landscape screens thread between them (below). */
+    top: 302px;
+    left: 14px;
+    right: 14px;
+    transform: none;
+    width: auto;
+    max-width: none;
     padding: 0.7rem 0.9rem;
-    max-height: 80vh;
+    max-height: calc(100dvh - 330px);
     overflow-y: auto;
   }
   .directive-card p {
@@ -1825,6 +1884,22 @@ a { color: var(--aqua); }
   .journal-modal, .controls-modal {
     max-height: 96dvh;
     height: 96dvh;
+  }
+}
+
+/* Landscape phones/tablets wide enough to thread the directive between
+   the left depth module and the right sonar panel. */
+@media (max-height: 520px) and (min-width: 560px) {
+  .directive-card {
+    top: 46px;
+    left: 184px;
+    right: 129px;
+    transform: none;
+    width: auto;
+    max-width: 560px;
+    margin-left: auto;
+    margin-right: auto;
+    max-height: calc(100dvh - 200px);
   }
 }
 

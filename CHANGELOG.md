@@ -82,6 +82,10 @@ User-visible changes to DESCENT are recorded here. Add new work under **Unreleas
 
 ### Fixed
 
+- Repaired the mobile HUD masthead overflow by stacking it into two rows (brand with pause control on top, MANUAL / AUDIO / FIELD JOURNAL / visitor telemetry spread across the second row) so the pause button no longer clips past the viewport edge on narrow screens.
+- Repositioned the expedition directive card below the depth and sonar instruments on mobile portrait viewports and threaded it between them on landscape phones, eliminating overlap with the depth readout and sonar panel; keyboard-only key hints are hidden on touch screens.
+- Fixed the Field Journal modal blowing out to ~1356 px wide on mobile by locking the modal overlay to a single `minmax(0, 1fr)` grid track with `minmax(0, 1fr)` journal tracks and `min-width: 0` guards, restoring the close button and internal scroll regions.
+- Suppressed the contextual pilot tutorial tip while the expedition directive card is visible so the two onboarding prompts never stack on short screens.
 - Converted Open Graph and Twitter Card social preview image URLs to absolute canonical URLs (`https://descent-explorer.vercel.app/og-image.jpg`) and added `og:url` and `rel="canonical"` metadata in [index.html](index.html) so Twitter/X, Discord, and Facebook scrapers successfully fetch and render the rich card preview thumbnail.
 - Flight Manual layout and key binding column alignment across all system cards.
 - Modal light-dismiss on background backdrop click for pause, journal, and manual dialogs.

@@ -28,8 +28,8 @@ root.innerHTML = `
         <button id="controlsBtn" class="text-button" type="button" aria-label="Controls manual">MANUAL <span class="key-badge">?</span></button>
         <button id="muteBtn" class="text-button" type="button" aria-label="Toggle audio">AUDIO <span id="muteLabel">ON</span></button>
         <button id="journalBtn" class="text-button" type="button">FIELD JOURNAL <span id="journalCount">00/08</span></button>
-        <button id="pauseBtn" class="icon-button" type="button" aria-label="Pause expedition">Ⅱ</button>
       </div>
+      <button id="pauseBtn" class="icon-button" type="button" aria-label="Pause expedition">Ⅱ</button>
     </header>
 
     <aside class="depth-module" aria-label="Depth instruments">
@@ -842,6 +842,12 @@ function updatePilotTip() {
   const tip = el<HTMLElement>('pilotTip');
   const text = el<HTMLElement>('tipText');
   if (!tip || !text) return;
+
+  // Keep the tutorial tip from stacking on top of the directive card.
+  if (!el<HTMLElement>('surfaceDirective').classList.contains('is-hidden')) {
+    show(tip, false);
+    return;
+  }
 
   if (pilotStep === 'dive') {
     if (metrics.depth > 3) {
