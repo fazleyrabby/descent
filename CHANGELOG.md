@@ -6,6 +6,7 @@ User-visible changes to DESCENT are recorded here. Add new work under **Unreleas
 
 ### Added
 
+- Sonar-reticle SVG favicon (`public/favicon.svg`) wired up in [index.html](index.html), eliminating the `/favicon.ico` 404 on every page load.
 - High-resolution Open Graph social preview banner (`public/og-image.jpg`, 1280x720) with deep-ocean exploration submersible illumination, supergiant hadal amphipod, vampire squid, and scientific telemetry badges, coupled with standard Open Graph and Twitter Card `summary_large_image` metadata in [index.html](index.html).
 - Real-time visitor counter telemetry widget mounted in the HUD masthead, backed by the self-hosted homelab `view-counter` microservice (`https://views.fazleyrabbi.xyz`) with animated number roll, pulsing live beacon, offline local caching, and automated deduplication guards (bots, localhost, session).
 - Deep-ocean expedition expansion from 8,500 m to 11,000 m down to the ultimate terminal seafloor at **Challenger Deep** (10,928–11,000 m), completing the entire continuous oceanic descent column from surface to Earth's deepest point under >1,080 atmospheres (>16,000 psi) of hydrostatic pressure.
