@@ -1139,7 +1139,13 @@ function renderSiteEntry(site: Site) {
         <span>SURVEY DIRECTIVE</span>
         <small>Descend to ${site.depth}. Ping sonar (<kbd>R</kbd>) to triangulate the large structure contact, maneuver within 50 meters, and hold <kbd>E</kbd> while targeting the wreck to complete the structural survey.</small>
       </div>
+      ${site.photo ? `
+        <div class="modal-actions">
+          <button class="secondary-button" data-photo="${site.id}" type="button">VIEW REFERENCE PHOTO</button>
+        </div>
+      ` : ''}
     `;
+    wirePhotoButtons();
     return;
   }
 
@@ -1158,7 +1164,13 @@ function renderSiteEntry(site: Site) {
       <a href="${site.source.url}" target="_blank" rel="noopener noreferrer">${site.source.title} ↗</a>
       <small>${site.source.publisher} · Accessed ${site.source.accessedOn}</small>
     </div>
+    ${site.photo ? `
+      <div class="modal-actions">
+        <button class="secondary-button" data-photo="${site.id}" type="button">VIEW REFERENCE PHOTO</button>
+      </div>
+    ` : ''}
   `;
+  wirePhotoButtons();
 }
 
 function setPause(next: boolean) {
@@ -1234,6 +1246,34 @@ function renderPhoto(target: string | CreatureHit) {
     journalBtn.onclick = () => {
       selectedSpecimenId = spec.id;
       selectedSiteId = null;
+      setPhoto(false);
+      setJournal(true);
+    };
+    return;
+  }
+
+  // Documented historic sites with reference photographs
+  const site = specimenId ? documentedSites.find((s) => s.id === specimenId) : undefined;
+  if (site && site.photo) {
+    resetPhotoModal();
+    el<HTMLElement>('photoEyebrow').textContent = 'HISTORIC SITE SURVEY PHOTOGRAPH';
+    const img = el<HTMLImageElement>('photoImage');
+    img.src = site.photo.src;
+    img.alt = `Historic site survey photograph: ${site.name} (${site.photo.caption})`;
+    el<HTMLElement>('photoTitle').textContent = site.name;
+    el<HTMLElement>('photoCaption').textContent = `${site.kind} · ${site.photo.caption}`;
+    el<HTMLElement>('photoFacts').innerHTML = `
+      <div><span>RESTING DEPTH</span><strong>${site.depth}</strong></div>
+      <div><span>LOCATION</span><strong>${site.location}</strong></div>
+      <div><span>SITE CLASSIFICATION</span><strong>${site.kind}</strong></div>
+      <div><span>SURVEY STATUS</span><strong>${discoveredSiteIds.includes(site.id) ? 'SURVEYED' : 'UNSURVEYED'}</strong></div>
+    `;
+    el<HTMLElement>('photoCredit').textContent = `${site.photo.credit} · ${site.photo.license}`;
+    const link = el<HTMLAnchorElement>('photoPageLink');
+    link.href = site.photo.pageUrl;
+    const journalBtn = el<HTMLButtonElement>('photoJournalBtn');
+    journalBtn.onclick = () => {
+      selectedSiteId = site.id;
       setPhoto(false);
       setJournal(true);
     };

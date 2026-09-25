@@ -7,6 +7,7 @@ User-visible changes to DESCENT are recorded here. Add new work under **Unreleas
 ### Added
 
 - Complete 32-species marine biodiversity catalog with real-life reference photographs: expanded the documented species registry from 8 to all 32 distinct marine organisms across all five oceanic zones from the surface down to Challenger Deep (0 to 11,000 m). Bundled 24 new freely-licensed reference photographs in `public/species/` (sourced from NOAA, Smithsonian, MBARI, and Wikimedia Commons contributors with photographer credit and license metadata shown in-app). Every creature in the ocean is now linked with an interactive taxonomy reticle, click-to-photo modal with direct Field Journal jump, active sonar triangulation (`R`), hold-to-scan (`E`), and authored scientific SVG plate diagrams.
+- Real-life reference photograph for RMS Titanic wreck site at ~3,800 m: bundled NOAA / IFE / URI ROV *Hercules* 2004 upright bow photograph (`public/species/rms-titanic.jpg`), linked with click-to-detail on the in-game wreck, Field Journal jump button, and "VIEW REFERENCE PHOTO" actions in both unsurveyed and documented historic site entries.
 
 ### Fixed
 

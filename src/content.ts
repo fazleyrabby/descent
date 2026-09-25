@@ -1525,6 +1525,13 @@ export type Site = {
   };
   annotations: { num: string; label: string }[];
   svg: string;
+  photo?: {
+    src: string;
+    caption: string;
+    credit: string;
+    license: string;
+    pageUrl: string;
+  };
 };
 
 export const documentedSites: Site[] = [
@@ -1537,6 +1544,13 @@ export const documentedSites: Site[] = [
     depthTier: 'bathypelagic',
     targetDepth: 3800,
     location: 'North Atlantic · ~600 km off Newfoundland',
+    photo: {
+      src: '/species/rms-titanic.jpg',
+      caption: 'View of the upright bow of RMS Titanic documented at 3,800 m depth by ROV Hercules (June 2004)',
+      credit: 'NOAA / Institute for Exploration / University of Rhode Island (IFE / URI)',
+      license: 'Public domain',
+      pageUrl: 'https://commons.wikimedia.org/wiki/File:Titanic_wreck_bow.jpg',
+    },
     description:
       'The wreck of the British ocean liner RMS Titanic, which sank on 15 April 1912 after striking an iceberg on her maiden voyage. She rests upright in abyssal sediment at roughly 3,800 m depth, broken in two with bow and stern sections lying about 600 m apart amid a vast debris field.',
     detail:

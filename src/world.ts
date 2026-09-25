@@ -1077,10 +1077,11 @@ export class OceanWorld {
     this.activeCreatures.push({
       screenX: wreckScreenX,
       screenY: floorY - 72,
-      name: 'RMS TITANIC (1912)',
+      name: 'RMS Titanic',
       category: 'Historic Shipwreck Site · ~3,800 m',
-      isHero: false,
-      radius: 80,
+      isHero: true,
+      specimenId: 'rms-titanic',
+      radius: 95,
       distM: Math.hypot(titanicWorldX - this.vehicle.position.x, wreckDepth - this.depth),
     });
 
