@@ -1128,6 +1128,11 @@ a { color: var(--aqua); }
   display: grid;
   gap: 0.5rem;
   margin-top: 1rem;
+  overflow-y: auto;
+  max-height: calc(85vh - 240px);
+  padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(142, 218, 211, 0.4) transparent;
 }
 .journal-section-label {
   margin-top: 0.9rem;

@@ -385,15 +385,39 @@ export class OceanWorld {
 
   private documentedTargets() {
     return [
+      { id: 'bottlenose-dolphin', name: 'Common bottlenose dolphin', pos: { x: this.wrapCoord(20, 110), depth: 35 }, maxSightDist: 26 },
+      { id: 'harbor-seal', name: 'Harbor seal', pos: { x: this.wrapCoord(55, 95), depth: 40 }, maxSightDist: 24 },
+      { id: 'epipelagic-fish', name: 'Atlantic mackerel', pos: { x: this.wrapCoord(22, 85), depth: 45 }, maxSightDist: 26 },
+      { id: 'moon-jelly', name: 'Moon jellyfish', pos: { x: this.wrapCoord(40, 70), depth: 50 }, maxSightDist: 22 },
+      { id: 'pelagic-ray', name: 'Giant oceanic manta ray', pos: { x: this.wrapCoord(15, 110), depth: 60 }, maxSightDist: 30 },
+      { id: 'pelagic-shark', name: 'Great white shark', pos: { x: this.wrapCoord(85, 130), depth: 95 }, maxSightDist: 32 },
       { id: 'blue-whale', name: 'Blue whale', pos: this.whalePosition(), maxSightDist: 42 },
+      { id: 'giant-octopus', name: 'Giant Pacific octopus', pos: { x: this.wrapCoord(25, 135), depth: 310 }, maxSightDist: 28 },
+      { id: 'crown-jellyfish', name: 'Crown jellyfish', pos: { x: this.wrapCoord(30, 80), depth: 340 }, maxSightDist: 22 },
+      { id: 'comb-jelly', name: 'Beroe comb jelly', pos: { x: this.wrapCoord(20, 90), depth: 400 }, maxSightDist: 22 },
+      { id: 'siphonophore', name: 'Giant siphonophore colony', pos: { x: this.wrapCoord(65, 110), depth: 460 }, maxSightDist: 26 },
+      { id: 'sperm-whale', name: 'Sperm whale', pos: { x: this.wrapCoord(70, 160), depth: 520 }, maxSightDist: 40 },
+      { id: 'lanternfish', name: 'Glacier lanternfish', pos: { x: this.wrapCoord(42, 80), depth: 620 }, maxSightDist: 24 },
       { id: 'vampire-squid', name: 'Vampire squid', pos: this.squidPosition(), maxSightDist: 18 },
+      { id: 'dumbo-octopus', name: 'Dumbo octopus', pos: { x: this.wrapCoord(50, 115), depth: 660 }, maxSightDist: 24 },
+      { id: 'phantom-jelly', name: 'Giant phantom jelly', pos: { x: this.wrapCoord(40, 140), depth: 880 }, maxSightDist: 30 },
+      { id: 'anglerfish', name: 'Humpback anglerfish', pos: { x: this.wrapCoord(30, 170), depth: 920 }, maxSightDist: 24 },
+      { id: 'sixgill-shark', name: 'Bluntnose sixgill shark', pos: { x: this.wrapCoord(80, 180), depth: 980 }, maxSightDist: 34 },
       { id: 'barreleye-fish', name: 'Barreleye fish', pos: this.barreleyePosition(), maxSightDist: 22 },
+      { id: 'black-swallower', name: 'Black swallower', pos: { x: this.wrapCoord(45, 120), depth: 1450 }, maxSightDist: 24 },
+      { id: 'giant-squid', name: 'Giant squid', pos: { x: this.wrapCoord(60, 160), depth: 1550 }, maxSightDist: 36 },
+      { id: 'dragonfish', name: 'Black dragonfish', pos: { x: this.wrapCoord(35, 130), depth: 1680 }, maxSightDist: 24 },
       { id: 'tripod-fish', name: 'Benthic tripod fish', pos: this.tripodPosition(), maxSightDist: 22 },
       { id: 'gulper-eel', name: 'Gulper eel', pos: this.gulperEelPosition(), maxSightDist: 28 },
-      { id: 'sea-pig', name: 'Abyssal sea pig', pos: this.seaPigPosition(), maxSightDist: 22 },
-      { id: 'mariana-snailfish', name: 'Mariana snailfish', pos: this.marianaSnailfishPosition(), maxSightDist: 26 },
-      { id: 'supergiant-amphipod', name: 'Supergiant hadal amphipod', pos: this.supergiantAmphipodPosition(), maxSightDist: 24 },
       { id: 'rms-titanic', name: 'RMS Titanic', pos: this.titanicPosition(), maxSightDist: 52 },
+      { id: 'glass-squid', name: 'Cockatoo glass squid', pos: { x: this.wrapCoord(55, 140), depth: 4700 }, maxSightDist: 25 },
+      { id: 'sea-pig', name: 'Abyssal sea pig', pos: this.seaPigPosition(), maxSightDist: 22 },
+      { id: 'xenophyophore', name: 'Giant xenophyophore', pos: { x: this.wrapCoord(12, 110), depth: 5200 }, maxSightDist: 24 },
+      { id: 'hadal-amphipod', name: 'Hadal trench amphipod', pos: { x: this.wrapCoord(40, 90), depth: 7500 }, maxSightDist: 22 },
+      { id: 'mariana-snailfish', name: 'Mariana snailfish', pos: this.marianaSnailfishPosition(), maxSightDist: 26 },
+      { id: 'hadal-sea-cucumber', name: 'Hadal swimming sea cucumber', pos: { x: this.wrapCoord(25, 150), depth: 9400 }, maxSightDist: 24 },
+      { id: 'supergiant-amphipod', name: 'Supergiant hadal amphipod', pos: this.supergiantAmphipodPosition(), maxSightDist: 24 },
+      { id: 'bathysiphon-mat', name: 'Tubular hadal foraminifera', pos: { x: this.wrapCoord(8, 120), depth: 10920 }, maxSightDist: 22 },
     ];
   }
 
@@ -1764,8 +1788,12 @@ export class OceanWorld {
         this.activeCreatures.push({
           screenX: schoolSx,
           screenY: schoolSy,
-          name: 'EPIPELAGIC SCHOOLING FISH',
-          category: 'Ambient scenery · Epipelagic',
+          name: 'ATLANTIC MACKEREL',
+          specimenId: 'epipelagic-fish',
+          category: this.isDiscovered('epipelagic-fish')
+            ? 'Documented species · Scomber scombrus'
+            : 'Schooling fish · [E] to scan · Click for photo',
+          isHero: true,
           radius: 28,
           distM: Math.hypot(schoolX - this.vehicle.position.x, schoolDepth - this.depth),
         });
@@ -1816,8 +1844,12 @@ export class OceanWorld {
         this.activeCreatures.push({
           screenX: raySx,
           screenY: raySy,
-          name: 'PELAGIC RAY',
-          category: 'Ambient scenery · Epipelagic',
+          name: 'GIANT OCEANIC MANTA RAY',
+          specimenId: 'pelagic-ray',
+          category: this.isDiscovered('pelagic-ray')
+            ? 'Documented species · Mobula birostris'
+            : 'Pelagic ray · [E] to scan · Click for photo',
+          isHero: true,
           radius: 32 * r.scale,
           distM: Math.hypot(rayX - this.vehicle.position.x, rayDepth - this.depth),
         });
@@ -1857,8 +1889,12 @@ export class OceanWorld {
       this.activeCreatures.push({
         screenX: jsx,
         screenY: jsy,
-        name: 'MOON JELLY',
-        category: 'Ambient scenery · Epipelagic',
+        name: 'MOON JELLYFISH',
+        specimenId: 'moon-jelly',
+        category: this.isDiscovered('moon-jelly')
+          ? 'Documented species · Aurelia aurita'
+          : 'Surface jellyfish · [E] to scan · Click for photo',
+        isHero: true,
         radius: 16,
         distM: Math.hypot(jx - this.vehicle.position.x, jd - this.depth),
       });
@@ -1895,8 +1931,12 @@ export class OceanWorld {
         this.activeCreatures.push({
           screenX: dsx,
           screenY: dsy,
-          name: 'BOTTLENOSE DOLPHINS',
-          category: 'Ambient scenery · Epipelagic',
+          name: 'BOTTLENOSE DOLPHIN',
+          specimenId: 'bottlenose-dolphin',
+          category: this.isDiscovered('bottlenose-dolphin')
+            ? 'Documented species · Tursiops truncatus'
+            : 'Cetacean pod · [E] to scan · Click for photo',
+          isHero: true,
           radius: 40,
           distM: Math.hypot(dolphinCurrX - this.vehicle.position.x, dolphinDepth - this.depth),
         });
@@ -1949,7 +1989,11 @@ export class OceanWorld {
           screenX: ssx,
           screenY: ssy,
           name: 'HARBOR SEAL',
-          category: 'Ambient scenery · Epipelagic',
+          specimenId: 'harbor-seal',
+          category: this.isDiscovered('harbor-seal')
+            ? 'Documented species · Phoca vitulina'
+            : 'Diving pinniped · [E] to scan · Click for photo',
+          isHero: true,
           radius: 24 * seal.scale,
           distM: Math.hypot(sealX - this.vehicle.position.x, sealDepth - this.depth),
         });
@@ -1997,8 +2041,12 @@ export class OceanWorld {
         this.activeCreatures.push({
           screenX: shsx,
           screenY: shsy,
-          name: 'PELAGIC SHARK',
-          category: 'Ambient scenery · Epipelagic',
+          name: 'GREAT WHITE SHARK',
+          specimenId: 'pelagic-shark',
+          category: this.isDiscovered('pelagic-shark')
+            ? 'Documented species · Carcharodon carcharias'
+            : 'Apex predator · [E] to scan · Click for photo',
+          isHero: true,
           radius: 38 * sh.scale,
           distM: Math.hypot(sharkCurrX - this.vehicle.position.x, sharkDepth - this.depth),
         });
@@ -2130,7 +2178,11 @@ export class OceanWorld {
         screenX: ksx,
         screenY: ksy,
         name: 'CROWN JELLYFISH',
-        category: 'Ambient scenery · Mesopelagic',
+        specimenId: 'crown-jellyfish',
+        category: this.isDiscovered('crown-jellyfish')
+          ? 'Documented species · Periphylla periphylla'
+          : 'Coronate medusa · [E] to scan · Click for photo',
+        isHero: true,
         radius: 20,
         distM: Math.hypot(kx - this.vehicle.position.x, kd - this.depth),
       });
@@ -2176,8 +2228,12 @@ export class OceanWorld {
       this.activeCreatures.push({
         screenX: csx,
         screenY: csy,
-        name: 'COMB JELLY (CTENOPHORE)',
-        category: 'Ambient scenery · Mesopelagic',
+        name: 'BEROE COMB JELLY',
+        specimenId: 'comb-jelly',
+        category: this.isDiscovered('comb-jelly')
+          ? 'Documented species · Beroe cucumis'
+          : 'Iridescent ctenophore · [E] to scan · Click for photo',
+        isHero: true,
         radius: 16,
         distM: Math.hypot(cx - this.vehicle.position.x, cd - this.depth),
       });
@@ -2214,8 +2270,12 @@ export class OceanWorld {
       this.activeCreatures.push({
         screenX: psx,
         screenY: psy,
-        name: 'SIPHONOPHORE COLONY',
-        category: 'Ambient scenery · Mesopelagic',
+        name: 'GIANT SIPHONOPHORE COLONY',
+        specimenId: 'siphonophore',
+        category: this.isDiscovered('siphonophore')
+          ? 'Documented species · Marrus orthocanna'
+          : 'Colonial hydrozoan · [E] to scan · Click for photo',
+        isHero: true,
         radius: 22,
         distM: Math.hypot(px - this.vehicle.position.x, pd - this.depth),
       });
@@ -2255,8 +2315,12 @@ export class OceanWorld {
         this.activeCreatures.push({
           screenX: podSx,
           screenY: podSy,
-          name: 'LANTERNFISH',
-          category: 'Ambient scenery · Mesopelagic',
+          name: 'GLACIER LANTERNFISH',
+          specimenId: 'lanternfish',
+          category: this.isDiscovered('lanternfish')
+            ? 'Documented species · Benthosema glaciale'
+            : 'Photophore bioluminescent · [E] to scan · Click for photo',
+          isHero: true,
           radius: 18,
           distM: Math.hypot(lx - this.vehicle.position.x, ld - this.depth),
         });
@@ -2299,8 +2363,12 @@ export class OceanWorld {
         this.activeCreatures.push({
           screenX: osx,
           screenY: osy,
-          name: 'GIANT OCTOPUS',
-          category: 'Ambient scenery · Mesopelagic',
+          name: 'GIANT PACIFIC OCTOPUS',
+          specimenId: 'giant-octopus',
+          category: this.isDiscovered('giant-octopus')
+            ? 'Documented species · Enteroctopus dofleini'
+            : 'Deep octopod · [E] to scan · Click for photo',
+          isHero: true,
           radius: 34 * oct.scale,
           distM: Math.hypot(octoX - this.vehicle.position.x, octoDepth - this.depth),
         });
@@ -2373,8 +2441,12 @@ export class OceanWorld {
         this.activeCreatures.push({
           screenX: spsx,
           screenY: spsy,
-          name: 'SPERM WHALE (DEEP DIVER)',
-          category: 'Ambient scenery · Mesopelagic',
+          name: 'SPERM WHALE',
+          specimenId: 'sperm-whale',
+          category: this.isDiscovered('sperm-whale')
+            ? 'Documented species · Physeter macrocephalus'
+            : 'Deep diver · [E] to scan · Click for photo',
+          isHero: true,
           radius: 55 * sp.scale,
           distM: Math.hypot(spermCurrX - this.vehicle.position.x, spermDepth - this.depth),
         });
@@ -2449,7 +2521,11 @@ export class OceanWorld {
           screenX: dmSx,
           screenY: dmSy,
           name: 'DUMBO OCTOPUS',
-          category: 'Ambient scenery · Mesopelagic',
+          specimenId: 'dumbo-octopus',
+          category: this.isDiscovered('dumbo-octopus')
+            ? 'Documented species · Grimpoteuthis sp.'
+            : 'Cirrate octopod · [E] to scan · Click for photo',
+          isHero: true,
           radius: 20 * dm.scale,
           distM: Math.hypot(dumboX - this.vehicle.position.x, dumboDepth - this.depth),
         });
@@ -2528,8 +2604,12 @@ export class OceanWorld {
         this.activeCreatures.push({
           screenX: jsx,
           screenY: jsy,
-          name: 'PHANTOM JELLY MEDUSA',
-          category: 'Ambient scenery · Bathypelagic',
+          name: 'GIANT PHANTOM JELLY',
+          specimenId: 'phantom-jelly',
+          category: this.isDiscovered('phantom-jelly')
+            ? 'Documented species · Stygiomedusa gigantea'
+            : 'Abyssal medusa · [E] to scan · Click for photo',
+          isHero: true,
           radius: 32 * jm.scale,
           distM: Math.hypot(jellyX - this.vehicle.position.x, jellyDepth - this.depth),
         });
@@ -2579,8 +2659,12 @@ export class OceanWorld {
         this.activeCreatures.push({
           screenX: asx,
           screenY: asy,
-          name: 'ABYSSAL ANGLERFISH',
-          category: 'Ambient scenery · Bathypelagic',
+          name: 'HUMPBACK ANGLERFISH',
+          specimenId: 'anglerfish',
+          category: this.isDiscovered('anglerfish')
+            ? 'Documented species · Melanocetus johnsonii'
+            : 'Ambush predator · [E] to scan · Click for photo',
+          isHero: true,
           radius: 22 * ang.scale,
           distM: Math.hypot(anglerX - this.vehicle.position.x, anglerDepth - this.depth),
         });
@@ -2636,7 +2720,11 @@ export class OceanWorld {
           screenX: dssx,
           screenY: dssy,
           name: 'BLUNTNOSE SIXGILL SHARK',
-          category: 'Ambient scenery · Bathypelagic',
+          specimenId: 'sixgill-shark',
+          category: this.isDiscovered('sixgill-shark')
+            ? 'Documented species · Hexanchus griseus'
+            : 'Archaic apex predator · [E] to scan · Click for photo',
+          isHero: true,
           radius: 42 * dsh.scale,
           distM: Math.hypot(deepSharkCurrX - this.vehicle.position.x, deepSharkDepth - this.depth),
         });
@@ -2814,7 +2902,11 @@ export class OceanWorld {
           screenX: swx,
           screenY: swy,
           name: 'BLACK SWALLOWER',
-          category: 'Ambient scenery · Bathypelagic',
+          specimenId: 'black-swallower',
+          category: this.isDiscovered('black-swallower')
+            ? 'Documented species · Chiasmodon niger'
+            : 'Expandable stomach · [E] to scan · Click for photo',
+          isHero: true,
           radius: 26 * sw.scale,
           distM: Math.hypot(swallowerCurrX - this.vehicle.position.x, swallowerDepth - this.depth),
         });
@@ -2876,7 +2968,11 @@ export class OceanWorld {
           screenX: gsqX,
           screenY: gsqY,
           name: 'GIANT SQUID',
-          category: 'Ambient scenery · Bathypelagic',
+          specimenId: 'giant-squid',
+          category: this.isDiscovered('giant-squid')
+            ? 'Documented species · Architeuthis dux'
+            : 'Colossal eye cephalopod · [E] to scan · Click for photo',
+          isHero: true,
           radius: 50 * gsq.scale,
           distM: Math.hypot(giantSquidCurrX - this.vehicle.position.x, giantSquidDepth - this.depth),
         });
@@ -2957,8 +3053,12 @@ export class OceanWorld {
         this.activeCreatures.push({
           screenX: drgSx,
           screenY: drgSy,
-          name: 'DEEP-SEA DRAGONFISH',
-          category: 'Ambient scenery · Bathypelagic',
+          name: 'BLACK DRAGONFISH',
+          specimenId: 'dragonfish',
+          category: this.isDiscovered('dragonfish')
+            ? 'Documented species · Idiacanthus atlanticus'
+            : 'Luminous barbel · [E] to scan · Click for photo',
+          isHero: true,
           radius: 24 * drg.scale,
           distM: Math.hypot(dragonX - this.vehicle.position.x, dragonDepth - this.depth),
         });
@@ -3078,8 +3178,12 @@ export class OceanWorld {
           this.activeCreatures.push({
             screenX: gsx,
             screenY: gsy,
-            name: 'DEEP-SEA GLASS SQUID',
-            category: 'Ambient scenery · Abyssopelagic',
+            name: 'COCKATOO GLASS SQUID',
+            specimenId: 'glass-squid',
+            category: this.isDiscovered('glass-squid')
+              ? 'Documented species · Taonius borealis'
+              : 'Transparent cranchiid · [E] to scan · Click for photo',
+            isHero: true,
             radius: 28 * gsq.scale,
             distM: Math.hypot(gsqCurrX - this.vehicle.position.x, gsqDepth - this.depth),
           });
@@ -3127,6 +3231,21 @@ export class OceanWorld {
         const floorY = this.screenY(5200);
         if (xsx < -30 || xsx > this.width + 30 || floorY < -20 || floorY > this.height + 30) continue;
 
+        if (s === 0) {
+          this.activeCreatures.push({
+            screenX: xsx,
+            screenY: floorY - 8,
+            name: 'GIANT XENOPHYOPHORE',
+            specimenId: 'xenophyophore',
+            category: this.isDiscovered('xenophyophore')
+              ? 'Documented species · Syringammina fragilissima'
+              : 'Giant single-cell test · [E] to scan · Click for photo',
+            isHero: true,
+            radius: 20,
+            distM: Math.hypot(xenoWorldX - this.vehicle.position.x, 5200 - this.depth),
+          });
+        }
+
         ctx.save();
         ctx.translate(xsx, floorY);
         // Frilly agglutinated sediment sphere structure
@@ -3156,8 +3275,12 @@ export class OceanWorld {
             this.activeCreatures.push({
               screenX: hampSx,
               screenY: hampSy,
-              name: 'HADAL AMPHIPOD SWARM',
-              category: 'Ambient scenery · Hirondellea gigas · Hadalpelagic',
+              name: 'HADAL TRENCH AMPHIPOD',
+              specimenId: 'hadal-amphipod',
+              category: this.isDiscovered('hadal-amphipod')
+                ? 'Documented species · Hirondellea gigas'
+                : 'Super-pressure adapted · [E] to scan · Click for photo',
+              isHero: true,
               radius: 18,
               distM: Math.hypot(ampWorldX - this.vehicle.position.x, ampDepth - this.depth),
             });
@@ -3215,8 +3338,12 @@ export class OceanWorld {
             this.activeCreatures.push({
               screenX: hsx,
               screenY: hsy,
-              name: 'HADAL SEA CUCUMBER',
-              category: 'Ambient scenery · Peniagone sp. · Hadalpelagic',
+              name: 'HADAL SWIMMING SEA CUCUMBER',
+              specimenId: 'hadal-sea-cucumber',
+              category: this.isDiscovered('hadal-sea-cucumber')
+                ? 'Documented species · Peniagone sp.'
+                : 'Translucent holothurian · [E] to scan · Click for photo',
+              isHero: true,
               radius: 22,
               distM: Math.hypot(hWorldX - this.vehicle.position.x, hDepth - this.depth),
             });
@@ -3269,6 +3396,21 @@ export class OceanWorld {
         const fsx = this.screenX(fWorldX);
         const fFloorY = this.screenY(10924);
         if (fsx < -30 || fsx > this.width + 30 || fFloorY < -20 || fFloorY > this.height + 40) continue;
+
+        if (fm === 0) {
+          this.activeCreatures.push({
+            screenX: fsx,
+            screenY: fFloorY - 16,
+            name: 'TUBULAR HADAL FORAMINIFERA',
+            specimenId: 'bathysiphon-mat',
+            category: this.isDiscovered('bathysiphon-mat')
+              ? 'Documented species · Bathysiphon filiformis'
+              : 'Silica agglutinated tubes · [E] to scan · Click for photo',
+            isHero: true,
+            radius: 20,
+            distM: Math.hypot(fWorldX - this.vehicle.position.x, 10924 - this.depth),
+          });
+        }
 
         ctx.save();
         ctx.translate(fsx, fFloorY);

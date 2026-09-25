@@ -27,7 +27,7 @@ root.innerHTML = `
         <div id="visitor-counter-mount"></div>
         <button id="controlsBtn" class="text-button" type="button" aria-label="Controls manual">MANUAL <span class="key-badge">?</span></button>
         <button id="muteBtn" class="text-button" type="button" aria-label="Toggle audio">AUDIO <span id="muteLabel">ON</span></button>
-        <button id="journalBtn" class="text-button" type="button">FIELD JOURNAL <span id="journalCount">00/08</span></button>
+        <button id="journalBtn" class="text-button" type="button">FIELD JOURNAL <span id="journalCount">00/32</span></button>
       </div>
       <button id="pauseBtn" class="icon-button" type="button" aria-label="Pause expedition">Ⅱ</button>
     </header>
@@ -275,7 +275,7 @@ root.innerHTML = `
           <div class="journal-expedition-stats">
             <span>EXPEDITION METRICS</span>
             <div><small>MISSION DEPTH</small><strong id="journalMaxDepth">000 m</strong></div>
-            <div><small>CATALOGUED</small><strong id="journalDiscoveredCount">0 of 4 Species</strong></div>
+            <div><small>CATALOGUED</small><strong id="journalDiscoveredCount">0 of 32 Species</strong></div>
             <div><small>SURVEY STATUS</small><strong id="journalStatus">ACTIVE DESCENT</strong></div>
             <div id="surveyBadgeContainer"></div>
           </div>
@@ -989,7 +989,7 @@ function journalContent() {
   const badgeContainer = el<HTMLElement>('surveyBadgeContainer');
   if (badgeContainer) {
     badgeContainer.innerHTML = count === total
-      ? `<div class="survey-complete-badge">★ EXPEDITION SURVEY COMPLETE · 8/8 CATALOGUED</div>`
+      ? `<div class="survey-complete-badge">★ EXPEDITION SURVEY COMPLETE · ${total}/${total} CATALOGUED</div>`
       : '';
   }
 
@@ -1635,7 +1635,7 @@ function triggerSonar() {
   if (res.distance !== null && res.distance < 160) {
     toast(`ACOUSTIC CONTACT DETECTED · ${Math.round(res.distance)} M ${res.name ? `[${res.name.toUpperCase()}]` : ''}`);
   } else {
-    toast(discoveredIds.length === documentedSpecimens.length ? 'ALL 8 REGIONAL SPECIES CATALOGUED' : 'NO UNCATALOGUED CONTACT IN RANGE');
+    toast(discoveredIds.length === documentedSpecimens.length ? `ALL ${documentedSpecimens.length} REGIONAL SPECIES CATALOGUED` : 'NO UNCATALOGUED CONTACT IN RANGE');
   }
 }
 
