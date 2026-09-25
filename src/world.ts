@@ -13,6 +13,7 @@ export type WorldMetrics = {
   reached1000: boolean;
   reached2000: boolean;
   zoom: number;
+  waterTransition: 'breach' | 'plunge' | null;
 };
 
 type Particle = { x: number; depth: number; radius: number; phase: number };
@@ -64,6 +65,8 @@ export class OceanWorld {
   private lastFrame = 16;
   private isThrusting = false;
   private bubbleTimer = 0;
+  private lastDepth = 0;
+  private waterTransition: 'breach' | 'plunge' | null = null;
   private onTick: (metrics: WorldMetrics) => void;
 
   constructor(canvas: HTMLCanvasElement, onTick: (metrics: WorldMetrics) => void) {
@@ -209,10 +212,22 @@ export class OceanWorld {
 
     this.isThrusting = horizontal !== 0 || vertical !== 0 || Math.abs(this.horizontalSpeed) > 0.8 || Math.abs(this.verticalSpeed) > 2;
 
+    const prevDepth = this.depth;
     this.horizontalSpeed += (horizontal * 8 - this.horizontalSpeed) * (1 - Math.exp(-dt * 3.1));
     this.verticalSpeed += (vertical * 34 - this.verticalSpeed) * (1 - Math.exp(-dt * 2.5));
     this.vehicle.position.x += this.horizontalSpeed * dt;
     this.vehicle.position.y = clamp(this.vehicle.position.y - this.verticalSpeed * dt, -2000, 3);
+    const currDepth = this.depth;
+
+    if (prevDepth > 0.4 && currDepth <= 0.4) {
+      this.waterTransition = 'breach';
+    } else if (prevDepth <= 0.4 && currDepth > 0.4) {
+      this.waterTransition = 'plunge';
+    } else {
+      this.waterTransition = null;
+    }
+    this.lastDepth = currDepth;
+
     if (Math.abs(this.horizontalSpeed) > 0.4) this.facing = Math.sign(this.horizontalSpeed);
     if (this.depth > 565 && this.encounterX === null) this.encounterX = this.vehicle.position.x + 8;
 
@@ -347,6 +362,7 @@ export class OceanWorld {
       reached1000: this.depth >= 998,
       reached2000: this.depth >= 1998,
       zoom: this.zoom,
+      waterTransition: this.waterTransition,
     };
   }
 
@@ -381,9 +397,10 @@ export class OceanWorld {
     ctx.fillStyle = water;
     ctx.fill();
 
-    // 3. Surface waves & Sunrays
+    // 3. Surface waves, Sunrays & Sunlight Caustics
     if (surfaceY > -height && surfaceY < height) this.drawSurface(surfaceY, darkness);
     if (depth < 80 && surfaceY > -180) this.drawSunRays(surfaceY, darkness);
+    if (depth < 85 && surfaceY < height) this.drawCaustics(surfaceY, darkness);
 
     // 4. Seafloor / Abyssal Plain (approaching 1,000m)
     if (depth > 880) this.drawSeafloor(darkness);
@@ -477,6 +494,64 @@ export class OceanWorld {
       ctx.fillStyle = ray;
       ctx.fill();
     }
+  }
+
+  private drawCaustics(surfaceY: number, darkness: number) {
+    if (this.depth > 85) return;
+    const ctx = this.ctx;
+    const depthRatio = clamp(this.depth / 80, 0, 1);
+    const causticIntensity = (1 - depthRatio) * (1 - darkness) * 0.38;
+    if (causticIntensity <= 0.01) return;
+
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
+
+    const top = Math.max(0, surfaceY);
+    const bottom = Math.min(this.height, surfaceY + 600);
+    const rows = 8;
+    const rowStep = (bottom - top) / rows;
+
+    for (let r = 0; r < rows; r++) {
+      const baseY = top + r * rowStep;
+      const rowProgress = r / rows;
+      const rowAlpha = causticIntensity * (1 - rowProgress * 0.7);
+
+      ctx.beginPath();
+      const stepX = 20;
+      for (let x = -20; x <= this.width + 30; x += stepX) {
+        const worldX = this.vehicle.position.x + (x - this.focusX) / this.pxPerMeter;
+        // Primary sweeping caustic ripple
+        const wave1 = Math.sin(worldX * 0.18 + this.elapsed * 1.35 + r * 1.2) * 9;
+        // Secondary harmonic counter-ripple
+        const wave2 = Math.cos(worldX * 0.32 - this.elapsed * 0.95 + r * 2.1) * 5;
+        // Vertical swell motion
+        const y = baseY + wave1 + wave2;
+
+        if (x === -20) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+
+      ctx.strokeStyle = `rgba(180, 248, 235, ${rowAlpha})`;
+      ctx.lineWidth = 1.2 + (1 - rowProgress) * 2.2;
+      ctx.stroke();
+
+      // Shimmering caustic nodal spots
+      if (this.quality === 'high' && r % 2 === 0) {
+        for (let s = 0; s < 4; s++) {
+          const spotWorldX = Math.round((this.vehicle.position.x + s * 25) / 30) * 30 + r * 12;
+          const spotSx = this.screenX(spotWorldX);
+          if (spotSx > -20 && spotSx < this.width + 20) {
+            const spotY = baseY + Math.sin(spotWorldX * 0.18 + this.elapsed * 1.35 + r * 1.2) * 9;
+            ctx.beginPath();
+            ctx.arc(spotSx, spotY, 2.5 + (1 - rowProgress) * 2, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(215, 255, 248, ${rowAlpha * 1.5})`;
+            ctx.fill();
+          }
+        }
+      }
+    }
+
+    ctx.restore();
   }
 
   private drawSeafloor(darkness: number) {
@@ -2222,6 +2297,28 @@ export class OceanWorld {
     ctx.fillStyle = 'rgba(220,245,240,0.85)';
     ctx.fillText('DSV-1 RESEARCH', -32, 20);
     ctx.restore();
+
+    // Surface sunlight caustic reflections dancing across the hull plates
+    if (this.depth < 65) {
+      const hullCausticAlpha = (1 - this.depth / 65) * 0.42;
+      ctx.save();
+      ctx.strokeStyle = `rgba(195, 255, 245, ${hullCausticAlpha})`;
+      ctx.lineWidth = 1.3;
+      for (let c = 0; c < 4; c++) {
+        const cPhase = this.elapsed * 2.2 + c * 1.4;
+        ctx.beginPath();
+        const cxStart = -40 + c * 22;
+        ctx.moveTo(cxStart, -18);
+        ctx.quadraticCurveTo(
+          cxStart + Math.sin(cPhase) * 9,
+          0,
+          cxStart + Math.cos(cPhase * 0.8) * 8,
+          20
+        );
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
 
     // 3. Dorsal Sail / Hatch Tower & Antenna Mast
     ctx.beginPath();

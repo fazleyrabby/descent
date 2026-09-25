@@ -72,6 +72,13 @@ root.innerHTML = `
       </div>
     </div>
 
+    <!-- Contextual Pilot Guidance Prompt -->
+    <div id="pilotTip" class="pilot-tip is-hidden" role="status">
+      <span class="tip-dot"></span>
+      <span id="tipText">PILOT CONTROL · PRESS <kbd>S</kbd> OR <kbd>▼</kbd> TO DIVE</span>
+      <button id="dismissTipBtn" class="tip-close" type="button" aria-label="Dismiss tip">×</button>
+    </div>
+
     <!-- 2,000m Milestone Celebration Card -->
     <div id="milestoneCard" class="milestone-card is-hidden" role="alert">
       <div class="milestone-tag">EXPEDITION MILESTONE · 2,000 M</div>
@@ -301,6 +308,7 @@ let metrics: WorldMetrics = {
   reached1000: false,
   reached2000: false,
   zoom: 1.0,
+  waterTransition: null,
 };
 
 let started = false;
@@ -316,6 +324,18 @@ let milestoneTriggered = false;
 let reached1000Notified = false;
 let lastAudioZone = '';
 let toastTimer: number | undefined;
+
+let pilotGuideComplete = readPilotGuideComplete();
+let pilotStep: 'dive' | 'systems' | 'tags' | 'done' = pilotGuideComplete ? 'done' : 'dive';
+
+function readPilotGuideComplete() {
+  try { return localStorage.getItem('descent-v1-guide-completed') === '1'; }
+  catch { return false; }
+}
+function savePilotGuideComplete() {
+  try { localStorage.setItem('descent-v1-guide-completed', '1'); }
+  catch { /* storage */ }
+}
 
 // Audio System (Web Audio API)
 let audioContext: AudioContext | null = null;
@@ -710,6 +730,91 @@ function switchAudio() {
   } catch { /* ignore */ }
 }
 
+function splashAudio(type: 'breach' | 'plunge') {
+  if (!audioContext || muted || volume === 0) return;
+  try {
+    const t0 = audioContext.currentTime;
+    const bufferSize = Math.floor(audioContext.sampleRate * 0.42);
+    const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (audioContext.sampleRate * 0.12));
+    }
+    const noise = audioContext.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = audioContext.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.Q.value = 1.9;
+    filter.frequency.setValueAtTime(type === 'plunge' ? 680 : 420, t0);
+    filter.frequency.exponentialRampToValueAtTime(type === 'plunge' ? 160 : 780, t0 + 0.38);
+
+    const gain = audioContext.createGain();
+    gain.gain.setValueAtTime(volume * 0.22, t0);
+    gain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.4);
+
+    noise.connect(filter).connect(gain).connect(audioContext.destination);
+    noise.start(t0);
+
+    const osc = audioContext.createOscillator();
+    const oscGain = audioContext.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(type === 'plunge' ? 95 : 60, t0);
+    osc.frequency.exponentialRampToValueAtTime(type === 'plunge' ? 36 : 105, t0 + 0.32);
+
+    oscGain.gain.setValueAtTime(volume * 0.18, t0);
+    oscGain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.35);
+
+    osc.connect(oscGain).connect(audioContext.destination);
+    osc.start(t0);
+    osc.stop(t0 + 0.36);
+  } catch { /* ignore */ }
+}
+
+function updatePilotTip() {
+  if (pilotGuideComplete || pilotStep === 'done') {
+    show(el<HTMLElement>('pilotTip'), false);
+    return;
+  }
+  const tip = el<HTMLElement>('pilotTip');
+  const text = el<HTMLElement>('tipText');
+  if (!tip || !text) return;
+
+  if (pilotStep === 'dive') {
+    if (metrics.depth > 3) {
+      pilotStep = 'systems';
+    } else {
+      text.innerHTML = `PILOT CONTROL · PRESS <kbd>W</kbd>/<kbd>S</kbd> OR <kbd>▲</kbd>/<kbd>▼</kbd> TO DIVE & RISE`;
+      show(tip, true);
+      return;
+    }
+  }
+
+  if (pilotStep === 'systems') {
+    if (metrics.depth > 35 || world.getLights() === false) {
+      pilotStep = 'tags';
+    } else {
+      text.innerHTML = `SYSTEMS TELEMETRY · PRESS <kbd>F</kbd> FOR FLOODLIGHTS · <kbd>R</kbd> FOR ACTIVE SONAR`;
+      show(tip, true);
+      return;
+    }
+  }
+
+  if (pilotStep === 'tags') {
+    if (metrics.depth > 65 || discoveredIds.length > 0) {
+      pilotStep = 'done';
+      pilotGuideComplete = true;
+      savePilotGuideComplete();
+      show(tip, false);
+      return;
+    } else {
+      text.innerHTML = `CREATURE TAXONOMY · HOVER MOUSE OR PRESS <kbd>T</kbd> TO TOGGLE SPECIES TAGS`;
+      show(tip, true);
+      return;
+    }
+  }
+}
+
 function toast(message: string) {
   const node = el<HTMLElement>('toast');
   node.textContent = message;
@@ -877,6 +982,15 @@ function onTick(next: WorldMetrics) {
     toast('2,000 M REACHED · ABYSSAL BENTHIC FLOOR');
   }
 
+  // Water breach and plunge surface transitions
+  if (metrics.waterTransition) {
+    splashAudio(metrics.waterTransition);
+    toast(metrics.waterTransition === 'breach' ? 'SURFACE BREACHED · OPEN ATMOSPHERE' : 'SUBMERGED · SUNLIGHT ZONE');
+  }
+
+  // Pilot onboarding tips
+  updatePilotTip();
+
   // Auto-dismiss surface directive if descended past 5m
   if (metrics.depth > 5 && !el<HTMLElement>('surfaceDirective').classList.contains('is-dismissed')) {
     el<HTMLElement>('surfaceDirective').classList.add('is-hidden');
@@ -976,6 +1090,13 @@ el<HTMLButtonElement>('dismissDirective').addEventListener('click', () => {
   el<HTMLElement>('surfaceDirective').classList.add('is-hidden', 'is-dismissed');
 });
 
+el<HTMLButtonElement>('dismissTipBtn')?.addEventListener('click', () => {
+  pilotStep = 'done';
+  pilotGuideComplete = true;
+  savePilotGuideComplete();
+  show(el<HTMLElement>('pilotTip'), false);
+});
+
 el<HTMLButtonElement>('milestoneCloseBtn').addEventListener('click', () => {
   show(el<HTMLElement>('milestoneCard'), false);
 });
@@ -1006,6 +1127,7 @@ el<HTMLButtonElement>('resetProgress').addEventListener('click', () => {
   try {
     localStorage.removeItem('descent-v1-discovered-species');
     localStorage.removeItem('descent-v1-vampire-squid');
+    localStorage.removeItem('descent-v1-guide-completed');
     localStorage.removeItem('descent-v1-muted');
   } catch { /* Storage */ }
   location.reload();

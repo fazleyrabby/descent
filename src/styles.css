@@ -402,6 +402,70 @@ a { color: var(--aqua); }
   margin-right: 2px;
 }
 
+/* Pilot Onboarding Guidance Pill */
+.pilot-tip {
+  position: absolute;
+  bottom: 85px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(3, 19, 29, 0.9);
+  border: 1px solid rgba(162, 237, 221, 0.38);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.45), 0 0 16px rgba(125, 226, 213, 0.12);
+  backdrop-filter: blur(10px);
+  padding: 0.65rem 1.15rem;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  z-index: 6;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  color: #d8f5ef;
+  font-family: 'Space Grotesk', sans-serif;
+  pointer-events: auto;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  max-width: 90vw;
+  white-space: nowrap;
+}
+.pilot-tip.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 10px);
+}
+.pilot-tip .tip-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--aqua);
+  box-shadow: 0 0 8px var(--aqua);
+  animation: pulseBeacon 2s infinite ease-in-out;
+  flex-shrink: 0;
+}
+.pilot-tip kbd {
+  display: inline-block;
+  padding: 1px 5px;
+  background: rgba(162, 235, 225, 0.15);
+  border: 1px solid rgba(162, 235, 225, 0.4);
+  border-radius: 2px;
+  color: #ffffff;
+  font-size: 0.64rem;
+  font-family: inherit;
+  font-weight: 600;
+}
+.tip-close {
+  background: none;
+  border: none;
+  color: #7d9da1;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0 0 0 0.4rem;
+  line-height: 1;
+  transition: color 0.15s ease;
+}
+.tip-close:hover {
+  color: #ffffff;
+}
+
 /* 1,000m Milestone Card */
 .milestone-card {
   position: absolute;

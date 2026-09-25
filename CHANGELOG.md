@@ -6,6 +6,10 @@ User-visible changes to DESCENT are recorded here. Add new work under **Unreleas
 
 ### Added
 
+- Animated procedural sunlight caustics across the epipelagic zone (0–75 m) with multi-frequency intersecting harmonic light ribbons and screen-blended shimmer nodes.
+- Submersible hull sunlight caustic reflections dancing across the titanium plates, decals, and observation dome in shallow waters (0–65 m).
+- Contextual first-time pilot onboarding guidance pill with step-by-step telemetry cues for diving controls, floodlights, active sonar ping, and taxonomy tags with persistent completion memory.
+- Dynamic water surface breach and plunge splash sound synthesis simulating atmospheric waterline crossing and water displacement whoosh.
 - Multi-specimen scientific Field Journal catalog featuring 4 fully scannable hero species spanning the water column: Blue Whale (*Balaenoptera musculus*, 0–200 m, NOAA sourced), Vampire Squid (*Vampyroteuthis infernalis*, 600–900 m, MBARI sourced), Barreleye Fish (*Macropinna microstoma*, 600–1,200 m, MBARI sourced), and Benthic Tripod Fish (*Bathypterois grallator*, 1,900–2,000 m, Smithsonian/NOAA sourced).
 - Individual scientific specimen plates with detailed SVG anatomical diagrams and callouts for all 4 documented species.
 - Reconnaissance briefing dossier for undiscovered species with bio-acoustic target sonar radar, expected depth range clues, and scanning directives.
