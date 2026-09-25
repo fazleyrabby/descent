@@ -6,6 +6,11 @@ User-visible changes to DESCENT are recorded here. Add new work under **Unreleas
 
 ### Added
 
+- Deep-ocean expedition expansion from 4,000 m down to 6,000 m into the Hadal Trench Subduction Gateway, extending the total descent column through the entire Abyssopelagic zone.
+- 6th documented hero species: Abyssal Sea Pig (*Scotoplanes globosa*, target depth 5,200 m, MBARI sourced), complete with an authored scientific SVG plate, interactive taxonomy reticle, active sonar triangulation, and animated model with walking hydraulic tube-feet, dorsal sensory papillae, and oral detritus tentacles.
+- Hadal Subduction Fault Gateway at 6,000 m featuring towering tectonic basalt canyon walls where the Pacific Plate subducts, serpentine fracture lines with piezoelectric luminescence, and the Ocean Floor Moored Hydrophone Station H-6000 with a flashing red seismic telemetry beacon.
+- Ambient abyssopelagic wildlife: Deep-Sea Glass Squid (*Taonius borealis*, 4,300–5,100 m) with transparent crystal mantle, vertical digestive gland, and iridescent photophores, plus benthic Xenophyophore protozoan aggregates (4,600–5,800 m).
+- Infrasonic tectonic audio synthesis with 18 Hz sub-bass plate subduction rumble and fault line shear friction acoustics.
 - Continuous vertical deep-ocean expedition expansion from 2,000 m down to 4,000 m into the Abyssopelagic zone, featuring the 2,000 m Mid-Ocean Hydrothermal Rift Canyon, the 3,200 m Abyssal Whale Fall chemosynthetic oasis, and the 4,000 m Abyssal Plain floor.
 - 5th documented hero species: Gulper Eel (*Eurypharynx pelecanoides*, target depth 2,750 m, MBARI sourced), complete with an authored scientific SVG plate, interactive taxonomy reticle, active sonar triangulation, and animated in-game model with expandable pouch mouth and flashing caudal photophore lure.
 - Abyssal Whale Fall ecosystem at 3,200 m featuring a massive cetacean skeleton with articulated vertebrae, arching ivory ribs, waving red *Osedax* bone-eating "zombie" worm colonies, scavenger lithodid crabs, and a cruising Pacific Sleeper Shark (*Somniosus pacificus*) silhouette.

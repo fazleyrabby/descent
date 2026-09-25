@@ -14,6 +14,8 @@ export type WorldMetrics = {
   reached2000: boolean;
   reached3000: boolean;
   reached4000: boolean;
+  reached5000: boolean;
+  reached6000: boolean;
   zoom: number;
   waterTransition: 'breach' | 'plunge' | null;
 };
@@ -132,10 +134,10 @@ export class OceanWorld {
 
     let state = this.seed;
     const random = () => ((state = (state * 1664525 + 1013904223) >>> 0) / 4294967296);
-    for (let i = 0; i < 5500; i++) {
+    for (let i = 0; i < 7500; i++) {
       this.particles.push({
         x: (random() - 0.5) * 440,
-        depth: random() * 4150,
+        depth: random() * 6250,
         radius: 0.35 + random() * 1.5,
         phase: random() * Math.PI * 2,
       });
@@ -218,7 +220,7 @@ export class OceanWorld {
     this.horizontalSpeed += (horizontal * 8 - this.horizontalSpeed) * (1 - Math.exp(-dt * 3.1));
     this.verticalSpeed += (vertical * 34 - this.verticalSpeed) * (1 - Math.exp(-dt * 2.5));
     this.vehicle.position.x += this.horizontalSpeed * dt;
-    this.vehicle.position.y = clamp(this.vehicle.position.y - this.verticalSpeed * dt, -4000, 3);
+    this.vehicle.position.y = clamp(this.vehicle.position.y - this.verticalSpeed * dt, -6000, 3);
     const currDepth = this.depth;
 
     if (prevDepth > 0.4 && currDepth <= 0.4) {
@@ -310,6 +312,15 @@ export class OceanWorld {
     return { x: gulperCurrX, depth: gulperDepth };
   }
 
+  private seaPigPosition() {
+    const seaPigBaseX = 45;
+    const seaPigX = this.wrapCoord(seaPigBaseX, 140);
+    const seaPigSpeed = 0.8;
+    const seaPigCurrX = seaPigX + (this.elapsed * seaPigSpeed) % 140 - 70;
+    const seaPigDepth = 5200;
+    return { x: seaPigCurrX, depth: seaPigDepth };
+  }
+
   private documentedTargets() {
     return [
       { id: 'blue-whale', name: 'Blue whale', pos: this.whalePosition(), maxSightDist: 42 },
@@ -317,6 +328,7 @@ export class OceanWorld {
       { id: 'barreleye-fish', name: 'Barreleye fish', pos: this.barreleyePosition(), maxSightDist: 22 },
       { id: 'tripod-fish', name: 'Benthic tripod fish', pos: this.tripodPosition(), maxSightDist: 22 },
       { id: 'gulper-eel', name: 'Gulper eel', pos: this.gulperEelPosition(), maxSightDist: 28 },
+      { id: 'sea-pig', name: 'Abyssal sea pig', pos: this.seaPigPosition(), maxSightDist: 22 },
     ];
   }
 
@@ -375,6 +387,8 @@ export class OceanWorld {
       reached2000: this.depth >= 1998,
       reached3000: this.depth >= 2998,
       reached4000: this.depth >= 3998,
+      reached5000: this.depth >= 4998,
+      reached6000: this.depth >= 5998,
       zoom: this.zoom,
       waterTransition: this.waterTransition,
     };
@@ -419,7 +433,8 @@ export class OceanWorld {
     // 4. Geological Terrains & Benthic Ecosystems
     if (depth > 1700 && depth < 2450) this.drawMidOceanRidge(darkness);
     if (depth > 2950 && depth < 3550) this.drawWhaleFall(darkness);
-    if (depth > 3700) this.drawAbyssalPlain(darkness);
+    if (depth > 3700 && depth < 5600) this.drawAbyssalPlain(darkness);
+    if (depth > 5500) this.drawHadalFault(darkness);
 
     // 5. Marine Snow Particles (enhanced with headlight cone scatter)
     this.drawParticles(darkness);
@@ -430,6 +445,7 @@ export class OceanWorld {
     // 7. Hero Specimens
     if (this.encounterX !== null) this.drawSquid();
     if (depth > 2400 && depth < 3100) this.drawGulperEel();
+    if (depth > 4900 && depth < 5500) this.drawSeaPig();
 
     // 8. Headlight Cones & Volumetric Glow
     this.drawLightBeam(darkness);
@@ -933,6 +949,111 @@ export class OceanWorld {
         ctx.beginPath();
         ctx.arc(0, -63, 16, 0, Math.PI * 2);
         ctx.fillStyle = 'rgba(255, 235, 120, 0.22)';
+        ctx.fill();
+      }
+
+      ctx.restore();
+    }
+  }
+
+  private drawHadalFault(darkness: number) {
+    const ctx = this.ctx;
+    const faultDepth = 6000;
+    const floorY = this.screenY(faultDepth);
+    if (floorY > this.height + 150) return;
+
+    // Subducting Pacific Plate fault scarp (massive tectonic canyon wall on western side)
+    ctx.beginPath();
+    ctx.moveTo(-20, -50);
+    ctx.lineTo(this.width * 0.35, floorY - 140);
+    ctx.lineTo(this.width * 0.48, floorY - 70);
+    ctx.lineTo(this.width * 0.62, floorY - 20);
+    ctx.lineTo(this.width + 30, floorY + 10);
+    ctx.lineTo(this.width + 30, this.height + 30);
+    ctx.lineTo(-20, this.height + 30);
+    ctx.closePath();
+    ctx.fillStyle = '#000203';
+    ctx.fill();
+
+    // Serpentine fracture striations & piezoelectric luminescence
+    ctx.beginPath();
+    ctx.moveTo(-20, floorY - 220);
+    ctx.lineTo(this.width * 0.3, floorY - 160);
+    ctx.lineTo(this.width * 0.45, floorY - 90);
+    ctx.strokeStyle = 'rgba(75, 210, 200, 0.28)';
+    ctx.lineWidth = 1.4;
+    ctx.stroke();
+
+    // Tectonic fault friction glow
+    for (let f = 0; f < 6; f++) {
+      const fx = this.width * (0.15 + f * 0.12);
+      const fy = floorY - 180 + f * 32;
+      const glow = 0.4 + 0.4 * Math.sin(this.elapsed * 2.2 + f * 1.4);
+      ctx.beginPath();
+      ctx.arc(fx, fy, 2, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(90, 245, 230, ${glow * 0.6})`;
+      ctx.fill();
+    }
+
+    // Moored Ocean Floor Hydrophone Station H-6000 at worldX = 25, depth = 5,950 m
+    const hydroWorldX = this.wrapCoord(25, 180);
+    const hydroScreenX = this.screenX(hydroWorldX);
+    if (hydroScreenX > -80 && hydroScreenX < this.width + 80) {
+      const hy = floorY - 30;
+
+      this.activeCreatures.push({
+        screenX: hydroScreenX,
+        screenY: hy - 40,
+        name: 'HADAL SUBDUCTION FAULT GATEWAY',
+        category: 'Tectonic Plate Boundary · Hydrophone H-6000 · 6,000 m',
+        isHero: false,
+        radius: 40,
+        distM: Math.hypot(hydroWorldX - this.vehicle.position.x, 5950 - this.depth),
+      });
+
+      ctx.save();
+      ctx.translate(hydroScreenX, hy);
+
+      // Heavy anchor clump weights on tectonic rock
+      ctx.fillStyle = '#121e25';
+      ctx.fillRect(-15, -6, 30, 8);
+
+      // Heavy mooring riser cable
+      ctx.beginPath();
+      ctx.moveTo(0, -6);
+      ctx.lineTo(0, -42);
+      ctx.strokeStyle = 'rgba(175, 230, 240, 0.6)';
+      ctx.lineWidth = 1.4;
+      ctx.stroke();
+
+      // Sub-surface buoyancy glass sphere housing
+      ctx.beginPath();
+      ctx.arc(0, -42, 12, 0, Math.PI * 2);
+      ctx.fillStyle = '#071822';
+      ctx.strokeStyle = 'rgba(160, 240, 245, 0.85)';
+      ctx.lineWidth = 1.6;
+      ctx.fill();
+      ctx.stroke();
+
+      // Hydrophone low-frequency geophone sensor arms
+      ctx.beginPath();
+      ctx.moveTo(-18, -42); ctx.lineTo(18, -42);
+      ctx.moveTo(0, -30); ctx.lineTo(0, -54);
+      ctx.strokeStyle = 'rgba(130, 215, 225, 0.7)';
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+
+      // Pulsing red seismic telemetry beacon (monitoring subduction tremors)
+      const beaconOn = (this.elapsed * 2.2) % 1 > 0.75;
+      ctx.beginPath();
+      ctx.arc(0, -56, 3, 0, Math.PI * 2);
+      ctx.fillStyle = beaconOn ? '#ff3b65' : '#450d18';
+      ctx.fill();
+
+      if (beaconOn) {
+        ctx.beginPath();
+        ctx.arc(0, -56, 18, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 60, 100, 0.25)';
         ctx.fill();
       }
 
@@ -2262,6 +2383,81 @@ export class OceanWorld {
         ctx.restore();
       }
     }
+
+    // J. Deep-Sea Glass Squid (Taonius borealis / Cranchiidae) (4,300m – 5,100m)
+    if (this.depth > 4200 && this.depth < 5200) {
+      const gsqBaseX = -70;
+      const gsqX = this.wrapCoord(gsqBaseX, 160);
+      const gsqSpeed = 2.0;
+      const gsqCurrX = gsqX + (this.elapsed * gsqSpeed) % 160 - 80;
+      const gsqDepth = 4750 + Math.sin(this.elapsed * 0.35) * 18;
+      const gsx = this.screenX(gsqCurrX);
+      const gsy = this.screenY(gsqDepth);
+
+      if (gsx > -60 && gsx < this.width + 60 && gsy > -40 && gsy < this.height + 40) {
+        this.activeCreatures.push({
+          screenX: gsx,
+          screenY: gsy,
+          name: 'DEEP-SEA GLASS SQUID',
+          category: 'Ambient scenery · Abyssopelagic',
+          radius: 28,
+          distM: Math.hypot(gsqCurrX - this.vehicle.position.x, gsqDepth - this.depth),
+        });
+
+        ctx.save();
+        ctx.translate(gsx, gsy);
+        // Transparent crystal mantle
+        ctx.beginPath();
+        ctx.moveTo(22, 0);
+        ctx.quadraticCurveTo(0, -12, -26, -5);
+        ctx.lineTo(-34, 0);
+        ctx.lineTo(-26, 5);
+        ctx.quadraticCurveTo(0, 12, 22, 0);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(195, 245, 255, 0.12)';
+        ctx.strokeStyle = 'rgba(160, 235, 245, 0.45)';
+        ctx.lineWidth = 1;
+        ctx.fill();
+        ctx.stroke();
+
+        // Opaque cigar-shaped digestive gland (held vertically)
+        ctx.beginPath();
+        ctx.ellipse(2, 0, 3, 9, 0, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(215, 140, 50, 0.85)';
+        ctx.fill();
+
+        // Iridescent eye photophores
+        for (const ey of [-4, 4]) {
+          ctx.beginPath();
+          ctx.arc(16, ey, 2.8, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(255, 240, 140, 0.85)';
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+    }
+
+    // K. Giant Xenophyophore Protozoan Aggregates on sediment (4,600m – 5,800m)
+    if (this.depth > 4500 && this.depth < 5850) {
+      for (let s = -1; s <= 1; s++) {
+        const xenoWorldX = this.wrapCoord(s * 50 + 12, 110);
+        const xsx = this.screenX(xenoWorldX);
+        const floorY = this.screenY(5200);
+        if (xsx < -30 || xsx > this.width + 30 || floorY < -20 || floorY > this.height + 30) continue;
+
+        ctx.save();
+        ctx.translate(xsx, floorY);
+        // Frilly agglutinated sediment sphere structure
+        ctx.beginPath();
+        ctx.arc(0, -8, 8, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(18, 32, 40, 0.9)';
+        ctx.strokeStyle = 'rgba(110, 170, 185, 0.35)';
+        ctx.lineWidth = 1;
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
   }
 
   /**
@@ -2611,6 +2807,130 @@ export class OceanWorld {
     ctx.arc(tipX, tipY, 1.0, 0, Math.PI * 2);
     ctx.fillStyle = '#ffffff';
     ctx.fill();
+
+    ctx.restore();
+  }
+
+  /**
+   * Hero Creature: Abyssal Sea Pig (Scotoplanes globosa)
+   * Authored with 4 dynamic components:
+   * 1. Plump, water-filled translucent pink body with visible internal digestive canal
+   * 2. 4 pairs of hydraulic tube-feet marching across soft sediment
+   * 3. Paired dorsal sensory papillae ("ears") swaying with benthic currents
+   * 4. Anterior oral feeding tentacles probing abyssal detritus
+   */
+  private drawSeaPig() {
+    const ctx = this.ctx;
+    const target = this.seaPigPosition();
+    const x = this.screenX(target.x);
+    const y = this.screenY(target.depth);
+    if (x < -110 || x > this.width + 110 || y < -110 || y > this.height + 110) return;
+
+    this.activeCreatures.push({
+      screenX: x,
+      screenY: y,
+      name: 'ABYSSAL SEA PIG',
+      category: this.isDiscovered('sea-pig')
+        ? 'Catalogued · MBARI Sourced Record'
+        : 'Documented Species · Scotoplanes globosa',
+      isHero: true,
+      radius: 32 * this.zoom,
+      distM: Math.hypot(target.x - this.vehicle.position.x, target.depth - this.depth),
+    });
+
+    // Ambient soft pink luminescence
+    const aura = ctx.createRadialGradient(x, y, 2, x, y, 68 * this.zoom);
+    aura.addColorStop(0, 'rgba(255, 170, 205, 0.16)');
+    aura.addColorStop(0.5, 'rgba(200, 110, 150, 0.05)');
+    aura.addColorStop(1, 'rgba(10, 5, 20, 0)');
+    ctx.fillStyle = aura;
+    ctx.fillRect(x - 68 * this.zoom, y - 68 * this.zoom, 136 * this.zoom, 136 * this.zoom);
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(this.zoom, this.zoom);
+
+    const facing = Math.sin(this.elapsed * 0.08) >= 0 ? 1 : -1;
+    ctx.scale(facing, 1);
+
+    const bodyBob = Math.sin(this.elapsed * 2.8) * 1.5;
+
+    // 1. Dorsal sensory papillae antennae ("ears")
+    for (const ear of [-1, 1]) {
+      const earWave = Math.sin(this.elapsed * 1.6 + ear) * 3;
+      ctx.beginPath();
+      ctx.moveTo(ear * 10, -18 + bodyBob);
+      ctx.quadraticCurveTo(ear * 16 + earWave, -34, ear * 20 + earWave * 1.5, -42);
+      ctx.strokeStyle = 'rgba(255, 205, 225, 0.85)';
+      ctx.lineWidth = 2.2;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(ear * 20 + earWave * 1.5, -42, 2.2, 0, Math.PI * 2);
+      ctx.fillStyle = '#ffe0ec';
+      ctx.fill();
+    }
+
+    // 2. Hydraulic tube-feet (4 pairs walking)
+    const legPositions = [-24, -8, 8, 24];
+    for (let i = 0; i < legPositions.length; i++) {
+      const lx = legPositions[i];
+      const stepPhase = this.elapsed * 3.2 + i * 1.2;
+      const legLift = Math.max(0, Math.sin(stepPhase)) * 5;
+      const legStride = Math.cos(stepPhase) * 6;
+
+      ctx.beginPath();
+      ctx.moveTo(lx, 10 + bodyBob);
+      ctx.lineTo(lx + legStride, 22 - legLift);
+      ctx.strokeStyle = 'rgba(240, 150, 185, 0.9)';
+      ctx.lineWidth = 3.2;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(lx + legStride, 22 - legLift, 2.4, 0, Math.PI * 2);
+      ctx.fillStyle = '#d6688f';
+      ctx.fill();
+    }
+
+    // 3. Gelatinous translucent pink body
+    ctx.beginPath();
+    ctx.ellipse(0, bodyBob, 34, 18, 0, 0, Math.PI * 2);
+    const bodyGrad = ctx.createLinearGradient(0, -18 + bodyBob, 0, 18 + bodyBob);
+    bodyGrad.addColorStop(0, 'rgba(255, 215, 230, 0.88)');
+    bodyGrad.addColorStop(0.5, 'rgba(245, 175, 200, 0.75)');
+    bodyGrad.addColorStop(1, 'rgba(215, 130, 165, 0.85)');
+    ctx.fillStyle = bodyGrad;
+    ctx.strokeStyle = 'rgba(255, 230, 240, 0.95)';
+    ctx.lineWidth = 1.4;
+    ctx.fill();
+    ctx.stroke();
+
+    // Internal fluid digestive tract silhouette
+    ctx.beginPath();
+    ctx.moveTo(-22, bodyBob + 2);
+    ctx.quadraticCurveTo(0, bodyBob + 8, 22, bodyBob);
+    ctx.strokeStyle = 'rgba(165, 75, 110, 0.45)';
+    ctx.lineWidth = 5;
+    ctx.stroke();
+
+    // 4. Anterior oral detritus feeding tentacles
+    const mouthX = 32;
+    const mouthY = 4 + bodyBob;
+    for (let t = -2; t <= 2; t++) {
+      const tentWave = Math.sin(this.elapsed * 4.0 + t) * 2;
+      ctx.beginPath();
+      ctx.moveTo(mouthX, mouthY);
+      ctx.lineTo(mouthX + 8, mouthY + t * 3 + tentWave);
+      ctx.strokeStyle = 'rgba(255, 215, 230, 0.9)';
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(mouthX + 8, mouthY + t * 3 + tentWave, 1.4, 0, Math.PI * 2);
+      ctx.fillStyle = '#ffd6e7';
+      ctx.fill();
+    }
 
     ctx.restore();
   }

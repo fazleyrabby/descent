@@ -25,7 +25,7 @@ root.innerHTML = `
         <span class="signal"><i></i> SYSTEMS ONLINE</span>
         <button id="controlsBtn" class="text-button" type="button" aria-label="Controls manual">MANUAL <span class="key-badge">?</span></button>
         <button id="muteBtn" class="text-button" type="button" aria-label="Toggle audio">AUDIO <span id="muteLabel">ON</span></button>
-        <button id="journalBtn" class="text-button" type="button">FIELD JOURNAL <span id="journalCount">00/05</span></button>
+        <button id="journalBtn" class="text-button" type="button">FIELD JOURNAL <span id="journalCount">00/06</span></button>
         <button id="pauseBtn" class="icon-button" type="button" aria-label="Pause expedition">Ⅱ</button>
       </div>
     </header>
@@ -62,7 +62,7 @@ root.innerHTML = `
     <!-- Initial surface flight directive banner -->
     <div id="surfaceDirective" class="directive-card">
       <div class="directive-head"><span class="directive-dot"></span><span>EXPEDITION DIRECTIVE</span><button id="dismissDirective" class="directive-close" type="button" aria-label="Dismiss directive">×</button></div>
-      <p>Dive from the sunlit surface down through the <strong>2,000 m</strong> hydrothermal rift into the <strong>4,000 m</strong> abyssal plain. Locate <strong>5 documented species</strong> with sonar (<kbd>R</kbd>), scan with (<kbd>E</kbd>), and compile your scientific Field Journal (<kbd>J</kbd>).</p>
+      <p>Dive from the sunlit surface down through the 2,000 m hydrothermal rift and 4,000 m abyssal plain to the <strong>6,000 m Hadal Subduction Fault</strong>. Locate <strong>6 documented species</strong> with sonar (<kbd>R</kbd>), scan with (<kbd>E</kbd>), and compile your scientific Field Journal (<kbd>J</kbd>).</p>
       <div class="directive-keys">
         <span><kbd>W</kbd><kbd>S</kbd> Dive / Rise</span>
         <span><kbd>A</kbd><kbd>D</kbd> Drift</span>
@@ -79,11 +79,11 @@ root.innerHTML = `
       <button id="dismissTipBtn" class="tip-close" type="button" aria-label="Dismiss tip">×</button>
     </div>
 
-    <!-- 4,000m Milestone Celebration Card -->
+    <!-- 6,000m Milestone Celebration Card -->
     <div id="milestoneCard" class="milestone-card is-hidden" role="alert">
-      <div class="milestone-tag">EXPEDITION MILESTONE · 4,000 M</div>
-      <h3>Abyssal Plain Boundary Achieved</h3>
-      <p>Depth rating expanded to 4,000 m on the abyssal sediment floor. Hydrostatic pressure: ~401 atm. You have explored through the 2,000 m hydrothermal rift canyon, discovered the 3,200 m whale fall oasis, and reached the Benthic Lander AL-IV observatory. Review your scientific journal (<kbd>J</kbd>) or continue exploring.</p>
+      <div class="milestone-tag">EXPEDITION MILESTONE · 6,000 M</div>
+      <h3>Hadal Subduction Gateway Reached</h3>
+      <p>You have reached the boundary of the Hadal zone at 6,000 m depth along the oceanic subduction fault where tectonic plates collide. Hydrostatic pressure: ~601 atm. Telemetry sensors at Ocean Floor Mooring Station H-6000 record deep mantle tremors. Open your field journal (<kbd>J</kbd>) to review your findings, or continue exploring.</p>
       <button id="milestoneCloseBtn" class="primary-button" type="button"><span>ACKNOWLEDGE & EXPLORE</span><span class="button-arrow">↗</span></button>
     </div>
 
@@ -107,7 +107,7 @@ root.innerHTML = `
     </div>
 
     <div class="bottom-bar">
-      <div class="bottom-left"><span class="latitude">SIMULATED EXPEDITION</span><span class="bottom-rule"></span><span>0 → 4,000 M</span></div>
+      <div class="bottom-left"><span class="latitude">SIMULATED EXPEDITION</span><span class="bottom-rule"></span><span>0 → 6,000 M</span></div>
       <div class="control-strip">
         <span><kbd>A</kbd><kbd>D</kbd> DRIFT</span>
         <span><kbd>W</kbd><kbd>S</kbd> RISE / DIVE</span>
@@ -279,7 +279,7 @@ root.innerHTML = `
   <aside id="debug" class="debug is-hidden">
     <div>DEBUG / SEED 183729</div>
     <div id="debugStats">—</div>
-    <label>TELEPORT DEPTH <input id="debugDepth" type="range" min="0" max="4000" step="1" value="0" /></label>
+    <label>TELEPORT DEPTH <input id="debugDepth" type="range" min="0" max="6000" step="1" value="0" /></label>
     <button id="debugLight" type="button">TOGGLE LIGHTS</button>
   </aside>
   <div id="fatal" class="fatal is-hidden" role="alert">
@@ -309,6 +309,8 @@ let metrics: WorldMetrics = {
   reached2000: false,
   reached3000: false,
   reached4000: false,
+  reached5000: false,
+  reached6000: false,
   zoom: 1.0,
   waterTransition: null,
 };
@@ -326,6 +328,8 @@ let milestoneTriggered = false;
 let reached1000Notified = false;
 let reached2000Notified = false;
 let reached3000Notified = false;
+let reached4000Notified = false;
+let reached5000Notified = false;
 let lastAudioZone = '';
 let toastTimer: number | undefined;
 
@@ -598,13 +602,23 @@ function updateAudio() {
     subGain = 0.08 + ratio * 0.02;
     noiseFreq = 95 - ratio * 25;
     noiseLevel = 0.015;
-  } else {
-    // Abyssal Plain Floor (Abyssopelagic floor approaching 4,000m)
-    cutoff = 75;
-    droneFreq = 22;
-    subGain = 0.095;
-    noiseFreq = 65;
+  } else if (depth < 5500) {
+    // Abyssal Plain Floor & Sediment Basin (3,800m - 5,500m)
+    const ratio = (depth - 3800) / 1700;
+    cutoff = 75 - ratio * 20;
+    droneFreq = 22 - ratio * 3;
+    subGain = 0.095 + ratio * 0.015;
+    noiseFreq = 65 - ratio * 15;
     noiseLevel = 0.012;
+  } else {
+    // Hadal Subduction Fault Gateway (5,500m - 6,000m)
+    const faultProximity = (depth - 5500) / 500;
+    cutoff = 55 + faultProximity * 25;
+    droneFreq = 18; // Deep tectonic infrasound resonance
+    subGain = 0.12;
+    // Tectonic plate subduction shear rumble and friction hiss
+    noiseFreq = 50 + faultProximity * 80;
+    noiseLevel = 0.014 + faultProximity * 0.025;
   }
 
   ambientFilter.frequency.setTargetAtTime(cutoff, now, 0.25);
@@ -850,6 +864,10 @@ function journalContent() {
   el<HTMLElement>('journalDiscoveredCount').textContent = `${count} of ${total} Species (${Math.round((count / total) * 100)}%)`;
   el<HTMLElement>('journalStatus').textContent = count === total
     ? 'ALL SPECIES CATALOGUED'
+    : metrics.reached6000
+    ? '6,000 M HADAL SUBDUCTION'
+    : metrics.reached5000
+    ? '5,000 M ABYSSAL BASIN'
     : metrics.reached4000
     ? '4,000 M ABYSSAL PLAIN'
     : metrics.reached3000
@@ -863,7 +881,7 @@ function journalContent() {
   const badgeContainer = el<HTMLElement>('surveyBadgeContainer');
   if (badgeContainer) {
     badgeContainer.innerHTML = count === total
-      ? `<div class="survey-complete-badge">★ EXPEDITION SURVEY COMPLETE · 5/5 CATALOGUED</div>`
+      ? `<div class="survey-complete-badge">★ EXPEDITION SURVEY COMPLETE · 6/6 CATALOGUED</div>`
       : '';
   }
 
@@ -1018,11 +1036,25 @@ function onTick(next: WorldMetrics) {
   }
 
   // 4,000 m Abyssal Plain Boundary Milestone Check
-  if (metrics.reached4000 && !milestoneTriggered) {
+  if (metrics.reached4000 && !reached4000Notified) {
+    reached4000Notified = true;
+    milestoneAudio();
+    toast('4,000 M REACHED · ABYSSAL PLAIN & BENTHIC OBSERVATORY');
+  }
+
+  // 5,000 m Abyssal Basin Check
+  if (metrics.reached5000 && !reached5000Notified) {
+    reached5000Notified = true;
+    milestoneAudio();
+    toast('5,000 M REACHED · DEEP ABYSSAL SEDIMENT BASIN');
+  }
+
+  // 6,000 m Hadal Subduction Fault Milestone Check
+  if (metrics.reached6000 && !milestoneTriggered) {
     milestoneTriggered = true;
     show(el<HTMLElement>('milestoneCard'), true);
     milestoneAudio();
-    toast('4,000 M REACHED · ABYSSAL PLAIN & BENTHIC OBSERVATORY');
+    toast('6,000 M REACHED · HADAL SUBDUCTION FAULT GATEWAY');
   }
 
   // Water breach and plunge surface transitions
@@ -1068,7 +1100,7 @@ function onTick(next: WorldMetrics) {
   el<HTMLElement>('zoneSubtitle').textContent = zone.subtitle;
   el<HTMLElement>('pressure').textContent = `~${(1 + depth / 10).toFixed(1)} atm`;
   el<HTMLElement>('light').textContent = `${Math.round(Math.pow(1 - Math.min(depth / 1000, 1), 2.6) * 100)}%`;
-  el<HTMLElement>('depthProgress').style.width = `${Math.min(depth / 4000, 1) * 100}%`;
+  el<HTMLElement>('depthProgress').style.width = `${Math.min(depth / 6000, 1) * 100}%`;
   el<HTMLElement>('fpsDisplay').textContent = `${Math.round(1000 / Math.max(metrics.frameMs, 1))} FPS`;
   const zoomDisplay = el<HTMLElement>('zoomDisplay');
   if (zoomDisplay) {
@@ -1231,7 +1263,7 @@ function triggerSonar() {
   if (res.distance !== null && res.distance < 160) {
     toast(`ACOUSTIC CONTACT DETECTED · ${Math.round(res.distance)} M ${res.name ? `[${res.name.toUpperCase()}]` : ''}`);
   } else {
-    toast(discoveredIds.length === documentedSpecimens.length ? 'ALL 5 REGIONAL SPECIES CATALOGUED' : 'NO UNCATALOGUED CONTACT IN RANGE');
+    toast(discoveredIds.length === documentedSpecimens.length ? 'ALL 6 REGIONAL SPECIES CATALOGUED' : 'NO UNCATALOGUED CONTACT IN RANGE');
   }
 }
 

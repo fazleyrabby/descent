@@ -4,7 +4,7 @@ export type Specimen = {
   name: string;
   scientificName: string;
   depth: string;
-  depthTier: 'epipelagic' | 'mesopelagic' | 'bathypelagic';
+  depthTier: 'epipelagic' | 'mesopelagic' | 'bathypelagic' | 'abyssopelagic' | 'hadalpelagic';
   targetDepth: number;
   habitat: string;
   realSize: string;
@@ -397,6 +397,97 @@ export const documentedSpecimens: Specimen[] = [
       </div>
     `,
   },
+  {
+    id: 'sea-pig',
+    index: '06',
+    name: 'Abyssal sea pig',
+    scientificName: 'Scotoplanes globosa',
+    depth: '1,200–6,000 m',
+    depthTier: 'abyssopelagic',
+    targetDepth: 5200,
+    habitat: 'Abyssal Plains · Sediment Basin',
+    realSize: '10–15 cm',
+    classification: 'ECHINODERMATA · HOLOTHUROIDEA · ELPIDIIDAE',
+    description:
+      'A plump, translucent pink abyssal sea cucumber that grazes upon organic marine snow fallen to the deep seafloor. It walks across soft abyssal silt using hydraulic tube-feet powered by internal fluid cavities.',
+    detail:
+      'Its dorsal surface bears paired sensory papillae structures that resemble antenna-like ears, aiding in sensing benthic currents. Around its mouth, specialized ringed feeding tentacles sift through sediment to extract microbial blooms.',
+    source: {
+      title: 'MBARI · Sea Pig (Scotoplanes)',
+      url: 'https://www.mbari.org/animal/sea-pig/',
+      publisher: 'Monterey Bay Aquarium Research Institute',
+      accessedOn: '2026-09-25',
+    },
+    annotations: [
+      { num: '01.', label: 'Translucent gelatinous dermis' },
+      { num: '02.', label: 'Hydraulic ambulatory tube-feet' },
+      { num: '03.', label: 'Dorsal sensory papillae' },
+      { num: '04.', label: 'Oral detritus tentacles' },
+    ],
+    svg: `
+      <div class="specimen-plate">
+        <div class="plate-badge">CLASSIFICATION // HOLOTHUROIDEA · ELPIDIIDAE</div>
+        <svg class="specimen-diagram" viewBox="0 0 340 240" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="pigAura" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#ff9ec2" stop-opacity="0.22"/>
+              <stop offset="100%" stop-color="#ff9ec2" stop-opacity="0"/>
+            </radialGradient>
+            <linearGradient id="pigBody" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="rgba(255,210,225,0.85)"/>
+              <stop offset="50%" stop-color="rgba(240,165,190,0.7)"/>
+              <stop offset="100%" stop-color="rgba(200,120,150,0.85)"/>
+            </linearGradient>
+            <linearGradient id="tubeFoot" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="rgba(245,180,205,0.8)"/>
+              <stop offset="100%" stop-color="rgba(190,105,135,0.9)"/>
+            </linearGradient>
+          </defs>
+          <circle cx="170" cy="120" r="110" fill="url(#pigAura)" />
+          
+          <!-- Dorsal sensory papillae "antennae" -->
+          <path d="M 130 90 C 125 60 110 40 100 35" fill="none" stroke="rgba(255,200,220,0.85)" stroke-width="3" stroke-linecap="round"/>
+          <path d="M 148 88 C 150 55 160 38 172 32" fill="none" stroke="rgba(255,200,220,0.85)" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="100" cy="35" r="2.5" fill="#ffe4ee"/>
+          <circle cx="172" cy="32" r="2.5" fill="#ffe4ee"/>
+
+          <!-- Hydraulic tube feet (stilt ambulatory legs) -->
+          <path d="M 105 138 L 92 188" stroke="url(#tubeFoot)" stroke-width="5" stroke-linecap="round"/>
+          <circle cx="92" cy="188" r="4" fill="#d8749a"/>
+          <path d="M 135 142 L 130 192" stroke="url(#tubeFoot)" stroke-width="5" stroke-linecap="round"/>
+          <circle cx="130" cy="192" r="4" fill="#d8749a"/>
+          <path d="M 175 142 L 180 192" stroke="url(#tubeFoot)" stroke-width="5" stroke-linecap="round"/>
+          <circle cx="180" cy="192" r="4" fill="#d8749a"/>
+          <path d="M 215 138 L 228 188" stroke="url(#tubeFoot)" stroke-width="5" stroke-linecap="round"/>
+          <circle cx="228" cy="188" r="4" fill="#d8749a"/>
+
+          <!-- Plump water-filled gelatinous body -->
+          <ellipse cx="165" cy="120" rx="75" ry="38" fill="url(#pigBody)" stroke="rgba(255,225,238,0.9)" stroke-width="1.8"/>
+          
+          <!-- Internal fluid digestive tract silhouette -->
+          <path d="M 115 124 Q 165 136 215 122" fill="none" stroke="rgba(160,70,105,0.4)" stroke-width="8" stroke-linecap="round"/>
+
+          <!-- Oral detritus feeding tentacles at anterior snout -->
+          <g stroke="rgba(255,210,228,0.9)" stroke-width="1.8" stroke-linecap="round">
+            <line x1="88" y1="126" x2="72" y2="122"/>
+            <line x1="88" y1="130" x2="68" y2="132"/>
+            <line x1="90" y1="134" x2="72" y2="142"/>
+            <line x1="92" y1="138" x2="78" y2="150"/>
+          </g>
+          <circle cx="72" cy="122" r="2" fill="#ffd1e3"/>
+          <circle cx="68" cy="132" r="2" fill="#ffd1e3"/>
+          <circle cx="72" cy="142" r="2" fill="#ffd1e3"/>
+          <circle cx="78" cy="150" r="2" fill="#ffd1e3"/>
+        </svg>
+        <div class="plate-annotations">
+          <span><b>01.</b> Translucent gelatinous dermis</span>
+          <span><b>02.</b> Hydraulic ambulatory tube-feet</span>
+          <span><b>03.</b> Dorsal sensory papillae</span>
+          <span><b>04.</b> Oral detritus tentacles</span>
+        </div>
+      </div>
+    `,
+  },
 ];
 
 export const vampireSquid = documentedSpecimens[1];
@@ -406,5 +497,6 @@ export function zoneAt(depth: number): { name: string; subtitle: string } {
   if (depth < 200) return { name: 'SUNLIGHT ZONE', subtitle: 'Epipelagic' };
   if (depth < 1000) return { name: 'TWILIGHT ZONE', subtitle: 'Mesopelagic' };
   if (depth < 4000) return { name: 'MIDNIGHT ZONE', subtitle: 'Bathypelagic' };
-  return { name: 'ABYSSAL ZONE', subtitle: 'Abyssopelagic' };
+  if (depth < 6000) return { name: 'ABYSSAL ZONE', subtitle: 'Abyssopelagic' };
+  return { name: 'HADAL ZONE', subtitle: 'Hadalpelagic · Trench Subduction' };
 }
