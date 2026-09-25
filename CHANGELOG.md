@@ -61,6 +61,14 @@ User-visible changes to DESCENT are recorded here. Add new work under **Unreleas
 
 ### Changed
 
+- Enhanced mobile and tablet HUD responsiveness across all viewport breakpoints (`<=1100px`, `<=768px`, `<=480px`, and landscape `@media (max-height: 520px)`):
+  - Repositioned the active sonar radar panel to the upper right beneath the masthead on mobile portrait viewports, eliminating overlap with the touch action buttons and virtual D-pad.
+  - Added CSS safe-area insets (`env(safe-area-inset-top)` and `env(safe-area-inset-bottom)`) for modern bezel-less iOS and Android displays.
+  - Implemented responsive typography clamping on depth readouts and compact vertical margins for atmospheric instruments.
+  - Re-architected the Field Journal scientific modal for mobile screens with a horizontally scrollable specimen selector tab strip, touch scroll snapping, and responsive SVG diagram auto-scaling.
+  - Optimized the Flight Manual modal into a clean single-column cards grid with scrollable viewports on mobile devices.
+  - Condensed the HUD masthead on narrow viewports: concealed auxiliary keyboard badges, scaled visitor telemetry chip, and preserved tap targets (>= 44x44px) for all primary controls.
+  - Added dedicated landscape mobile layout (`max-height: 520px`) with compact D-pad, linear 4-button action row, condensed depth instrument, and hidden non-essential indicators.
 - Enhanced sonar with audible echo return and proximity radar contact feedback.
 - Polished specimen scanning feedback with real-time telemetry audio sweep and discovery chime.
 - Reduced the first-release plan to a focused surface-to-1,000 m expedition.

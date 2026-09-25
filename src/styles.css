@@ -1344,7 +1344,7 @@ a { color: var(--aqua); }
 }
 
 @media (max-width: 1100px) {
-  .depth-module { top: 18%; width: 260px; }
+  .depth-module { top: 16%; width: 260px; }
   .sonar-panel { width: 165px; bottom: 17vh; }
   .sonar-screen { width: 100px; height: 100px; }
   .control-strip { gap: 0.7rem; }
@@ -1352,33 +1352,480 @@ a { color: var(--aqua); }
   .intro-main { left: 8%; }
 }
 
-@media (max-width: 760px) {
-  .masthead { left: 16px; right: 16px; top: 16px; }
-  .brand-sub, .brand-rule, .signal, .bottom-left, .bottom-right, .bottom-right-cluster, .control-strip { display: none; }
-  .top-actions { gap: 0.8rem; }
-  .depth-module { left: 18px; top: 80px; width: 200px; }
-  .depth-readout { font-size: 4rem; }
-  .readings { margin-top: 1.5rem; gap: 0.5rem; }
-  .sonar-panel { right: 16px; bottom: 175px; width: 135px; padding: 0.6rem; }
-  .sonar-screen { width: 78px; height: 78px; margin: 0.5rem auto; }
-  .sonar-footer, .panel-head { font-size: 0.46rem; }
-  .reticle { width: 55px; height: 55px; }
-  .target-prompt { left: calc(50% + 35px); font-size: 0.55rem; }
-  .intro-top, .intro-bottom { left: 20px; right: 20px; }
-  .intro-top > span:last-child, .intro-bottom > span:last-child { display: none; }
-  .intro-main { left: 20px; right: 20px; top: 50%; }
-  .intro h1 { font-size: clamp(4rem, 14vw, 5.5rem); }
-  .intro-side { right: -32%; width: 95vw; height: 95vw; opacity: 0.25; }
-  .journal-grid { grid-template-columns: 1fr; overflow: auto; }
-  .journal-index { padding: 1rem 1.5rem; border-right: 0; border-bottom: 1px solid var(--line); }
-  .entry-tab { max-width: 240px; margin-top: 0.6rem; }
-  .journal-entry { padding: 1.5rem; }
-  .journal-top { padding: 1.3rem 1.5rem; }
-  .journal-top h2 { font-size: 2rem; }
-  .entry-facts { grid-template-columns: 1fr 1fr; gap: 1rem; }
-  .pause-modal { padding: 2rem; }
-  .bottom-bar { bottom: 15px; }
-  .touch-controls { display: flex; }
+@media (max-width: 768px) {
+  /* Masthead & Navigation */
+  .masthead {
+    left: 14px;
+    right: 14px;
+    top: max(12px, env(safe-area-inset-top, 12px));
+    gap: 0.5rem;
+  }
+  .brand {
+    font-size: 0.95rem;
+    letter-spacing: 0.18em;
+  }
+  .brand-sub, .brand-rule, .signal, .bottom-left, .bottom-right, .bottom-right-cluster, .control-strip {
+    display: none !important;
+  }
+  .top-actions {
+    gap: 0.5rem;
+  }
+  .text-button {
+    font-size: 0.58rem;
+    letter-spacing: 0.1em;
+    padding: 6px 4px;
+  }
+  .icon-button {
+    width: 34px;
+    height: 34px;
+  }
+  .visitor-counter {
+    padding: 3px 8px;
+    font-size: 0.56rem;
+  }
+
+  /* Depth Instrument Module */
+  .depth-module {
+    left: 14px;
+    top: calc(max(12px, env(safe-area-inset-top, 12px)) + 52px);
+    width: 175px;
+    pointer-events: none;
+  }
+  .instrument-label {
+    font-size: 0.52rem;
+  }
+  .depth-readout {
+    font-size: clamp(2.4rem, 9vw, 3.6rem);
+    margin-top: 0.4rem;
+  }
+  .depth-unit {
+    font-size: 1.15rem;
+    margin-top: 0.4rem;
+  }
+  .depth-rule {
+    margin: 0.6rem 0 0.8rem;
+  }
+  .zone div {
+    font-size: 0.88rem;
+  }
+  .zone span {
+    font-size: 0.7rem;
+  }
+  .readings {
+    margin-top: 0.8rem;
+    gap: 0.35rem;
+  }
+  .readings div {
+    padding-top: 0.35rem;
+  }
+  .readings span, .readings strong {
+    font-size: 0.58rem;
+  }
+
+  /* Sonar Screen Repositioning (upper right below masthead to avoid d-pad/actions overlap) */
+  .sonar-panel {
+    top: calc(max(12px, env(safe-area-inset-top, 12px)) + 52px);
+    right: 14px;
+    bottom: auto;
+    width: 125px;
+    padding: 0.55rem;
+    background: rgba(3, 22, 32, 0.78);
+    pointer-events: auto;
+  }
+  .sonar-screen {
+    width: 72px;
+    height: 72px;
+    margin: 0.45rem auto;
+  }
+  .sonar-footer, .panel-head {
+    font-size: 0.46rem;
+  }
+
+  /* Reticle & Targeting */
+  .reticle {
+    width: 52px;
+    height: 52px;
+  }
+  .target-prompt {
+    left: calc(50% + 32px);
+    font-size: 0.52rem;
+    line-height: 1.4;
+  }
+
+  /* Surface Directive & Pilot Tip */
+  .directive-card {
+    top: calc(max(12px, env(safe-area-inset-top, 12px)) + 54px);
+    max-width: calc(100vw - 28px);
+    width: calc(100vw - 28px);
+    padding: 0.9rem 1.1rem;
+  }
+  .directive-card p {
+    font-size: 0.72rem;
+    line-height: 1.5;
+  }
+  .pilot-tip {
+    bottom: calc(max(16px, env(safe-area-inset-bottom, 16px)) + 148px);
+    max-width: calc(100vw - 32px);
+    white-space: normal;
+    text-align: center;
+    font-size: 0.62rem;
+    padding: 0.5rem 0.9rem;
+  }
+
+  /* Touch Navigation Controls */
+  .touch-controls {
+    display: flex;
+    left: 14px;
+    right: 14px;
+    bottom: calc(max(14px, env(safe-area-inset-bottom, 14px)) + 8px);
+  }
+  .touch-dpad {
+    grid-template-columns: repeat(3, 44px);
+    grid-template-rows: repeat(3, 44px);
+    gap: 5px;
+  }
+  .touch-center-dot {
+    width: 44px;
+    height: 44px;
+  }
+  .touch-actions {
+    grid-template-columns: repeat(2, 58px);
+    gap: 6px;
+  }
+  .touch-action-btn {
+    height: 46px;
+    font-size: 0.6rem;
+  }
+  .touch-action-btn small {
+    font-size: 0.45rem;
+  }
+
+  /* Intro Screen */
+  .intro-top, .intro-bottom {
+    left: 16px;
+    right: 16px;
+  }
+  .intro-top > span:last-child, .intro-bottom > span:last-child {
+    display: none;
+  }
+  .intro-main {
+    left: 16px;
+    right: 16px;
+    top: 48%;
+  }
+  .intro h1 {
+    font-size: clamp(3.2rem, 13vw, 5rem);
+    margin-bottom: 1.2rem;
+  }
+  .intro-copy {
+    font-size: 0.88rem;
+    line-height: 1.55;
+    margin-bottom: 1.5rem;
+  }
+  .intro-side {
+    right: -36%;
+    width: 90vw;
+    height: 90vw;
+    opacity: 0.2;
+  }
+
+  /* Modals: Journal Modal Full Responsive Layout */
+  .modal-overlay {
+    padding: 0.6rem;
+  }
+  .journal-modal {
+    width: 100%;
+    height: 100%;
+    max-height: 100dvh;
+    border-radius: 4px;
+  }
+  .journal-top {
+    padding: 1rem 1.2rem;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+  .journal-top h2 {
+    font-size: 1.6rem;
+  }
+  .journal-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .journal-index {
+    padding: 0.8rem 1rem;
+    border-right: none;
+    border-bottom: 1px solid var(--line);
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  .journal-entries-list {
+    display: flex;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    gap: 0.4rem;
+    margin-top: 0.4rem;
+    padding-bottom: 4px;
+    scroll-snap-type: x mandatory;
+  }
+  .entry-tab {
+    min-width: 150px;
+    max-width: 180px;
+    flex-shrink: 0;
+    scroll-snap-align: start;
+    padding: 0.55rem 0.65rem;
+    font-size: 0.62rem;
+  }
+  .entry-tab strong {
+    font-size: 0.66rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .journal-expedition-stats {
+    display: none;
+  }
+  .journal-entry {
+    padding: 1.2rem 1.1rem;
+  }
+  .journal-entry h3 {
+    font-size: 1.9rem;
+  }
+  .entry-facts {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8rem;
+    margin: 1.2rem 0;
+    padding: 1rem 0;
+  }
+  .specimen-plate {
+    margin: 1.2rem 0;
+    padding: 1rem;
+  }
+  .specimen-diagram {
+    max-width: 100%;
+    height: auto;
+  }
+  .plate-annotations {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.45rem;
+    font-size: 0.56rem;
+  }
+
+  /* Modals: Controls Manual */
+  .controls-modal {
+    width: 100%;
+    max-height: 94dvh;
+    overflow-y: auto;
+    padding: 1.4rem 1.1rem;
+  }
+  .controls-modal .modal-header h2 {
+    font-size: 1.7rem;
+  }
+  .controls-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .control-card {
+    padding: 1rem;
+  }
+  .control-card li {
+    grid-template-columns: 90px 1fr;
+    font-size: 0.68rem;
+  }
+
+  /* Modals: Pause & Milestone */
+  .pause-modal {
+    padding: 1.5rem;
+    max-width: 95vw;
+  }
+  .pause-modal h2 {
+    font-size: 2.2rem;
+  }
+  .milestone-card {
+    padding: 1.5rem 1.2rem;
+    max-height: 90dvh;
+    overflow-y: auto;
+  }
+  .milestone-card h3 {
+    font-size: 1.7rem;
+  }
+  .milestone-card p {
+    font-size: 0.78rem;
+    line-height: 1.55;
+  }
+}
+
+/* Compact phones <= 480px */
+@media (max-width: 480px) {
+  .masthead {
+    left: 10px;
+    right: 10px;
+    top: max(8px, env(safe-area-inset-top, 8px));
+  }
+  .brand {
+    font-size: 0.85rem;
+    letter-spacing: 0.12em;
+  }
+  .brand-mark {
+    font-size: 1.3rem;
+  }
+  #controlsBtn .key-badge {
+    display: none;
+  }
+  .top-actions {
+    gap: 0.35rem;
+  }
+  .text-button {
+    font-size: 0.52rem;
+    padding: 4px 2px;
+  }
+  .visitor-counter {
+    padding: 2px 6px;
+    font-size: 0.5rem;
+    gap: 4px;
+  }
+  .visitor-counter__label {
+    display: none;
+  }
+  .depth-module {
+    left: 10px;
+    top: calc(max(8px, env(safe-area-inset-top, 8px)) + 46px);
+    width: 145px;
+  }
+  .depth-readout {
+    font-size: clamp(2rem, 8vw, 2.8rem);
+  }
+  .sonar-panel {
+    top: calc(max(8px, env(safe-area-inset-top, 8px)) + 46px);
+    right: 10px;
+    width: 110px;
+    padding: 0.45rem;
+  }
+  .sonar-screen {
+    width: 60px;
+    height: 60px;
+  }
+  .touch-controls {
+    left: 10px;
+    right: 10px;
+  }
+  .touch-dpad {
+    grid-template-columns: repeat(3, 40px);
+    grid-template-rows: repeat(3, 40px);
+  }
+  .touch-center-dot {
+    width: 40px;
+    height: 40px;
+  }
+  .touch-actions {
+    grid-template-columns: repeat(2, 52px);
+    gap: 4px;
+  }
+  .touch-action-btn {
+    height: 42px;
+    font-size: 0.54rem;
+  }
+  .entry-facts {
+    grid-template-columns: 1fr;
+  }
+  .plate-annotations {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Landscape Mode on mobile screens (height <= 520px) */
+@media (max-height: 520px) {
+  .masthead {
+    top: 6px;
+    left: 12px;
+    right: 12px;
+  }
+  .brand-sub, .brand-rule, .signal, .bottom-bar {
+    display: none !important;
+  }
+  .depth-module {
+    top: 40px;
+    left: 12px;
+    width: 160px;
+  }
+  .depth-readout {
+    font-size: 2.2rem;
+    margin-top: 0.2rem;
+  }
+  .readings {
+    display: none;
+  }
+  .sonar-panel {
+    top: 40px;
+    right: 12px;
+    bottom: auto;
+    width: 105px;
+    padding: 0.4rem;
+  }
+  .sonar-screen {
+    width: 54px;
+    height: 54px;
+    margin: 0.25rem auto;
+  }
+  .touch-controls {
+    bottom: 8px;
+    left: 12px;
+    right: 12px;
+  }
+  .touch-dpad {
+    grid-template-columns: repeat(3, 36px);
+    grid-template-rows: repeat(3, 36px);
+    gap: 3px;
+  }
+  .touch-center-dot {
+    width: 36px;
+    height: 36px;
+  }
+  .touch-btn {
+    font-size: 0.85rem;
+  }
+  .touch-actions {
+    grid-template-columns: repeat(4, 48px);
+    gap: 4px;
+  }
+  .touch-action-btn {
+    height: 38px;
+    font-size: 0.52rem;
+  }
+  .directive-card {
+    top: 40px;
+    padding: 0.7rem 0.9rem;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+  .directive-card p {
+    font-size: 0.66rem;
+    line-height: 1.4;
+  }
+  .pilot-tip {
+    bottom: 60px;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.56rem;
+  }
+  .intro h1 {
+    font-size: 2.8rem;
+    margin-bottom: 0.6rem;
+  }
+  .intro-copy {
+    font-size: 0.75rem;
+    margin-bottom: 0.8rem;
+  }
+  .intro-accent {
+    margin-bottom: 0.8rem;
+  }
+  .intro-main {
+    top: 50%;
+  }
+  .journal-modal, .controls-modal {
+    max-height: 96dvh;
+    height: 96dvh;
+  }
 }
 
 @media (pointer: coarse) {
