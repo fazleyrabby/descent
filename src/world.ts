@@ -230,9 +230,12 @@ export class OceanWorld {
     this.lastTime = now;
     this.lastFrame = dt * 1000;
     this.realElapsed += dt;
-    // Superspeed tiers accelerate the simulated world clock (creature motion,
-    // ambient animation) without changing real-time systems like sonar.
-    this.elapsed += dt * this.speedMultiplier;
+    // Superspeed tiers accelerate creature movement only while the submersible is actively
+    // moving / thrusting. When the ship is stationary or taking a pause to observe sea creatures,
+    // the world clock returns to 1x normal speed so creatures move naturally.
+    const isMoving = this.isThrusting || Math.abs(this.horizontalSpeed) > 0.5 || Math.abs(this.verticalSpeed) > 1;
+    const effectiveTimeScale = isMoving ? this.speedMultiplier : 1;
+    this.elapsed += dt * effectiveTimeScale;
     this.update(dt);
     this.draw();
     this.onTick(this.metrics());
@@ -351,6 +354,16 @@ export class OceanWorld {
     return { x: gulperCurrX, depth: gulperDepth };
   }
 
+  private bigfinSquidPosition() {
+    const bfsBaseX = 30;
+    const bfsX = this.wrapCoord(bfsBaseX, 150);
+    const bfsSpeed = 1.2;
+    const drift = Math.sin(this.elapsed * 0.25) * 12;
+    const bfsCurrX = bfsX + ((this.elapsed * bfsSpeed) % 150 + 150) % 150 - 75 + drift;
+    const bfsDepth = 3350 + Math.cos(this.elapsed * 0.2) * 15;
+    return { x: bfsCurrX, depth: bfsDepth };
+  }
+
   private seaPigPosition() {
     const seaPigBaseX = 45;
     const seaPigX = this.wrapCoord(seaPigBaseX, 140);
@@ -409,6 +422,7 @@ export class OceanWorld {
       { id: 'dragonfish', name: 'Black dragonfish', pos: { x: this.wrapCoord(35, 130), depth: 1680 }, maxSightDist: 24 },
       { id: 'tripod-fish', name: 'Benthic tripod fish', pos: this.tripodPosition(), maxSightDist: 22 },
       { id: 'gulper-eel', name: 'Gulper eel', pos: this.gulperEelPosition(), maxSightDist: 28 },
+      { id: 'bigfin-squid', name: 'Bigfin squid', pos: this.bigfinSquidPosition(), maxSightDist: 32 },
       { id: 'rms-titanic', name: 'RMS Titanic', pos: this.titanicPosition(), maxSightDist: 52 },
       { id: 'glass-squid', name: 'Cockatoo glass squid', pos: { x: this.wrapCoord(55, 140), depth: 4700 }, maxSightDist: 25 },
       { id: 'sea-pig', name: 'Abyssal sea pig', pos: this.seaPigPosition(), maxSightDist: 22 },
@@ -3163,7 +3177,108 @@ export class OceanWorld {
       }
     }
 
-    // J. Deep-Sea Glass Squids (Taonius borealis / Cranchiidae) (4,300m – 5,100m, multiple transparent drifting specimens)
+    // J. Bigfin Squid (Magnapinna sp.) (3,100m – 3,600m, colossal terminal fins and elbow-jointed filaments)
+    if (this.depth > 3050 && this.depth < 3650) {
+      for (const bfs of [
+        { baseX: 30, depthBase: 3350, speed: 1.2, dir: 1, scale: 1.0, delay: 0 },
+        { baseX: -40, depthBase: 3480, speed: 1.4, dir: -1, scale: 0.85, delay: 2.5 },
+      ]) {
+        const bfsX = this.wrapCoord(bfs.baseX, 150);
+        const drift = Math.sin(this.elapsed * 0.25 + bfs.delay) * 12;
+        const bfsCurrX = bfsX + ((this.elapsed * bfs.speed * bfs.dir + bfs.delay * 20) % 150 + 150) % 150 - 75 + drift;
+        const bfsDepth = bfs.depthBase + Math.cos(this.elapsed * 0.2 + bfs.delay) * 15;
+        const bsx = this.screenX(bfsCurrX);
+        const bsy = this.screenY(bfsDepth);
+
+        if (bsx > -120 && bsx < this.width + 120 && bsy > -150 && bsy < this.height + 150) {
+          this.activeCreatures.push({
+            screenX: bsx,
+            screenY: bsy,
+            name: 'BIGFIN SQUID',
+            specimenId: 'bigfin-squid',
+            category: this.isDiscovered('bigfin-squid')
+              ? 'Documented species · Magnapinna sp.'
+              : 'Elbow-jointed hadal cephalopod · [E] to scan · Click for photo',
+            isHero: true,
+            radius: 40 * bfs.scale,
+            distM: Math.hypot(bfsCurrX - this.vehicle.position.x, bfsDepth - this.depth),
+          });
+
+          ctx.save();
+          ctx.translate(bsx, bsy);
+          ctx.scale(bfs.scale * bfs.dir, bfs.scale);
+
+          // Gentle fin ripple
+          const finFlap = Math.sin(this.elapsed * 1.6 + bfs.delay) * 0.25;
+
+          // Upper terminal fins: huge, heart/ovate shaped, thin flapping fins
+          ctx.save();
+          ctx.rotate(finFlap);
+          ctx.beginPath();
+          ctx.ellipse(0, -22, 28, 14, 0, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(215, 120, 80, 0.35)';
+          ctx.strokeStyle = 'rgba(255, 160, 110, 0.55)';
+          ctx.lineWidth = 1.2;
+          ctx.fill();
+          ctx.stroke();
+          ctx.restore();
+
+          // Slender conical mantle
+          ctx.beginPath();
+          ctx.moveTo(0, -28);
+          ctx.quadraticCurveTo(8, -12, 5, 4);
+          ctx.lineTo(-5, 4);
+          ctx.quadraticCurveTo(-8, -12, 0, -28);
+          ctx.closePath();
+          ctx.fillStyle = 'rgba(185, 95, 60, 0.65)';
+          ctx.strokeStyle = 'rgba(240, 145, 95, 0.7)';
+          ctx.lineWidth = 1;
+          ctx.fill();
+          ctx.stroke();
+
+          // Small head & dark chromatophore eyes
+          ctx.beginPath();
+          ctx.arc(0, 7, 4.5, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(160, 80, 50, 0.75)';
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(3.5, 6.5, 1.2, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(20, 20, 30, 0.9)';
+          ctx.fill();
+
+          // 10 elbow-jointed arms/tentacles with long trailing filaments
+          const elbowOffsets = [-18, -12, -7, -3, 3, 7, 12, 18];
+          for (let i = 0; i < elbowOffsets.length; i++) {
+            const ex = elbowOffsets[i];
+            const ey = 14 + Math.abs(ex) * 0.3;
+            // Lateral arm to elbow
+            ctx.beginPath();
+            ctx.moveTo(ex * 0.2, 9);
+            ctx.lineTo(ex, ey);
+            ctx.strokeStyle = 'rgba(230, 140, 95, 0.75)';
+            ctx.lineWidth = 1.3;
+            ctx.stroke();
+
+            // Filament dangling downward from elbow
+            const sway = Math.sin(this.elapsed * 0.9 + i * 0.7 + bfs.delay) * (6 + i * 1.2);
+            ctx.beginPath();
+            ctx.moveTo(ex, ey);
+            ctx.bezierCurveTo(
+              ex + sway * 0.4, ey + 35,
+              ex + sway * 0.8, ey + 75,
+              ex + sway, ey + 115
+            );
+            ctx.strokeStyle = 'rgba(220, 130, 85, 0.45)';
+            ctx.lineWidth = 0.9;
+            ctx.stroke();
+          }
+
+          ctx.restore();
+        }
+      }
+    }
+
+    // K. Deep-Sea Glass Squids (Taonius borealis / Cranchiidae) (4,300m – 5,100m, multiple transparent drifting specimens)
     if (this.depth > 4200 && this.depth < 5200) {
       for (const gsq of [
         { baseX: -70, depthBase: 4750, speed: 2.0, dir: 1, scale: 1.0, delay: 0 },

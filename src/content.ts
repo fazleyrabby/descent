@@ -1500,6 +1500,52 @@ export const documentedSpecimens: Specimen[] = [
     ],
     "svg": "\n      <div class=\"specimen-plate\">\n        <div class=\"plate-badge\">CLASSIFICATION // FORAMINIFERA · ASTRORHIZIDA</div>\n        <svg class=\"specimen-diagram\" viewBox=\"0 0 340 240\" xmlns=\"http://www.w3.org/2000/svg\">\n          <circle cx=\"170\" cy=\"120\" r=\"95\" fill=\"rgba(120,210,230,0.12)\" />\n          <line x1=\"30\" y1=\"205\" x2=\"310\" y2=\"205\" stroke=\"rgba(150,210,225,0.4)\" stroke-width=\"1.5\" stroke-dasharray=\"3 3\"/>\n          <!-- Upright tubes -->\n          <line x1=\"140\" y1=\"205\" x2=\"135\" y2=\"70\" stroke=\"rgba(190,235,245,0.85)\" stroke-width=\"2.5\" stroke-linecap=\"round\"/>\n          <circle cx=\"135\" cy=\"70\" r=\"2.5\" fill=\"#e0f8ff\"/>\n          <line x1=\"170\" y1=\"205\" x2=\"172\" y2=\"50\" stroke=\"rgba(190,235,245,0.9)\" stroke-width=\"2.5\" stroke-linecap=\"round\"/>\n          <circle cx=\"172\" cy=\"50\" r=\"2.5\" fill=\"#e0f8ff\"/>\n          <line x1=\"200\" y1=\"205\" x2=\"205\" y2=\"85\" stroke=\"rgba(190,235,245,0.8)\" stroke-width=\"2.5\" stroke-linecap=\"round\"/>\n          <circle cx=\"205\" cy=\"85\" r=\"2.5\" fill=\"#e0f8ff\"/>\n        </svg>\n        <div class=\"plate-annotations\">\n          <span><b>01.</b> Agglutinated silica tubes</span>\n          <span><b>02.</b> Terminal aperture</span>\n          <span><b>03.</b> Diatomaceous sediment base</span>\n          <span><b>04.</b> Pseudopodial net</span>\n        </div>\n      </div>\n    ",
     "index": "32"
+  },
+  {
+    "id": "bigfin-squid",
+    "name": "Bigfin squid",
+    "scientificName": "Magnapinna sp.",
+    "depth": "1,940–6,212 m",
+    "depthTier": "abyssopelagic",
+    "targetDepth": 3350,
+    "habitat": "Bathypelagic to abyssopelagic ocean column",
+    "realSize": "Up to 8 m (26 ft) total length with extended filaments",
+    "classification": "CEPHALOPODA · MAGNAPINNIDAE",
+    "photo": {
+      "src": "/species/bigfin-squid.jpg",
+      "caption": "Large Bigfin squid (Magnapinna sp.) with characteristic right-angle elbow arms documented in-situ by NOAA Okeanos Explorer",
+      "credit": "NOAA Okeanos Explorer Program / NOAA Photo Library",
+      "license": "CC BY 2.0",
+      "pageUrl": "https://commons.wikimedia.org/wiki/File:Magnapinna_sp._-_Expl8176.jpg"
+    },
+    "description": "Enigmatic deep-sea cephalopod instantly recognizable by its colossal, terminal ovate fins (up to 90% of mantle length) and extremely elongated, slender tentacular filaments extending at sharp, right-angle 'elbow' joints meters below its body.",
+    "detail": "Drifts ghostlike in deep abyssal waters, holding its long elastic filaments hanging downward or trailing behind like a living drift net to capture small crustaceans and detritus particles. Recorded by submersibles as deep as 6,212 m in the Philippine Trench.",
+    "source": {
+      "title": "NOAA Ocean Exploration · Bigfin Squid",
+      "url": "https://oceanexplorer.noaa.gov/okeanos/explorations/ex2107/media-resources/bigfin-squid.html",
+      "publisher": "NOAA Office of Ocean Exploration and Research",
+      "accessedOn": "2026-09-25"
+    },
+    "annotations": [
+      {
+        "num": "01.",
+        "label": "Terminal ovate flapping fins"
+      },
+      {
+        "num": "02.",
+        "label": "Cylindrical gelatinous mantle"
+      },
+      {
+        "num": "03.",
+        "label": "Elbow-jointed prehensile arms"
+      },
+      {
+        "num": "04.",
+        "label": "Trailing microscopic elastic filaments"
+      }
+    ],
+    "svg": "\n      <div class=\"specimen-plate\">\n        <div class=\"plate-badge\">CLASSIFICATION // CEPHALOPODA · MAGNAPINNIDAE</div>\n        <svg class=\"specimen-diagram\" viewBox=\"0 0 340 240\" xmlns=\"http://www.w3.org/2000/svg\">\n          <circle cx=\"170\" cy=\"120\" r=\"95\" fill=\"rgba(100,210,225,0.12)\" />\n          <!-- Huge ovate fins -->\n          <ellipse cx=\"170\" cy=\"45\" rx=\"36\" ry=\"16\" fill=\"#d27558\" stroke=\"rgba(255,180,150,0.8)\" stroke-width=\"1.5\"/>\n          <!-- Mantle -->\n          <path d=\"M 160 45 C 160 70 162 88 164 100 L 176 100 C 178 88 180 70 180 45 Z\" fill=\"#e08568\" stroke=\"rgba(255,190,165,0.85)\" stroke-width=\"1.4\"/>\n          <!-- Head and small eye -->\n          <circle cx=\"166\" cy=\"102\" r=\"2.5\" fill=\"#12242c\" stroke=\"rgba(255,220,180,0.9)\" stroke-width=\"0.8\"/>\n          <circle cx=\"174\" cy=\"102\" r=\"2.5\" fill=\"#12242c\" stroke=\"rgba(255,220,180,0.9)\" stroke-width=\"0.8\"/>\n          <!-- Elbow arms branching outward at right angles -->\n          <path d=\"M 165 106 L 125 125 L 122 225\" stroke=\"rgba(255,190,170,0.75)\" stroke-width=\"1.4\" fill=\"none\"/>\n          <path d=\"M 168 106 L 140 130 L 138 225\" stroke=\"rgba(255,190,170,0.65)\" stroke-width=\"1.2\" fill=\"none\"/>\n          <path d=\"M 172 106 L 200 130 L 202 225\" stroke=\"rgba(255,190,170,0.65)\" stroke-width=\"1.2\" fill=\"none\"/>\n          <path d=\"M 175 106 L 215 125 L 218 225\" stroke=\"rgba(255,190,170,0.75)\" stroke-width=\"1.4\" fill=\"none\"/>\n          <path d=\"M 170 106 L 160 132 L 158 228\" stroke=\"rgba(255,190,170,0.5)\" stroke-width=\"1\" fill=\"none\"/>\n          <path d=\"M 170 106 L 180 132 L 182 228\" stroke=\"rgba(255,190,170,0.5)\" stroke-width=\"1\" fill=\"none\"/>\n        </svg>\n        <div class=\"plate-annotations\">\n          <span><b>01.</b> Terminal ovate fins</span>\n          <span><b>02.</b> Cylindrical mantle</span>\n          <span><b>03.</b> Right-angle elbow arms</span>\n          <span><b>04.</b> Trailing elastic filaments</span>\n        </div>\n      </div>\n    ",
+    "index": "33"
   }
 ];
 

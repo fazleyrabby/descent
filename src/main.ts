@@ -27,7 +27,7 @@ root.innerHTML = `
         <div id="visitor-counter-mount"></div>
         <button id="controlsBtn" class="text-button" type="button" aria-label="Controls manual">MANUAL <span class="key-badge">?</span></button>
         <button id="muteBtn" class="text-button" type="button" aria-label="Toggle audio">AUDIO <span id="muteLabel">ON</span></button>
-        <button id="journalBtn" class="text-button" type="button">FIELD JOURNAL <span id="journalCount">00/32</span></button>
+        <button id="journalBtn" class="text-button" type="button">FIELD JOURNAL <span id="journalCount">00/${documentedSpecimens.length}</span></button>
       </div>
       <button id="pauseBtn" class="icon-button" type="button" aria-label="Pause expedition">Ⅱ</button>
     </header>
@@ -275,7 +275,7 @@ root.innerHTML = `
           <div class="journal-expedition-stats">
             <span>EXPEDITION METRICS</span>
             <div><small>MISSION DEPTH</small><strong id="journalMaxDepth">000 m</strong></div>
-            <div><small>CATALOGUED</small><strong id="journalDiscoveredCount">0 of 32 Species</strong></div>
+            <div><small>CATALOGUED</small><strong id="journalDiscoveredCount">0 of ${documentedSpecimens.length} Species</strong></div>
             <div><small>SURVEY STATUS</small><strong id="journalStatus">ACTIVE DESCENT</strong></div>
             <div id="surveyBadgeContainer"></div>
           </div>
