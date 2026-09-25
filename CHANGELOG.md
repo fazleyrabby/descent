@@ -83,6 +83,7 @@ User-visible changes to DESCENT are recorded here. Add new work under **Unreleas
 
 ### Removed
 
+- Removed internal project specification files (`spec.md`, `spec-original.md`), creature asset catalog (`CREATURE_ASSETS.md`), and production film directory (`film/`) from the tracked repository and git commit history, adding them to `.gitignore` to keep the public repository lightweight and clean.
 - Three.js, the 3D ocean shader, glTF tooling, and the temporary animated shark model from the shipped project.
 
 ## 0.1.0 — 2026-09-25
