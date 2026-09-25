@@ -82,6 +82,7 @@ User-visible changes to DESCENT are recorded here. Add new work under **Unreleas
 
 ### Fixed
 
+- Converted Open Graph and Twitter Card social preview image URLs to absolute canonical URLs (`https://descent-explorer.vercel.app/og-image.jpg`) and added `og:url` and `rel="canonical"` metadata in [index.html](index.html) so Twitter/X, Discord, and Facebook scrapers successfully fetch and render the rich card preview thumbnail.
 - Flight Manual layout and key binding column alignment across all system cards.
 - Modal light-dismiss on background backdrop click for pause, journal, and manual dialogs.
 
