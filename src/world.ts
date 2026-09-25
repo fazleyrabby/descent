@@ -12,6 +12,8 @@ export type WorldMetrics = {
   isThrusting: boolean;
   reached1000: boolean;
   reached2000: boolean;
+  reached3000: boolean;
+  reached4000: boolean;
   zoom: number;
   waterTransition: 'breach' | 'plunge' | null;
 };
@@ -130,10 +132,10 @@ export class OceanWorld {
 
     let state = this.seed;
     const random = () => ((state = (state * 1664525 + 1013904223) >>> 0) / 4294967296);
-    for (let i = 0; i < 3400; i++) {
+    for (let i = 0; i < 5500; i++) {
       this.particles.push({
-        x: (random() - 0.5) * 420,
-        depth: random() * 2080,
+        x: (random() - 0.5) * 440,
+        depth: random() * 4150,
         radius: 0.35 + random() * 1.5,
         phase: random() * Math.PI * 2,
       });
@@ -216,7 +218,7 @@ export class OceanWorld {
     this.horizontalSpeed += (horizontal * 8 - this.horizontalSpeed) * (1 - Math.exp(-dt * 3.1));
     this.verticalSpeed += (vertical * 34 - this.verticalSpeed) * (1 - Math.exp(-dt * 2.5));
     this.vehicle.position.x += this.horizontalSpeed * dt;
-    this.vehicle.position.y = clamp(this.vehicle.position.y - this.verticalSpeed * dt, -2000, 3);
+    this.vehicle.position.y = clamp(this.vehicle.position.y - this.verticalSpeed * dt, -4000, 3);
     const currDepth = this.depth;
 
     if (prevDepth > 0.4 && currDepth <= 0.4) {
@@ -299,12 +301,22 @@ export class OceanWorld {
     return { x: tx, depth: 1994 };
   }
 
+  private gulperEelPosition() {
+    const gulperBaseX = -35;
+    const gulperX = this.wrapCoord(gulperBaseX, 160);
+    const gulperSpeed = 2.4;
+    const gulperCurrX = gulperX + (this.elapsed * gulperSpeed) % 160 - 80;
+    const gulperDepth = 2750 + Math.sin(this.elapsed * 0.32) * 22;
+    return { x: gulperCurrX, depth: gulperDepth };
+  }
+
   private documentedTargets() {
     return [
       { id: 'blue-whale', name: 'Blue whale', pos: this.whalePosition(), maxSightDist: 42 },
       { id: 'vampire-squid', name: 'Vampire squid', pos: this.squidPosition(), maxSightDist: 18 },
       { id: 'barreleye-fish', name: 'Barreleye fish', pos: this.barreleyePosition(), maxSightDist: 22 },
       { id: 'tripod-fish', name: 'Benthic tripod fish', pos: this.tripodPosition(), maxSightDist: 22 },
+      { id: 'gulper-eel', name: 'Gulper eel', pos: this.gulperEelPosition(), maxSightDist: 28 },
     ];
   }
 
@@ -361,6 +373,8 @@ export class OceanWorld {
       isThrusting: this.isThrusting,
       reached1000: this.depth >= 998,
       reached2000: this.depth >= 1998,
+      reached3000: this.depth >= 2998,
+      reached4000: this.depth >= 3998,
       zoom: this.zoom,
       waterTransition: this.waterTransition,
     };
@@ -402,8 +416,10 @@ export class OceanWorld {
     if (depth < 80 && surfaceY > -180) this.drawSunRays(surfaceY, darkness);
     if (depth < 85 && surfaceY < height) this.drawCaustics(surfaceY, darkness);
 
-    // 4. Seafloor / Abyssal Plain (approaching 1,000m)
-    if (depth > 880) this.drawSeafloor(darkness);
+    // 4. Geological Terrains & Benthic Ecosystems
+    if (depth > 1700 && depth < 2450) this.drawMidOceanRidge(darkness);
+    if (depth > 2950 && depth < 3550) this.drawWhaleFall(darkness);
+    if (depth > 3700) this.drawAbyssalPlain(darkness);
 
     // 5. Marine Snow Particles (enhanced with headlight cone scatter)
     this.drawParticles(darkness);
@@ -411,8 +427,9 @@ export class OceanWorld {
     // 6. Ambient Wildlife Gradient (dense photic surface -> sparse abyssal isolation)
     this.drawAmbientWildlife(darkness);
 
-    // 7. Hero Specimen: Vampire Squid
+    // 7. Hero Specimens
     if (this.encounterX !== null) this.drawSquid();
+    if (depth > 2400 && depth < 3100) this.drawGulperEel();
 
     // 8. Headlight Cones & Volumetric Glow
     this.drawLightBeam(darkness);
@@ -554,17 +571,21 @@ export class OceanWorld {
     ctx.restore();
   }
 
-  private drawSeafloor(darkness: number) {
+  private drawMidOceanRidge(darkness: number) {
     const ctx = this.ctx;
-    const floorY = this.screenY(2000);
-    if (floorY > this.height + 150) return;
+    const ridgeDepth = 2000;
+    const floorY = this.screenY(ridgeDepth);
+    if (floorY < -150 || floorY > this.height + 150) return;
 
-    // Distant abyssal basalt ridge
+    // Distant tectonic basalt wall silhouettes (flanking canyon rift)
     ctx.beginPath();
     ctx.moveTo(-20, this.height + 20);
     for (let x = -20; x <= this.width + 30; x += 25) {
       const worldX = this.vehicle.position.x + (x - this.focusX) / this.pxPerMeter;
-      const ridgeHeight = Math.sin(worldX * 0.08) * 18 + Math.cos(worldX * 0.035) * 28 + 45;
+      // Rift pass canyon drops between worldX -18 and +18
+      const inChasm = Math.abs(worldX % 90 - 45) < 18;
+      const chasmDrop = inChasm ? 120 : 0;
+      const ridgeHeight = (Math.sin(worldX * 0.08) * 18 + Math.cos(worldX * 0.035) * 28 + 45) - chasmDrop;
       ctx.lineTo(x, floorY - ridgeHeight);
     }
     ctx.lineTo(this.width + 20, this.height + 20);
@@ -572,12 +593,14 @@ export class OceanWorld {
     ctx.fillStyle = '#020b12';
     ctx.fill();
 
-    // Foreground benthic floor & hydrothermal vent pillars
+    // Foreground rift terraces & basalt columns
     ctx.beginPath();
     ctx.moveTo(-20, this.height + 20);
     for (let x = -20; x <= this.width + 30; x += 15) {
       const worldX = this.vehicle.position.x + (x - this.focusX) / this.pxPerMeter;
-      const rockyContour = Math.sin(worldX * 0.14) * 8 + Math.sin(worldX * 0.05) * 15 + 12;
+      const inChasm = Math.abs(worldX % 90 - 45) < 15;
+      const chasmDrop = inChasm ? 140 : 0;
+      const rockyContour = (Math.sin(worldX * 0.14) * 8 + Math.sin(worldX * 0.05) * 15 + 14) - chasmDrop;
       ctx.lineTo(x, floorY - rockyContour);
     }
     ctx.lineTo(this.width + 20, this.height + 20);
@@ -585,21 +608,31 @@ export class OceanWorld {
     ctx.fillStyle = '#01060a';
     ctx.fill();
 
-    // Subtle sediment edge highlight
     ctx.strokeStyle = 'rgba(74,138,145,0.22)';
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    // Hydrothermal vent chimneys & hydrothermal mineral shimmering specks
-    const chimneyWorldX = Math.round(this.vehicle.position.x / 90) * 90 + 25;
+    // Hydrothermal black smoker chimneys & thermal particulate
+    const chimneyWorldX = this.wrapCoord(22, 90);
     const chimneyScreenX = this.screenX(chimneyWorldX);
     if (chimneyScreenX > -50 && chimneyScreenX < this.width + 50) {
       const baseFloor = floorY - 14;
+
+      this.activeCreatures.push({
+        screenX: chimneyScreenX,
+        screenY: baseFloor - 36,
+        name: 'HYDROTHERMAL BLACK SMOKER',
+        category: 'Geological Feature · 2,000 m Rift',
+        isHero: false,
+        radius: 30,
+        distM: Math.hypot(chimneyWorldX - this.vehicle.position.x, ridgeDepth - this.depth),
+      });
+
       // Chimney column
       ctx.beginPath();
       ctx.moveTo(chimneyScreenX - 9, baseFloor);
-      ctx.lineTo(chimneyScreenX - 5, baseFloor - 45);
-      ctx.lineTo(chimneyScreenX + 5, baseFloor - 45);
+      ctx.lineTo(chimneyScreenX - 5, baseFloor - 48);
+      ctx.lineTo(chimneyScreenX + 5, baseFloor - 48);
       ctx.lineTo(chimneyScreenX + 8, baseFloor);
       ctx.closePath();
       ctx.fillStyle = '#081720';
@@ -609,13 +642,13 @@ export class OceanWorld {
       ctx.stroke();
 
       // Shimmering mineral thermal particulate rising from chimney
-      for (let p = 0; p < 8; p++) {
-        const pPhase = (this.elapsed * 1.4 + p * 0.3) % 1;
-        const py = baseFloor - 45 - pPhase * 60;
-        const px = chimneyScreenX + Math.sin(p * 2.1 + this.elapsed * 2.5) * (4 + pPhase * 12);
+      for (let p = 0; p < 10; p++) {
+        const pPhase = (this.elapsed * 1.5 + p * 0.25) % 1;
+        const py = baseFloor - 48 - pPhase * 70;
+        const px = chimneyScreenX + Math.sin(p * 2.1 + this.elapsed * 2.5) * (4 + pPhase * 14);
         ctx.beginPath();
-        ctx.arc(px, py, 1.2, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(145,245,230,${(1 - pPhase) * 0.45})`;
+        ctx.arc(px, py, 1.3, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(145,245,230,${(1 - pPhase) * 0.5})`;
         ctx.fill();
       }
     }
@@ -637,6 +670,273 @@ export class OceanWorld {
         ctx.fillStyle = 'rgba(140,230,235,0.4)';
         ctx.fill();
       }
+    }
+  }
+
+  private drawWhaleFall(darkness: number) {
+    const ctx = this.ctx;
+    const wfDepth = 3200;
+    const floorY = this.screenY(wfDepth);
+    if (floorY < -150 || floorY > this.height + 150) return;
+
+    const wfWorldX = this.wrapCoord(25, 200);
+    const wfScreenX = this.screenX(wfWorldX);
+    if (wfScreenX < -200 || wfScreenX > this.width + 200) return;
+
+    // Sediment terrace beneath skeleton
+    ctx.beginPath();
+    ctx.moveTo(wfScreenX - 160, floorY + 40);
+    ctx.quadraticCurveTo(wfScreenX, floorY - 6, wfScreenX + 160, floorY + 40);
+    ctx.lineTo(wfScreenX + 160, this.height + 20);
+    ctx.lineTo(wfScreenX - 160, this.height + 20);
+    ctx.closePath();
+    ctx.fillStyle = '#010508';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(60, 115, 125, 0.25)';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    this.activeCreatures.push({
+      screenX: wfScreenX,
+      screenY: floorY - 26,
+      name: 'ABYSSAL WHALE FALL ECOSYSTEM',
+      category: 'Chemosynthetic Oasis · 3,200 m',
+      isHero: false,
+      radius: 46,
+      distM: Math.hypot(wfWorldX - this.vehicle.position.x, wfDepth - this.depth),
+    });
+
+    ctx.save();
+    ctx.translate(wfScreenX, floorY);
+
+    // 1. Whale Skull (massive rostrum and hollow cranial cavity)
+    ctx.beginPath();
+    ctx.moveTo(70, -4);
+    ctx.bezierCurveTo(90, -12, 105, -6, 115, -2);
+    ctx.lineTo(112, 4);
+    ctx.quadraticCurveTo(85, 8, 65, 3);
+    ctx.closePath();
+    ctx.fillStyle = '#c5d8dc';
+    ctx.strokeStyle = 'rgba(75, 120, 130, 0.6)';
+    ctx.lineWidth = 1.2;
+    ctx.fill();
+    ctx.stroke();
+
+    // Eye socket
+    ctx.beginPath();
+    ctx.ellipse(88, -2, 5, 3.5, 0.1, 0, Math.PI * 2);
+    ctx.fillStyle = '#020b12';
+    ctx.fill();
+
+    // 2. Articulated Spinal Column (vertebrae)
+    ctx.beginPath();
+    ctx.moveTo(65, 0);
+    ctx.bezierCurveTo(15, -12, -45, -8, -105, 4);
+    ctx.strokeStyle = '#b8ccd2';
+    ctx.lineWidth = 5;
+    ctx.stroke();
+
+    // Vertebrae segments
+    for (let v = -95; v <= 55; v += 12) {
+      ctx.beginPath();
+      ctx.moveTo(v, -8);
+      ctx.lineTo(v, 4);
+      ctx.strokeStyle = '#051218';
+      ctx.lineWidth = 1.6;
+      ctx.stroke();
+    }
+
+    // 3. Arched Ivory Ribs curving upward into water column
+    const ribPositions = [45, 32, 18, 5, -10, -26, -42, -58, -74];
+    for (let i = 0; i < ribPositions.length; i++) {
+      const rx = ribPositions[i];
+      const ribHeight = 28 - i * 1.8;
+      ctx.beginPath();
+      ctx.moveTo(rx, 0);
+      ctx.quadraticCurveTo(rx - 8, -ribHeight, rx + 4, -ribHeight - 6);
+      ctx.strokeStyle = '#d6e4e8';
+      ctx.lineWidth = 2.2;
+      ctx.stroke();
+
+      // Chemosynthetic Osedax "zombie" worm colonies on ribs (red waving plumes)
+      const plumeCount = 3;
+      for (let p = 0; p < plumeCount; p++) {
+        const py = -ribHeight * (0.35 + p * 0.28);
+        const px = rx - 5;
+        const wave = Math.sin(this.elapsed * 2.5 + i * 1.2 + p) * 3;
+        ctx.beginPath();
+        ctx.moveTo(px, py);
+        ctx.quadraticCurveTo(px + wave, py - 4, px + wave * 1.5, py - 7);
+        ctx.strokeStyle = 'rgba(235, 60, 95, 0.75)';
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(px + wave * 1.5, py - 7, 1.3, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 95, 125, 0.85)';
+        ctx.fill();
+      }
+    }
+
+    // 4. Scavenger Lithodid Crabs crawling on the skeleton
+    for (const crabX of [-35, 15, 60]) {
+      const crabY = 3;
+      ctx.beginPath();
+      ctx.ellipse(crabX, crabY, 3.5, 2.5, 0, 0, Math.PI * 2);
+      ctx.fillStyle = '#8f4a38';
+      ctx.fill();
+      // Spider crab legs
+      for (let leg = -1; leg <= 1; leg++) {
+        ctx.beginPath();
+        ctx.moveTo(crabX + leg * 2, crabY);
+        ctx.lineTo(crabX + leg * 5 + Math.sin(this.elapsed * 1.5 + crabX) * 1.5, crabY + 4);
+        ctx.strokeStyle = '#b8624c';
+        ctx.lineWidth = 0.8;
+        ctx.stroke();
+      }
+    }
+
+    // 5. Patrolling Pacific Sleeper Shark silhouette in background
+    const sharkPhase = (this.elapsed * 0.08) % 1;
+    const sharkX = -140 + sharkPhase * 280;
+    const sharkY = -65 + Math.sin(this.elapsed * 0.4) * 8;
+    ctx.save();
+    ctx.translate(sharkX, sharkY);
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 36, 9, 0, 0, Math.PI * 2);
+    ctx.moveTo(-6, -8); ctx.lineTo(-2, -18); ctx.lineTo(6, -8);
+    ctx.moveTo(14, -7); ctx.lineTo(17, -13); ctx.lineTo(22, -7);
+    ctx.moveTo(34, 0); ctx.lineTo(48, -14); ctx.lineTo(44, 0); ctx.lineTo(47, 10); ctx.lineTo(34, 0);
+    ctx.fillStyle = 'rgba(8, 22, 30, 0.55)';
+    ctx.fill();
+    ctx.restore();
+
+    ctx.restore();
+  }
+
+  private drawAbyssalPlain(darkness: number) {
+    const ctx = this.ctx;
+    const floorY = this.screenY(4000);
+    if (floorY > this.height + 150) return;
+
+    // Distant abyssal basalt bedrock ridge
+    ctx.beginPath();
+    ctx.moveTo(-20, this.height + 20);
+    for (let x = -20; x <= this.width + 30; x += 25) {
+      const worldX = this.vehicle.position.x + (x - this.focusX) / this.pxPerMeter;
+      const ridgeHeight = Math.sin(worldX * 0.06) * 15 + Math.cos(worldX * 0.025) * 22 + 40;
+      ctx.lineTo(x, floorY - ridgeHeight);
+    }
+    ctx.lineTo(this.width + 20, this.height + 20);
+    ctx.closePath();
+    ctx.fillStyle = '#010508';
+    ctx.fill();
+
+    // Foreground abyssal sediment plain with soft silt ripples
+    ctx.beginPath();
+    ctx.moveTo(-20, this.height + 20);
+    for (let x = -20; x <= this.width + 30; x += 15) {
+      const worldX = this.vehicle.position.x + (x - this.focusX) / this.pxPerMeter;
+      const rockyContour = Math.sin(worldX * 0.12) * 6 + Math.sin(worldX * 0.04) * 12 + 10;
+      ctx.lineTo(x, floorY - rockyContour);
+    }
+    ctx.lineTo(this.width + 20, this.height + 20);
+    ctx.closePath();
+    ctx.fillStyle = '#000305';
+    ctx.fill();
+
+    ctx.strokeStyle = 'rgba(55, 110, 115, 0.2)';
+    ctx.lineWidth = 1.4;
+    ctx.stroke();
+
+    // Manganese nodules strewn across the sediment
+    for (let n = -6; n <= 6; n++) {
+      const noduleWorldX = Math.round(this.vehicle.position.x / 18) * 18 + n * 16 + 5;
+      const nx = this.screenX(noduleWorldX);
+      if (nx > -20 && nx < this.width + 20) {
+        const ny = floorY - 8 + Math.sin(noduleWorldX * 0.3) * 3;
+        ctx.beginPath();
+        ctx.ellipse(nx, ny, 3.2, 2.2, 0.2, 0, Math.PI * 2);
+        ctx.fillStyle = '#06131c';
+        ctx.strokeStyle = 'rgba(40, 85, 95, 0.4)';
+        ctx.lineWidth = 0.8;
+        ctx.fill();
+        ctx.stroke();
+      }
+    }
+
+    // Benthic Lander AL-IV scientific artifact at worldX = -20, depth = 3,988 m
+    const landerWorldX = this.wrapCoord(-20, 160);
+    const landerScreenX = this.screenX(landerWorldX);
+    if (landerScreenX > -80 && landerScreenX < this.width + 80) {
+      const ly = floorY - 12;
+
+      this.activeCreatures.push({
+        screenX: landerScreenX,
+        screenY: ly - 36,
+        name: 'BENTHIC LANDER AL-IV',
+        category: 'Deep-Ocean Autonomous Observatory · 3,988 m',
+        isHero: false,
+        radius: 35,
+        distM: Math.hypot(landerWorldX - this.vehicle.position.x, 3988 - this.depth),
+      });
+
+      ctx.save();
+      ctx.translate(landerScreenX, ly);
+
+      // Ballast drop weights / footpads
+      ctx.fillStyle = '#1a2b32';
+      ctx.fillRect(-18, -4, 9, 5);
+      ctx.fillRect(9, -4, 9, 5);
+
+      // Aluminum tripod structural truss
+      ctx.beginPath();
+      ctx.moveTo(-14, -3); ctx.lineTo(-5, -34);
+      ctx.moveTo(14, -3); ctx.lineTo(5, -34);
+      ctx.moveTo(0, -3); ctx.lineTo(0, -34);
+      ctx.moveTo(-12, -18); ctx.lineTo(12, -18);
+      ctx.strokeStyle = 'rgba(150, 205, 215, 0.65)';
+      ctx.lineWidth = 1.4;
+      ctx.stroke();
+
+      // Titanium pressure sphere for instruments
+      ctx.beginPath();
+      ctx.arc(0, -34, 11, 0, Math.PI * 2);
+      ctx.fillStyle = '#0b2633';
+      ctx.strokeStyle = 'rgba(175, 235, 245, 0.8)';
+      ctx.lineWidth = 1.6;
+      ctx.fill();
+      ctx.stroke();
+
+      // Optical glass instrumentation port
+      ctx.beginPath();
+      ctx.arc(2, -34, 4, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(90, 235, 220, 0.4)';
+      ctx.fill();
+
+      // Acoustic transponder antenna mast
+      ctx.beginPath();
+      ctx.moveTo(0, -45);
+      ctx.lineTo(0, -62);
+      ctx.strokeStyle = 'rgba(195, 240, 245, 0.85)';
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+
+      // Strobe beacon flashing periodic xenon flash
+      const strobeOn = (this.elapsed * 1.5) % 1 > 0.82;
+      ctx.beginPath();
+      ctx.arc(0, -63, 2.5, 0, Math.PI * 2);
+      ctx.fillStyle = strobeOn ? '#ffe875' : '#453a15';
+      ctx.fill();
+
+      if (strobeOn) {
+        ctx.beginPath();
+        ctx.arc(0, -63, 16, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 235, 120, 0.22)';
+        ctx.fill();
+      }
+
+      ctx.restore();
     }
   }
 
@@ -1714,57 +2014,61 @@ export class OceanWorld {
       ctx.restore();
     }
 
-    // F. Gulper Eel (Pelican Eel / Eurypharynx pelecanoides) (1,150m – 1,580m)
-    const gulperBaseX = -90;
-    const gulperX = this.wrapCoord(gulperBaseX, 150);
-    const gulperSpeed = 2.8;
-    const gulperCurrX = gulperX + (this.elapsed * gulperSpeed) % 150 - 75;
-    const gulperDepth = 1350 + Math.sin(this.elapsed * 0.28) * 16;
-    const gsx = this.screenX(gulperCurrX);
-    const gsy = this.screenY(gulperDepth);
+    // F. Black Swallower (Chiasmodon niger) (1,300m – 1,650m)
+    const swallowerBaseX = -90;
+    const swallowerX = this.wrapCoord(swallowerBaseX, 150);
+    const swallowerSpeed = 1.8;
+    const swallowerCurrX = swallowerX + (this.elapsed * swallowerSpeed) % 150 - 75;
+    const swallowerDepth = 1420 + Math.sin(this.elapsed * 0.28) * 14;
+    const swx = this.screenX(swallowerCurrX);
+    const swy = this.screenY(swallowerDepth);
 
-    if (gsx > -80 && gsx < this.width + 80 && gsy > -50 && gsy < this.height + 50) {
+    if (swx > -80 && swx < this.width + 80 && swy > -50 && swy < this.height + 50) {
       this.activeCreatures.push({
-        screenX: gsx,
-        screenY: gsy,
-        name: 'GULPER EEL',
+        screenX: swx,
+        screenY: swy,
+        name: 'BLACK SWALLOWER',
         category: 'Ambient scenery · Bathypelagic',
-        radius: 36,
-        distM: Math.hypot(gulperCurrX - this.vehicle.position.x, gulperDepth - this.depth),
+        radius: 26,
+        distM: Math.hypot(swallowerCurrX - this.vehicle.position.x, swallowerDepth - this.depth),
       });
 
       ctx.save();
-      ctx.translate(gsx, gsy);
-      const tailWave = Math.sin(this.elapsed * 2.2);
-
-      // Huge pouch-like expandable jaw
+      ctx.translate(swx, swy);
+      // Elongated body
       ctx.beginPath();
-      ctx.moveTo(22, -6);
-      ctx.quadraticCurveTo(8, -14, -8, -8);
-      ctx.quadraticCurveTo(0, 16, 20, 10);
+      ctx.moveTo(14, 0);
+      ctx.lineTo(4, -5);
+      ctx.lineTo(-14, -4);
+      ctx.lineTo(-24, 0);
+      ctx.lineTo(-14, 3);
+      ctx.lineTo(4, 4);
       ctx.closePath();
-      ctx.fillStyle = 'rgba(16, 12, 22, 0.85)';
-      ctx.strokeStyle = 'rgba(125, 75, 110, 0.5)';
-      ctx.lineWidth = 1.2;
+      ctx.fillStyle = 'rgba(10, 14, 20, 0.92)';
+      ctx.strokeStyle = 'rgba(50, 75, 90, 0.4)';
+      ctx.lineWidth = 1;
       ctx.fill();
       ctx.stroke();
 
-      // Slender ribbon-like body and whip-like tail
+      // Distended expandable belly pouch
       ctx.beginPath();
-      ctx.moveTo(-8, -2);
-      ctx.bezierCurveTo(-26, -4 + tailWave * 6, -45, tailWave * 12, -68, -tailWave * 14);
-      ctx.strokeStyle = 'rgba(28, 22, 36, 0.9)';
-      ctx.lineWidth = 2.2;
+      ctx.moveTo(8, 3);
+      ctx.quadraticCurveTo(-4, 18, -14, 3);
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(16, 24, 34, 0.85)';
+      ctx.strokeStyle = 'rgba(70, 110, 125, 0.45)';
+      ctx.lineWidth = 1;
+      ctx.fill();
       ctx.stroke();
 
-      // Bioluminescent red/pink photophore beacon at tail tip
-      const tailTipX = -68;
-      const tailTipY = -tailWave * 14;
-      const tipGlow = 0.6 + 0.4 * Math.sin(this.elapsed * 4);
+      // Sharp dentition
       ctx.beginPath();
-      ctx.arc(tailTipX, tailTipY, 2.5, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255, 90, 130, ${tipGlow})`;
-      ctx.fill();
+      ctx.moveTo(14, 0); ctx.lineTo(11, -3);
+      ctx.moveTo(11, 0); ctx.lineTo(8, -3);
+      ctx.strokeStyle = 'rgba(180, 235, 245, 0.7)';
+      ctx.lineWidth = 0.8;
+      ctx.stroke();
+
       ctx.restore();
     }
 
@@ -1915,12 +2219,13 @@ export class OceanWorld {
       ctx.restore();
     }
 
-    // I. Benthic Tripod Fish (Bathypterois) standing on 2,000 m seafloor (1,965m – 2,000m)
-    if (this.depth > 1945) {
+    // I. Benthic Tripod Fish (Bathypterois grallator) standing on seafloor (1,960m – 2,040m and 3,960m – 4,000m)
+    if ((this.depth > 1940 && this.depth < 2050) || this.depth > 3940) {
+      const targetBedDepth = this.depth < 2500 ? 2000 : 4000;
       for (let t = -1; t <= 1; t++) {
         const tx = this.wrapCoord(t * 45 + 18, 90);
         const tsx = this.screenX(tx);
-        const floorY = this.screenY(2000) - 14;
+        const floorY = this.screenY(targetBedDepth) - 14;
         if (tsx < -25 || tsx > this.width + 25 || floorY < -20 || floorY > this.height + 30) continue;
 
         this.activeCreatures.push({
@@ -1932,7 +2237,7 @@ export class OceanWorld {
             : 'Documented Species · Bathypterois grallator',
           isHero: true,
           radius: 18,
-          distM: Math.hypot(tx - this.vehicle.position.x, 1995 - this.depth),
+          distM: Math.hypot(tx - this.vehicle.position.x, targetBedDepth - 5 - this.depth),
         });
 
         ctx.save();
@@ -2181,6 +2486,131 @@ export class OceanWorld {
       ctx.fillStyle = '#ffffff';
       ctx.fill();
     }
+
+    ctx.restore();
+  }
+
+  /**
+   * Hero Creature: Gulper Eel (Eurypharynx pelecanoides)
+   * Authored with 4 dynamic components:
+   * 1. Cavernous expandable pouch mouth & elastic throat lining
+   * 2. Loosely hinged upper & lower mandibles
+   * 3. Sinusoidal undulating slender whip tail
+   * 4. Bioluminescent caudal lure photophore flashing in the midnight abyss
+   */
+  private drawGulperEel() {
+    const ctx = this.ctx;
+    const target = this.gulperEelPosition();
+    const x = this.screenX(target.x);
+    const y = this.screenY(target.depth);
+    if (x < -140 || x > this.width + 140 || y < -120 || y > this.height + 120) return;
+
+    this.activeCreatures.push({
+      screenX: x,
+      screenY: y,
+      name: 'GULPER EEL',
+      category: this.isDiscovered('gulper-eel')
+        ? 'Catalogued · MBARI Sourced Record'
+        : 'Documented Species · Eurypharynx pelecanoides',
+      isHero: true,
+      radius: 40 * this.zoom,
+      distM: Math.hypot(target.x - this.vehicle.position.x, target.depth - this.depth),
+    });
+
+    // Bioluminescent ethereal aura
+    const aura = ctx.createRadialGradient(x, y, 4, x, y, 85 * this.zoom);
+    aura.addColorStop(0, 'rgba(255, 75, 135, 0.16)');
+    aura.addColorStop(0.5, 'rgba(120, 40, 90, 0.05)');
+    aura.addColorStop(1, 'rgba(10, 5, 20, 0)');
+    ctx.fillStyle = aura;
+    ctx.fillRect(x - 85 * this.zoom, y - 85 * this.zoom, 170 * this.zoom, 170 * this.zoom);
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(this.zoom, this.zoom);
+
+    const facing = Math.sin(this.elapsed * 0.12) >= 0 ? 1 : -1;
+    ctx.scale(facing, 1);
+
+    const jawExpansion = 1 + Math.sin(this.elapsed * 1.3) * 0.09;
+    const wave = Math.sin(this.elapsed * 2.4);
+
+    // 1. Expandable pouch throat membrane
+    ctx.beginPath();
+    ctx.moveTo(35, -4);
+    ctx.bezierCurveTo(15, -12 * jawExpansion, -15, -8 * jawExpansion, -32, 4);
+    ctx.bezierCurveTo(-15, 28 * jawExpansion, 15, 34 * jawExpansion, 35, 8);
+    ctx.closePath();
+    const pouchGrad = ctx.createLinearGradient(0, -10, 0, 32);
+    pouchGrad.addColorStop(0, 'rgba(16, 26, 36, 0.88)');
+    pouchGrad.addColorStop(0.6, 'rgba(25, 45, 60, 0.7)');
+    pouchGrad.addColorStop(1, 'rgba(8, 16, 24, 0.95)');
+    ctx.fillStyle = pouchGrad;
+    ctx.strokeStyle = 'rgba(110, 220, 230, 0.55)';
+    ctx.lineWidth = 1.3;
+    ctx.fill();
+    ctx.stroke();
+
+    // 2. Upper and lower articulated jawbone struts
+    ctx.beginPath();
+    ctx.moveTo(35, -4);
+    ctx.quadraticCurveTo(10, -14 * jawExpansion, -32, 4);
+    ctx.strokeStyle = 'rgba(165, 245, 240, 0.85)';
+    ctx.lineWidth = 1.6;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(-32, 4);
+    ctx.quadraticCurveTo(12, 36 * jawExpansion, 35, 8);
+    ctx.strokeStyle = 'rgba(165, 245, 240, 0.85)';
+    ctx.lineWidth = 1.6;
+    ctx.stroke();
+
+    // 3. Minute cephalic eye perched high on tip of snout
+    ctx.beginPath();
+    ctx.arc(33, -5, 1.8, 0, Math.PI * 2);
+    ctx.fillStyle = '#65f0ff';
+    ctx.fill();
+
+    // 4. Undulating sinusoidal whip tail
+    ctx.beginPath();
+    ctx.moveTo(-32, 4);
+    const cp1x = -55;
+    const cp1y = 4 + wave * 9;
+    const cp2x = -85;
+    const cp2y = 4 - wave * 14;
+    const tipX = -120;
+    const tipY = 4 + wave * 18;
+    ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, tipX, tipY);
+    ctx.strokeStyle = 'rgba(18, 38, 52, 0.95)';
+    ctx.lineWidth = 3.6;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(-32, 4);
+    ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, tipX, tipY);
+    ctx.strokeStyle = 'rgba(120, 215, 225, 0.45)';
+    ctx.lineWidth = 1.1;
+    ctx.stroke();
+
+    // 5. Bioluminescent caudal lure organ (flashing pink/magenta photophore)
+    const lureGlow = 0.5 + 0.5 * Math.sin(this.elapsed * 4.5);
+    const lureRad = ctx.createRadialGradient(tipX, tipY, 0.5, tipX, tipY, 10);
+    lureRad.addColorStop(0, `rgba(255, 90, 160, ${0.95 * lureGlow})`);
+    lureRad.addColorStop(0.4, `rgba(255, 60, 130, ${0.5 * lureGlow})`);
+    lureRad.addColorStop(1, 'rgba(255, 40, 110, 0)');
+    ctx.fillStyle = lureRad;
+    ctx.fillRect(tipX - 10, tipY - 10, 20, 20);
+
+    ctx.beginPath();
+    ctx.arc(tipX, tipY, 2.4, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(255, 140, 195, ${lureGlow})`;
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(tipX, tipY, 1.0, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
 
     ctx.restore();
   }

@@ -325,6 +325,78 @@ export const documentedSpecimens: Specimen[] = [
       </div>
     `,
   },
+  {
+    id: 'gulper-eel',
+    index: '05',
+    name: 'Gulper eel',
+    scientificName: 'Eurypharynx pelecanoides',
+    depth: '1,200–3,000 m',
+    depthTier: 'bathypelagic',
+    targetDepth: 2750,
+    habitat: 'Lower Bathypelagic · Midnight Abyss',
+    realSize: '75–100 cm (jaw forms ~25% of body length)',
+    classification: 'ACTINOPTERYGII · SACCOPHARYNGIFORMES · EURYPHARYNGIDAE',
+    description:
+      'An astonishing deep-sea predator with a gargantuan distensible pouch jaw loosely hinged like a pelican beak, allowing it to engulf prey significantly larger than itself in the food-sparse bathypelagic depths.',
+    detail:
+      'Its whip-like slender body terminates in a complex bioluminescent organ that glows with pink and blue flashes to lure curious organisms directly into its yawning cavernous mouth. The stomach expands to accommodate massive meals.',
+    source: {
+      title: 'MBARI · Gulper eel',
+      url: 'https://www.mbari.org/animal/gulper-eel/',
+      publisher: 'Monterey Bay Aquarium Research Institute',
+      accessedOn: '2026-09-25',
+    },
+    annotations: [
+      { num: '01.', label: 'Distensible pouch jaw' },
+      { num: '02.', label: 'Minute dorsal eye' },
+      { num: '03.', label: 'Sinusoidal whip tail' },
+      { num: '04.', label: 'Bioluminescent lure' },
+    ],
+    svg: `
+      <div class="specimen-plate">
+        <div class="plate-badge">CLASSIFICATION // SACCOPHARYNGIFORMES · EURYPHARYNGIDAE</div>
+        <svg class="specimen-diagram" viewBox="0 0 340 240" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="eelAura" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#ff4a88" stop-opacity="0.2"/>
+              <stop offset="100%" stop-color="#ff4a88" stop-opacity="0"/>
+            </radialGradient>
+            <linearGradient id="eelBody" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#081822"/>
+              <stop offset="50%" stop-color="#142c38"/>
+              <stop offset="100%" stop-color="#081822"/>
+            </linearGradient>
+            <linearGradient id="eelPouch" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="rgba(20,50,65,0.7)"/>
+              <stop offset="100%" stop-color="rgba(6,18,25,0.9)"/>
+            </linearGradient>
+          </defs>
+          <circle cx="170" cy="120" r="110" fill="url(#eelAura)" />
+          <!-- Cavernous expandable pouch mouth -->
+          <path d="M 270 102 C 220 102 180 110 165 125 C 175 160 215 178 265 142 C 275 132 278 112 270 102 Z" fill="url(#eelPouch)" stroke="rgba(140,245,235,0.6)" stroke-width="1.4"/>
+          <!-- Elastic jaw hinge and upper mandible -->
+          <path d="M 270 102 Q 220 98 165 125" fill="none" stroke="rgba(180,250,240,0.85)" stroke-width="1.8"/>
+          <!-- Lower mandible arc -->
+          <path d="M 165 125 Q 185 180 265 142" fill="none" stroke="rgba(180,250,240,0.85)" stroke-width="1.8"/>
+          <!-- Long slender whip-like eel body with sinusoidal undulation -->
+          <path d="M 165 125 C 135 122 105 130 85 115 C 65 100 45 125 30 110 C 22 102 15 115 12 112" fill="none" stroke="url(#eelBody)" stroke-width="4.5"/>
+          <path d="M 165 125 C 135 122 105 130 85 115 C 65 100 45 125 30 110 C 22 102 15 115 12 112" fill="none" stroke="rgba(125,225,240,0.5)" stroke-width="1.2"/>
+          <!-- Minute eye perched high near tip of snout -->
+          <circle cx="264" cy="100" r="1.8" fill="#58d5e8" stroke="#ffffff" stroke-width="0.6"/>
+          <!-- Bioluminescent caudal tip organ (photophore lure) -->
+          <circle cx="12" cy="112" r="5" fill="rgba(255,100,160,0.35)"/>
+          <circle cx="12" cy="112" r="2.5" fill="#ff72aa"/>
+          <circle cx="12" cy="112" r="1" fill="#ffffff"/>
+        </svg>
+        <div class="plate-annotations">
+          <span><b>01.</b> Distensible pouch jaw</span>
+          <span><b>02.</b> Minute dorsal eye</span>
+          <span><b>03.</b> Sinusoidal whip tail</span>
+          <span><b>04.</b> Bioluminescent lure</span>
+        </div>
+      </div>
+    `,
+  },
 ];
 
 export const vampireSquid = documentedSpecimens[1];
@@ -333,5 +405,6 @@ export function zoneAt(depth: number): { name: string; subtitle: string } {
   if (depth < 1) return { name: 'OCEAN SURFACE', subtitle: 'Open water' };
   if (depth < 200) return { name: 'SUNLIGHT ZONE', subtitle: 'Epipelagic' };
   if (depth < 1000) return { name: 'TWILIGHT ZONE', subtitle: 'Mesopelagic' };
-  return { name: 'MIDNIGHT ZONE', subtitle: 'Bathypelagic' };
+  if (depth < 4000) return { name: 'MIDNIGHT ZONE', subtitle: 'Bathypelagic' };
+  return { name: 'ABYSSAL ZONE', subtitle: 'Abyssopelagic' };
 }

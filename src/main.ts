@@ -25,7 +25,7 @@ root.innerHTML = `
         <span class="signal"><i></i> SYSTEMS ONLINE</span>
         <button id="controlsBtn" class="text-button" type="button" aria-label="Controls manual">MANUAL <span class="key-badge">?</span></button>
         <button id="muteBtn" class="text-button" type="button" aria-label="Toggle audio">AUDIO <span id="muteLabel">ON</span></button>
-        <button id="journalBtn" class="text-button" type="button">FIELD JOURNAL <span id="journalCount">00/04</span></button>
+        <button id="journalBtn" class="text-button" type="button">FIELD JOURNAL <span id="journalCount">00/05</span></button>
         <button id="pauseBtn" class="icon-button" type="button" aria-label="Pause expedition">Ⅱ</button>
       </div>
     </header>
@@ -62,7 +62,7 @@ root.innerHTML = `
     <!-- Initial surface flight directive banner -->
     <div id="surfaceDirective" class="directive-card">
       <div class="directive-head"><span class="directive-dot"></span><span>EXPEDITION DIRECTIVE</span><button id="dismissDirective" class="directive-close" type="button" aria-label="Dismiss directive">×</button></div>
-      <p>Dive from the sunlit surface down to the <strong>2,000 m</strong> abyssal floor. Locate <strong>4 documented species</strong> with sonar (<kbd>R</kbd>), scan with (<kbd>E</kbd>), and compile your scientific Field Journal (<kbd>J</kbd>).</p>
+      <p>Dive from the sunlit surface down through the <strong>2,000 m</strong> hydrothermal rift into the <strong>4,000 m</strong> abyssal plain. Locate <strong>5 documented species</strong> with sonar (<kbd>R</kbd>), scan with (<kbd>E</kbd>), and compile your scientific Field Journal (<kbd>J</kbd>).</p>
       <div class="directive-keys">
         <span><kbd>W</kbd><kbd>S</kbd> Dive / Rise</span>
         <span><kbd>A</kbd><kbd>D</kbd> Drift</span>
@@ -79,11 +79,11 @@ root.innerHTML = `
       <button id="dismissTipBtn" class="tip-close" type="button" aria-label="Dismiss tip">×</button>
     </div>
 
-    <!-- 2,000m Milestone Celebration Card -->
+    <!-- 4,000m Milestone Celebration Card -->
     <div id="milestoneCard" class="milestone-card is-hidden" role="alert">
-      <div class="milestone-tag">EXPEDITION MILESTONE · 2,000 M</div>
-      <h3>Abyssal Benthic Floor Reached</h3>
-      <p>Maximum rated depth achieved at the 2,000 m ocean floor boundary. Hydrostatic pressure: ~201 atm. You have traversed the complete water column from sunlit waves to hydrothermal vents. Open the field journal (<kbd>J</kbd>) to review your findings, or explore freely.</p>
+      <div class="milestone-tag">EXPEDITION MILESTONE · 4,000 M</div>
+      <h3>Abyssal Plain Boundary Achieved</h3>
+      <p>Depth rating expanded to 4,000 m on the abyssal sediment floor. Hydrostatic pressure: ~401 atm. You have explored through the 2,000 m hydrothermal rift canyon, discovered the 3,200 m whale fall oasis, and reached the Benthic Lander AL-IV observatory. Review your scientific journal (<kbd>J</kbd>) or continue exploring.</p>
       <button id="milestoneCloseBtn" class="primary-button" type="button"><span>ACKNOWLEDGE & EXPLORE</span><span class="button-arrow">↗</span></button>
     </div>
 
@@ -107,7 +107,7 @@ root.innerHTML = `
     </div>
 
     <div class="bottom-bar">
-      <div class="bottom-left"><span class="latitude">SIMULATED EXPEDITION</span><span class="bottom-rule"></span><span>0 → 2,000 M</span></div>
+      <div class="bottom-left"><span class="latitude">SIMULATED EXPEDITION</span><span class="bottom-rule"></span><span>0 → 4,000 M</span></div>
       <div class="control-strip">
         <span><kbd>A</kbd><kbd>D</kbd> DRIFT</span>
         <span><kbd>W</kbd><kbd>S</kbd> RISE / DIVE</span>
@@ -279,7 +279,7 @@ root.innerHTML = `
   <aside id="debug" class="debug is-hidden">
     <div>DEBUG / SEED 183729</div>
     <div id="debugStats">—</div>
-    <label>TELEPORT DEPTH <input id="debugDepth" type="range" min="0" max="2000" step="1" value="0" /></label>
+    <label>TELEPORT DEPTH <input id="debugDepth" type="range" min="0" max="4000" step="1" value="0" /></label>
     <button id="debugLight" type="button">TOGGLE LIGHTS</button>
   </aside>
   <div id="fatal" class="fatal is-hidden" role="alert">
@@ -307,6 +307,8 @@ let metrics: WorldMetrics = {
   isThrusting: false,
   reached1000: false,
   reached2000: false,
+  reached3000: false,
+  reached4000: false,
   zoom: 1.0,
   waterTransition: null,
 };
@@ -322,6 +324,8 @@ let lastUi = 0;
 let maxDepthRecord = 0;
 let milestoneTriggered = false;
 let reached1000Notified = false;
+let reached2000Notified = false;
+let reached3000Notified = false;
 let lastAudioZone = '';
 let toastTimer: number | undefined;
 
@@ -570,22 +574,37 @@ function updateAudio() {
     noiseFreq = 450 - ratio * 230;
     noiseLevel = 0.025;
   } else if (depth < 1850) {
-    // Midnight Zone (Bathypelagic)
+    // Midnight Zone (Upper Bathypelagic)
     const ratio = (depth - 1000) / 850;
     cutoff = 280 - ratio * 140;
     droneFreq = 40 - ratio * 7;
     subGain = 0.045 + ratio * 0.03;
     noiseFreq = 220 - ratio * 90;
     noiseLevel = 0.02;
-  } else {
-    // Abyssal Rift Floor & Hydrothermal Vents (1,850m - 2,000m)
-    const ventProximity = (depth - 1850) / 150;
+  } else if (depth < 2350) {
+    // Mid-Ocean Hydrothermal Rift Ridge (1,850m - 2,350m)
+    const ventProximity = 1 - Math.abs(depth - 2000) / 350;
     cutoff = 140 - ventProximity * 30;
     droneFreq = 33;
     subGain = 0.075;
-    // Thermal vent jet hiss and convective rumble
+    // Thermal vent convective rumble and particulate hiss
     noiseFreq = 130 + ventProximity * 150;
     noiseLevel = 0.02 + ventProximity * 0.035;
+  } else if (depth < 3800) {
+    // Lower Bathypelagic & Whale Fall Chemosynthetic Oasis (2,350m - 3,800m)
+    const ratio = (depth - 2350) / 1450;
+    cutoff = 120 - ratio * 40;
+    droneFreq = 28 - ratio * 4;
+    subGain = 0.08 + ratio * 0.02;
+    noiseFreq = 95 - ratio * 25;
+    noiseLevel = 0.015;
+  } else {
+    // Abyssal Plain Floor (Abyssopelagic floor approaching 4,000m)
+    cutoff = 75;
+    droneFreq = 22;
+    subGain = 0.095;
+    noiseFreq = 65;
+    noiseLevel = 0.012;
   }
 
   ambientFilter.frequency.setTargetAtTime(cutoff, now, 0.25);
@@ -829,12 +848,22 @@ function journalContent() {
   el<HTMLElement>('journalCount').textContent = `${count.toString().padStart(2, '0')}/${total.toString().padStart(2, '0')}`;
   el<HTMLElement>('journalMaxDepth').textContent = `${Math.round(maxDepthRecord)} m`;
   el<HTMLElement>('journalDiscoveredCount').textContent = `${count} of ${total} Species (${Math.round((count / total) * 100)}%)`;
-  el<HTMLElement>('journalStatus').textContent = count === total ? 'ALL SPECIES CATALOGUED' : metrics.reached2000 ? '2,000 M FLOOR REACHED' : metrics.reached1000 ? '1,000 M BATHYPELAGIC' : 'EXPEDITION ACTIVE';
+  el<HTMLElement>('journalStatus').textContent = count === total
+    ? 'ALL SPECIES CATALOGUED'
+    : metrics.reached4000
+    ? '4,000 M ABYSSAL PLAIN'
+    : metrics.reached3000
+    ? '3,000 M WHALE FALL OASIS'
+    : metrics.reached2000
+    ? '2,000 M HYDROTHERMAL RIFT'
+    : metrics.reached1000
+    ? '1,000 M BATHYPELAGIC'
+    : 'EXPEDITION ACTIVE';
 
   const badgeContainer = el<HTMLElement>('surveyBadgeContainer');
   if (badgeContainer) {
     badgeContainer.innerHTML = count === total
-      ? `<div class="survey-complete-badge">★ EXPEDITION SURVEY COMPLETE · 4/4 CATALOGUED</div>`
+      ? `<div class="survey-complete-badge">★ EXPEDITION SURVEY COMPLETE · 5/5 CATALOGUED</div>`
       : '';
   }
 
@@ -974,12 +1003,26 @@ function onTick(next: WorldMetrics) {
     milestoneAudio();
   }
 
-  // 2,000 m Abyssal Benthic Floor Milestone Check
-  if (metrics.reached2000 && !milestoneTriggered) {
+  // 2,000 m Hydrothermal Rift Ridge Milestone Check
+  if (metrics.reached2000 && !reached2000Notified) {
+    reached2000Notified = true;
+    milestoneAudio();
+    toast('2,000 M REACHED · MID-OCEAN HYDROTHERMAL RIFT');
+  }
+
+  // 3,000 m Whale Fall Oasis Check
+  if (metrics.reached3000 && !reached3000Notified) {
+    reached3000Notified = true;
+    milestoneAudio();
+    toast('3,000 M REACHED · ABYSSAL WHALE FALL ECOSYSTEM');
+  }
+
+  // 4,000 m Abyssal Plain Boundary Milestone Check
+  if (metrics.reached4000 && !milestoneTriggered) {
     milestoneTriggered = true;
     show(el<HTMLElement>('milestoneCard'), true);
     milestoneAudio();
-    toast('2,000 M REACHED · ABYSSAL BENTHIC FLOOR');
+    toast('4,000 M REACHED · ABYSSAL PLAIN & BENTHIC OBSERVATORY');
   }
 
   // Water breach and plunge surface transitions
@@ -1025,7 +1068,7 @@ function onTick(next: WorldMetrics) {
   el<HTMLElement>('zoneSubtitle').textContent = zone.subtitle;
   el<HTMLElement>('pressure').textContent = `~${(1 + depth / 10).toFixed(1)} atm`;
   el<HTMLElement>('light').textContent = `${Math.round(Math.pow(1 - Math.min(depth / 1000, 1), 2.6) * 100)}%`;
-  el<HTMLElement>('depthProgress').style.width = `${Math.min(depth / 2000, 1) * 100}%`;
+  el<HTMLElement>('depthProgress').style.width = `${Math.min(depth / 4000, 1) * 100}%`;
   el<HTMLElement>('fpsDisplay').textContent = `${Math.round(1000 / Math.max(metrics.frameMs, 1))} FPS`;
   const zoomDisplay = el<HTMLElement>('zoomDisplay');
   if (zoomDisplay) {
@@ -1188,7 +1231,7 @@ function triggerSonar() {
   if (res.distance !== null && res.distance < 160) {
     toast(`ACOUSTIC CONTACT DETECTED · ${Math.round(res.distance)} M ${res.name ? `[${res.name.toUpperCase()}]` : ''}`);
   } else {
-    toast(discoveredIds.length === documentedSpecimens.length ? 'ALL 4 REGIONAL SPECIES CATALOGUED' : 'NO UNCATALOGUED CONTACT IN RANGE');
+    toast(discoveredIds.length === documentedSpecimens.length ? 'ALL 5 REGIONAL SPECIES CATALOGUED' : 'NO UNCATALOGUED CONTACT IN RANGE');
   }
 }
 

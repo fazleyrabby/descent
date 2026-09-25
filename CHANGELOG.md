@@ -6,6 +6,12 @@ User-visible changes to DESCENT are recorded here. Add new work under **Unreleas
 
 ### Added
 
+- Continuous vertical deep-ocean expedition expansion from 2,000 m down to 4,000 m into the Abyssopelagic zone, featuring the 2,000 m Mid-Ocean Hydrothermal Rift Canyon, the 3,200 m Abyssal Whale Fall chemosynthetic oasis, and the 4,000 m Abyssal Plain floor.
+- 5th documented hero species: Gulper Eel (*Eurypharynx pelecanoides*, target depth 2,750 m, MBARI sourced), complete with an authored scientific SVG plate, interactive taxonomy reticle, active sonar triangulation, and animated in-game model with expandable pouch mouth and flashing caudal photophore lure.
+- Abyssal Whale Fall ecosystem at 3,200 m featuring a massive cetacean skeleton with articulated vertebrae, arching ivory ribs, waving red *Osedax* bone-eating "zombie" worm colonies, scavenger lithodid crabs, and a cruising Pacific Sleeper Shark (*Somniosus pacificus*) silhouette.
+- Abyssal Plain seafloor at 4,000 m with rolling sediment drifts, scattered manganese nodules, benthic tripod fish, and the autonomous deep-ocean research artifact: Benthic Lander AL-IV with titanium instrument sphere and xenon strobe beacon.
+- Distinct procedural acoustic profiles for deep-water tiers: hydrothermal rift convection rumble (2,000 m), resonant stillness of the whale fall oasis (3,200 m), and sub-bass abyssal floor drone (4,000 m).
+- Ambient bathypelagic wildlife addition: Black Swallower (*Chiasmodon niger*, 1,300–1,650 m) with distended stomach pouch.
 - Animated procedural sunlight caustics across the epipelagic zone (0–75 m) with multi-frequency intersecting harmonic light ribbons and screen-blended shimmer nodes.
 - Submersible hull sunlight caustic reflections dancing across the titanium plates, decals, and observation dome in shallow waters (0–65 m).
 - Contextual first-time pilot onboarding guidance pill with step-by-step telemetry cues for diving controls, floodlights, active sonar ping, and taxonomy tags with persistent completion memory.

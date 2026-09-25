@@ -1,6 +1,6 @@
 # DESCENT
 
-A small, playable 2D side-view ocean expedition. [spec.md](spec.md) contains the reduced release plan, [CHANGELOG.md](CHANGELOG.md) tracks project changes, and [spec-original.md](spec-original.md) archives the earlier large 3D concept.
+A small, playable 2D side-view ocean expedition. [spec.md](spec.md) contains the reduced release plan, [CHANGELOG.md](CHANGELOG.md) tracks project changes, [film/README.md](film/README.md) documents the narrated short film, and [spec-original.md](spec-original.md) archives the earlier large 3D concept.
 
 ## Run
 
